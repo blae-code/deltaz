@@ -171,24 +171,33 @@ Deno.serve(async (req) => {
       if (!sanitized) {
         return Response.json({ error: "Message is required" }, { status: 400 });
       }
-      const result = await sendRconCommand(`Say ${sanitized}`);
-      return Response.json({ status: "ok", result });
-    }
-
-    // --- RCON: Get player list ---
-    if (action === "players") {
-      const result = await sendRconCommand("Players");
-      return Response.json({ status: "ok", raw: result });
-    }
-
-    // --- RCON: Send arbitrary command (admin) ---
-    if (action === "rcon") {
-      const command = message.trim();
-      if (!command) {
-        return Response.json({ error: "Command is required" }, { status: 400 });
+      let rconResult = '';
+      try {
+        rconResult = await sendRconCommand(`Say ${sanitized}`);
+      } catch (rconErr) {
+        console.warn('RCON broadcast failed (server may be offline):', rconErr.message);
       }
-      const result = await sendRconCommand(command);
-      return Response.json({ status: "ok", result });
+
+      // Also create an in-app notification for all players
+      await base44.asServiceRole.entities.Notification.create({
+        player_email: 'broadcast',
+        title: 'Server Broadcast',
+        message: sanitized,
+        type: 'system_alert',
+        priority: 'high',
+        is_read: false,
+      });
+
+      // Create a world event for the COMMS feed
+      await base44.asServiceRole.entities.Event.create({
+        title: `BROADCAST: ${sanitized.slice(0, 60)}`,
+        content: sanitized,
+        type: 'broadcast',
+        severity: 'warning',
+        is_active: true,
+      });
+
+      return Response.json({ status: "ok", result: rconResult });
     }
 
     return Response.json({ error: "Unknown action" }, { status: 400 });

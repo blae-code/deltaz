@@ -22,15 +22,30 @@ export default function NotificationBanner({ userEmail }) {
 
   useEffect(() => {
     if (!userEmail) return;
-    base44.entities.Notification.filter(
-      { player_email: userEmail, is_read: false },
-      "-created_date",
-      10
-    ).then(setNotifications).catch(() => {});
+
+    // Fetch both user-specific and broadcast notifications
+    Promise.all([
+      base44.entities.Notification.filter(
+        { player_email: userEmail, is_read: false },
+        "-created_date",
+        10
+      ),
+      base44.entities.Notification.filter(
+        { player_email: "broadcast", is_read: false },
+        "-created_date",
+        10
+      ),
+    ]).then(([personal, broadcasts]) => {
+      const all = [...personal, ...broadcasts].sort(
+        (a, b) => new Date(b.created_date) - new Date(a.created_date)
+      );
+      setNotifications(all);
+    }).catch(() => {});
 
     // Subscribe to real-time notifications
     const unsub = base44.entities.Notification.subscribe((event) => {
-      if (event.type === "create" && event.data.player_email === userEmail && !event.data.is_read) {
+      if (event.type === "create" && !event.data.is_read &&
+          (event.data.player_email === userEmail || event.data.player_email === "broadcast")) {
         setNotifications((prev) => [event.data, ...prev]);
       }
     });
