@@ -91,6 +91,9 @@
           "territory_id": {
             "type": "string"
           },
+          "previous_status": {
+            "type": "string"
+          },
           "security_change": {
             "type": "string"
           }

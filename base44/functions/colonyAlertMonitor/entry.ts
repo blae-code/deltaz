@@ -1,20 +1,19 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.24';
 
-const RCON_IP = Deno.env.get("GAME_SERVER_IP");
-const RCON_PORT = parseInt(Deno.env.get("RCON_PORT") || "25575");
-const RCON_PASS = Deno.env.get("RCON_PASSWORD");
+const RCON_IP = Deno.env.get('GAME_SERVER_IP');
+const RCON_PORT = Number.parseInt(Deno.env.get('RCON_PORT') || '25575', 10);
+const RCON_PASS = Deno.env.get('RCON_PASSWORD');
+const ALERT_SUPPRESSION_MS = 30 * 60 * 1000;
 
-// Threshold config: metric -> { threshold, label, rconMessage, eventSeverity }
 const THRESHOLDS = {
-  food_reserves: { threshold: 20, label: "Food Reserves", severity: "critical", emoji: "🍖" },
-  water_supply: { threshold: 20, label: "Water Supply", severity: "critical", emoji: "💧" },
-  medical_supplies: { threshold: 15, label: "Medical Supplies", severity: "emergency", emoji: "🏥" },
-  morale: { threshold: 25, label: "Colony Morale", severity: "critical", emoji: "😰" },
-  defense_integrity: { threshold: 30, label: "Defense Integrity", severity: "emergency", emoji: "🛡" },
-  power_level: { threshold: 20, label: "Power Grid", severity: "critical", emoji: "⚡" },
+  food_reserves: { threshold: 20, label: 'Food Reserves', severity: 'critical', emoji: 'FOOD' },
+  water_supply: { threshold: 20, label: 'Water Supply', severity: 'critical', emoji: 'WATER' },
+  medical_supplies: { threshold: 15, label: 'Medical Supplies', severity: 'emergency', emoji: 'MED' },
+  morale: { threshold: 25, label: 'Colony Morale', severity: 'critical', emoji: 'MORALE' },
+  defense_integrity: { threshold: 30, label: 'Defense Integrity', severity: 'emergency', emoji: 'DEFENSE' },
+  power_level: { threshold: 20, label: 'Power Grid', severity: 'critical', emoji: 'POWER' },
 };
 
-// RCON packet helpers
 function encodePacket(id, type, body) {
   const bodyBuf = new TextEncoder().encode(body);
   const size = 4 + 4 + bodyBuf.length + 2;
@@ -30,113 +29,193 @@ function encodePacket(id, type, body) {
 }
 
 function decodePacket(buf) {
-  const view = new DataView(buf.buffer);
+  const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
   return {
     size: view.getInt32(0, true),
     id: view.getInt32(4, true),
     type: view.getInt32(8, true),
-    body: new TextDecoder().decode(buf.slice(12, buf.length - 2)),
+    body: new TextDecoder().decode(buf.slice(12, Math.max(12, buf.length - 2))),
   };
 }
 
+async function readPacket(conn) {
+  const header = new Uint8Array(4);
+  const headerBytes = await conn.read(header);
+  if (!headerBytes || headerBytes < 4) {
+    return null;
+  }
+
+  const size = new DataView(header.buffer).getInt32(0, true);
+  const payload = new Uint8Array(size);
+  let offset = 0;
+  while (offset < size) {
+    const read = await conn.read(payload.subarray(offset));
+    if (!read) break;
+    offset += read;
+  }
+
+  if (offset !== size) {
+    return null;
+  }
+
+  const fullPacket = new Uint8Array(4 + size);
+  fullPacket.set(header, 0);
+  fullPacket.set(payload, 4);
+  return decodePacket(fullPacket);
+}
+
 async function sendRconCommand(command) {
-  if (!RCON_IP || !RCON_PASS) return null;
+  if (!RCON_IP || !RCON_PASS || !Number.isFinite(RCON_PORT)) {
+    return null;
+  }
+
   let conn;
   try {
     conn = await Deno.connect({ hostname: RCON_IP, port: RCON_PORT });
-    // Auth
+
     await conn.write(encodePacket(1, 3, RCON_PASS));
-    const authBuf = new Uint8Array(4096);
-    await conn.read(authBuf);
-    const authResp = decodePacket(authBuf);
-    if (authResp.id === -1) return "RCON auth failed";
-    // Command
+    const authResponse = await readPacket(conn);
+    if (!authResponse || authResponse.id === -1) {
+      return 'RCON auth failed';
+    }
+
     await conn.write(encodePacket(2, 2, command));
-    const cmdBuf = new Uint8Array(4096);
-    await conn.read(cmdBuf);
-    const cmdResp = decodePacket(cmdBuf);
-    return cmdResp.body;
-  } catch (err) {
-    console.error("RCON error:", err.message);
+    const commandResponse = await readPacket(conn);
+    return commandResponse?.body || '';
+  } catch (error) {
+    console.error('RCON error:', error.message);
     return null;
   } finally {
-    try { conn?.close(); } catch (_) {}
+    try {
+      conn?.close();
+    } catch (_) {}
   }
 }
 
 Deno.serve(async (req) => {
   try {
+    if (req.method !== 'POST') {
+      return Response.json({ error: 'Method not allowed' }, { status: 405 });
+    }
+
     const base44 = createClientFromRequest(req);
-    const body = await req.json();
-    const colonyData = body.data;
+
+    try {
+      const user = await base44.auth.me();
+      if (user && user.role !== 'admin') {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    } catch (_) {}
+
+    const body = await req.json().catch(() => ({}));
+    const colonyData = resolveColonyData(body);
 
     if (!colonyData) {
-      return Response.json({ error: "No colony data in payload" }, { status: 400 });
+      return Response.json({ error: 'No colony data in payload' }, { status: 400 });
     }
 
-    const breached = [];
-
-    // Check each metric against thresholds
-    for (const [metric, config] of Object.entries(THRESHOLDS)) {
-      const value = colonyData[metric];
-      if (value !== undefined && value !== null && value <= config.threshold) {
-        breached.push({ metric, value, ...config });
-      }
-    }
-
+    const breached = getBreachedThresholds(colonyData);
     if (breached.length === 0) {
-      return Response.json({ status: "ok", message: "All metrics within safe limits" });
+      return Response.json({ status: 'ok', message: 'All metrics within safe limits' });
     }
 
-    // Determine worst severity
-    const hasEmergency = breached.some(b => b.severity === "emergency");
-    const overallSeverity = hasEmergency ? "emergency" : "critical";
+    const alertKey = `colony-alert:${breached.map((item) => item.metric).sort().join(',')}`;
+    const recentAlerts = await base44.asServiceRole.entities.Notification.filter({
+      type: 'colony_alert',
+      reference_id: alertKey,
+    }, '-created_date', 1);
 
-    // Build event content
-    const alertLines = breached.map(b => `${b.emoji} ${b.label}: ${b.value}% (threshold: ${b.threshold}%)`);
+    const latestAlert = recentAlerts[0];
+    const latestAlertTime = Date.parse(latestAlert?.created_date || '');
+    if (Number.isFinite(latestAlertTime) && (Date.now() - latestAlertTime) < ALERT_SUPPRESSION_MS) {
+      return Response.json({
+        status: 'suppressed',
+        message: 'Duplicate colony alert suppressed',
+        breached_count: breached.length,
+        alert_key: alertKey,
+      });
+    }
+
+    const hasEmergency = breached.some((item) => item.severity === 'emergency');
+    const overallSeverity = hasEmergency ? 'emergency' : 'critical';
+    const alertLines = breached.map((item) => `${item.emoji} ${item.label}: ${item.value}% (threshold: ${item.threshold}%)`);
     const eventTitle = breached.length === 1
       ? `COLONY ALERT: ${breached[0].label} critically low at ${breached[0].value}%`
       : `COLONY CRISIS: ${breached.length} critical systems failing`;
-    const eventContent = alertLines.join("\n") + "\n\nImmediate action required. All operatives report to duty stations.";
+    const eventContent = `${alertLines.join('\n')}\n\nImmediate action required. All operatives report to duty stations.`;
 
-    // Create world event
     await base44.asServiceRole.entities.Event.create({
       title: eventTitle,
       content: eventContent,
-      type: "world_event",
+      type: 'world_event',
       severity: overallSeverity,
       is_active: true,
     });
 
-    // Send RCON broadcast to game server
     const rconMessage = breached.length === 1
       ? `[COLONY ALERT] ${breached[0].label} at ${breached[0].value}%! Survival protocols in effect.`
-      : `[COLONY CRISIS] Multiple systems critical: ${breached.map(b => `${b.label} ${b.value}%`).join(", ")}. All hands report!`;
+      : `[COLONY CRISIS] Multiple systems critical: ${breached.map((item) => `${item.label} ${item.value}%`).join(', ')}. All hands report!`;
 
     const rconResult = await sendRconCommand(`broadcast ${rconMessage}`);
 
-    // Also create a broadcast notification
     await base44.asServiceRole.entities.Notification.create({
-      player_email: "broadcast",
+      player_email: 'broadcast',
       title: eventTitle,
       message: eventContent,
-      type: "colony_alert",
-      priority: hasEmergency ? "critical" : "high",
+      type: 'colony_alert',
+      priority: hasEmergency ? 'critical' : 'high',
       is_read: false,
+      reference_id: alertKey,
     });
-
-    console.log(`Colony alert triggered: ${breached.length} thresholds breached`);
-    console.log(`RCON broadcast result: ${rconResult}`);
 
     return Response.json({
-      status: "alert_triggered",
+      status: 'alert_triggered',
       breached_count: breached.length,
-      breached: breached.map(b => ({ metric: b.metric, value: b.value, threshold: b.threshold })),
+      breached: breached.map((item) => ({ metric: item.metric, value: item.value, threshold: item.threshold })),
       severity: overallSeverity,
-      rcon_sent: !!rconResult,
+      rcon_sent: rconResult !== null,
+      alert_key: alertKey,
     });
   } catch (error) {
-    console.error("Colony alert monitor error:", error.message);
+    console.error('Colony alert monitor error:', error.message);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
+
+function resolveColonyData(body) {
+  if (!body || typeof body !== 'object') {
+    return null;
+  }
+
+  const directMetrics = Object.keys(THRESHOLDS).some((key) => body[key] !== undefined);
+  if (directMetrics) {
+    return body;
+  }
+
+  if (body.data && typeof body.data === 'object') {
+    return body.data;
+  }
+
+  return null;
+}
+
+function getBreachedThresholds(colonyData) {
+  const breached = [];
+
+  for (const [metric, config] of Object.entries(THRESHOLDS)) {
+    const value = Number(colonyData[metric]);
+    if (!Number.isFinite(value)) {
+      continue;
+    }
+
+    if (value <= config.threshold) {
+      breached.push({
+        metric,
+        value: Math.max(0, Math.min(100, Math.round(value))),
+        ...config,
+      });
+    }
+  }
+
+  return breached;
+}

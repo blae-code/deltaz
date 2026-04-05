@@ -52,10 +52,20 @@
       "default": false,
       "description": "If true, faction cannot trade resources"
     },
+    "upkeep_cost": {
+      "type": "number",
+      "default": 100,
+      "description": "Base upkeep cost paid each economy cycle"
+    },
     "last_cycle_income": {
       "type": "number",
       "default": 0,
       "description": "Income from last production cycle"
+    },
+    "last_cycle_expenses": {
+      "type": "number",
+      "default": 0,
+      "description": "Expenses paid during the last production cycle"
     },
     "last_cycle_tax": {
       "type": "number",

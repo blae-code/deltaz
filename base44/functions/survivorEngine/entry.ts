@@ -1,117 +1,119 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.24';
 
 Deno.serve(async (req) => {
-  const base44 = createClientFromRequest(req);
-
-  // Allow admin manual + automation
   try {
-    const user = await base44.auth.me();
-    if (user && user.role !== 'admin') {
-      return Response.json({ error: 'Forbidden' }, { status: 403 });
-    }
-  } catch (_) {}
+    const base44 = createClientFromRequest(req);
 
-  const body = await req.json().catch(() => ({}));
-  const mode = body.mode || 'cycle'; // 'cycle' | 'assign'
+    // Allow admin manual + automation
+    try {
+      const user = await base44.auth.me();
+      if (user && user.role !== 'admin') {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    } catch (_) {}
 
-  const [bases, survivors, factions, diplomacy, territories, reputations, events] = await Promise.all([
-    base44.asServiceRole.entities.PlayerBase.filter({ status: 'active' }),
-    base44.asServiceRole.entities.Survivor.filter({}),
-    base44.asServiceRole.entities.Faction.filter({}),
-    base44.asServiceRole.entities.Diplomacy.filter({}),
-    base44.asServiceRole.entities.Territory.filter({}),
-    base44.asServiceRole.entities.Reputation.filter({}),
-    base44.asServiceRole.entities.Event.filter({ is_active: true }, '-created_date', 10),
-  ]);
+    const body = await req.json().catch(() => ({}));
+    const mode = body.mode === 'assign' ? 'assign' : 'cycle';
 
-  // Manual assignment by admin
-  if (mode === 'assign') {
-    const { base_id, count } = body;
-    const targetBase = bases.find(b => b.id === base_id);
-    if (!targetBase) return Response.json({ error: 'Base not found' }, { status: 404 });
+    const [bases, survivors, diplomacy, territories, reputations, events] = await Promise.all([
+      base44.asServiceRole.entities.PlayerBase.filter({ status: 'active' }),
+      base44.asServiceRole.entities.Survivor.filter({}),
+      base44.asServiceRole.entities.Diplomacy.filter({}),
+      base44.asServiceRole.entities.Territory.filter({}),
+      base44.asServiceRole.entities.Reputation.filter({}),
+      base44.asServiceRole.entities.Event.filter({ is_active: true }, '-created_date', 10),
+    ]);
 
-    const currentCount = survivors.filter(s => s.base_id === base_id && s.status === 'active').length;
-    const slots = (targetBase.capacity || 5) - currentCount;
-    const toGenerate = Math.min(count || 1, slots);
+    if (mode === 'assign') {
+      const requestedCount = Number.parseInt(String(body.count ?? '1'), 10);
+      const safeCount = Number.isFinite(requestedCount) ? Math.max(1, Math.min(5, requestedCount)) : 1;
+      const base_id = typeof body.base_id === 'string' ? body.base_id : '';
+      const targetBase = bases.find((base) => base.id === base_id);
+      if (!targetBase) return Response.json({ error: 'Base not found' }, { status: 404 });
 
-    if (toGenerate <= 0) return Response.json({ error: 'Base at capacity', current: currentCount, max: targetBase.capacity });
+      const currentCount = survivors.filter((survivor) => survivor.base_id === base_id && survivor.status === 'active').length;
+      const slots = (targetBase.capacity || 5) - currentCount;
+      const toGenerate = Math.min(safeCount, slots);
 
-    const generated = await generateSurvivors(base44, toGenerate, targetBase, 'assigned', 'Assigned by Command');
-    return Response.json({ status: 'ok', generated: generated.length });
-  }
+      if (toGenerate <= 0) {
+        return Response.json(
+          { error: 'Base at capacity', current: currentCount, max: targetBase.capacity },
+          { status: 409 },
+        );
+      }
 
-  // Auto cycle: evaluate each active base
-  const results = [];
-
-  for (const base of bases) {
-    const currentSurvivors = survivors.filter(s => s.base_id === base.id && s.status === 'active');
-    const slots = (base.capacity || 5) - currentSurvivors.length;
-    if (slots <= 0) continue;
-
-    // Calculate attraction score
-    let attractionScore = 0;
-    let origin = 'wanderer';
-    let reason = 'Drawn by signs of habitation';
-
-    // Reputation bonus: higher rep = more survivors attracted
-    const ownerReps = reputations.filter(r => r.player_email === base.owner_email);
-    const totalRep = ownerReps.reduce((s, r) => s + (r.score || 0), 0);
-    attractionScore += Math.min(totalRep * 0.02, 3);
-
-    // Territory safety bonus
-    const linkedTerritory = territories.find(t => t.id === base.territory_id);
-    if (linkedTerritory) {
-      const safetyBonus = { minimal: 2, low: 1.5, moderate: 1, high: 0.5, critical: 0 };
-      attractionScore += safetyBonus[linkedTerritory.threat_level] || 0.5;
+      const generated = await generateSurvivors(base44, toGenerate, targetBase, 'assigned', 'Assigned by Command');
+      return Response.json({ status: 'ok', generated: generated.length });
     }
 
-    // Base defense bonus
-    attractionScore += (base.defense_level || 1) * 0.3;
+    const results = [];
 
-    // War refugees: if any faction is at war, refugees flee to safer bases
-    const activeWars = diplomacy.filter(d => d.status === 'war');
-    if (activeWars.length > 0 && (linkedTerritory?.threat_level === 'minimal' || linkedTerritory?.threat_level === 'low')) {
-      attractionScore += activeWars.length * 1.5;
-      origin = 'refugee';
-      reason = 'Fleeing from faction warfare';
-    }
+    for (const base of bases) {
+      const currentSurvivors = survivors.filter((survivor) => survivor.base_id === base.id && survivor.status === 'active');
+      const slots = (base.capacity || 5) - currentSurvivors.length;
+      if (slots <= 0) continue;
 
-    // World events: emergencies drive people toward shelter
-    const emergencies = events.filter(e => e.severity === 'emergency' || e.severity === 'critical');
-    if (emergencies.length > 0) {
-      attractionScore += emergencies.length * 0.8;
-      if (origin === 'wanderer') {
+      let attractionScore = 0;
+      let origin = 'wanderer';
+      let reason = 'Drawn by signs of habitation';
+
+      const ownerReps = reputations.filter((rep) => rep.player_email === base.owner_email);
+      const totalRep = ownerReps.reduce((sum, rep) => sum + (rep.score || 0), 0);
+      attractionScore += Math.min(totalRep * 0.02, 3);
+
+      const linkedTerritory = territories.find((territory) => territory.id === base.territory_id);
+      if (linkedTerritory) {
+        const safetyBonus = { minimal: 2, low: 1.5, moderate: 1, high: 0.5, critical: 0 };
+        attractionScore += safetyBonus[linkedTerritory.threat_level] || 0.5;
+      }
+
+      attractionScore += (base.defense_level || 1) * 0.3;
+
+      const activeWars = diplomacy.filter((relationship) => relationship.status === 'war');
+      if (activeWars.length > 0 && (linkedTerritory?.threat_level === 'minimal' || linkedTerritory?.threat_level === 'low')) {
+        attractionScore += activeWars.length * 1.5;
         origin = 'refugee';
-        reason = `Displaced by: ${emergencies[0].title}`;
+        reason = 'Fleeing from faction warfare';
+      }
+
+      const emergencies = events.filter((event) => event.severity === 'emergency' || event.severity === 'critical');
+      if (emergencies.length > 0) {
+        attractionScore += emergencies.length * 0.8;
+        if (origin === 'wanderer') {
+          origin = 'refugee';
+          reason = `Displaced by: ${emergencies[0].title}`;
+        }
+      }
+
+      const chance = Math.min(attractionScore / 5, 1);
+      if (Math.random() > chance) continue;
+
+      const count = Math.min(Math.floor(attractionScore / 3) + 1, slots, 2);
+      const generated = await generateSurvivors(base44, count, base, origin, reason);
+      results.push({ base: base.name, owner: base.owner_email, new_survivors: generated.length });
+
+      if (generated.length > 0) {
+        await base44.asServiceRole.entities.Notification.create({
+          player_email: base.owner_email,
+          title: `${generated.length} survivor${generated.length > 1 ? 's' : ''} arrived at ${base.name}`,
+          message: generated.map((survivor) => `${survivor.name} the ${survivor.skill} (${survivor.origin})`).join(', '),
+          type: 'system_alert',
+          priority: 'normal',
+          is_read: false,
+        });
       }
     }
 
-    // Random chance threshold: score of 3+ = guaranteed spawn, lower = probability
-    const chance = Math.min(attractionScore / 5, 1);
-    const roll = Math.random();
-    if (roll > chance) continue;
-
-    const count = Math.min(Math.floor(attractionScore / 3) + 1, slots, 2); // max 2 per cycle
-    const generated = await generateSurvivors(base44, count, base, origin, reason);
-    results.push({ base: base.name, owner: base.owner_email, new_survivors: generated.length });
-
-    // Notify the base owner
-    if (generated.length > 0) {
-      await base44.asServiceRole.entities.Notification.create({
-        player_email: base.owner_email,
-        title: `${generated.length} survivor${generated.length > 1 ? 's' : ''} arrived at ${base.name}`,
-        message: generated.map(s => `${s.name} the ${s.skill} (${s.origin})`).join(', '),
-        type: 'system_alert',
-        priority: 'normal',
-      });
-    }
+    return Response.json({ status: 'ok', bases_processed: bases.length, arrivals: results });
+  } catch (error) {
+    console.error('survivorEngine error:', error);
+    return Response.json({ error: error.message || 'Unexpected error' }, { status: 500 });
   }
-
-  return Response.json({ status: 'ok', bases_processed: bases.length, arrivals: results });
 });
 
 async function generateSurvivors(base44, count, base, origin, reason) {
-  const prompt = `Generate ${count} post-apocalyptic survivor(s) for a base called "${base.name}". These NPCs arrived as "${origin}" because: "${reason}".
+  const safeCount = Math.max(1, Math.floor(count || 1));
+  const prompt = `Generate ${safeCount} post-apocalyptic survivor(s) for a base called "${base.name}". These NPCs arrived as "${origin}" because: "${reason}".
 
 For each survivor generate:
 - name: realistic first + last name
@@ -162,27 +164,31 @@ Make each unique. Vary skills. Be creative with names and backstories. Dark humo
   };
 
   const created = [];
-  for (const s of (result.survivors || [])) {
-    const validSkill = ['scavenger', 'medic', 'mechanic', 'farmer', 'guard', 'trader', 'engineer', 'cook'].includes(s.skill) ? s.skill : 'scavenger';
+  for (const survivor of (result.survivors || []).slice(0, safeCount)) {
+    const validSkill = ['scavenger', 'medic', 'mechanic', 'farmer', 'guard', 'trader', 'engineer', 'cook'].includes(survivor.skill)
+      ? survivor.skill
+      : 'scavenger';
     const bonuses = skillBonusMap[validSkill] || skillBonusMap.scavenger;
+    const skillLevel = Math.max(1, Math.min(5, Number(survivor.skill_level) || 1));
 
     const record = await base44.asServiceRole.entities.Survivor.create({
-      name: s.name,
-      nickname: s.nickname || '',
-      backstory: s.backstory || '',
-      personality: s.personality || '',
+      name: survivor.name,
+      nickname: survivor.nickname || '',
+      backstory: survivor.backstory || '',
+      personality: survivor.personality || '',
       skill: validSkill,
-      skill_level: Math.max(1, Math.min(5, s.skill_level || 1)),
-      morale: ['desperate', 'anxious', 'neutral', 'content', 'thriving'].includes(s.morale) ? s.morale : 'neutral',
-      health: ['critical', 'injured', 'sick', 'healthy', 'peak'].includes(s.health) ? s.health : 'healthy',
+      skill_level: skillLevel,
+      morale: ['desperate', 'anxious', 'neutral', 'content', 'thriving'].includes(survivor.morale) ? survivor.morale : 'neutral',
+      health: ['critical', 'injured', 'sick', 'healthy', 'peak'].includes(survivor.health) ? survivor.health : 'healthy',
       base_id: base.id,
       origin,
       arrival_reason: reason,
       bonus_type: bonuses.bonus_type,
-      bonus_value: bonuses.bonus_value * (s.skill_level || 1),
+      bonus_value: bonuses.bonus_value * skillLevel,
       status: 'active',
     });
     created.push(record);
   }
+
   return created;
 }

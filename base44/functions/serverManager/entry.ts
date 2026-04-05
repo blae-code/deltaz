@@ -1,23 +1,50 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.24';
 
-const PTERODACTYL_URL = Deno.env.get("PTERODACTYL_URL");
-const PTERODACTYL_API_KEY = Deno.env.get("PTERODACTYL_API_KEY");
-const PTERODACTYL_SERVER_ID = Deno.env.get("PTERODACTYL_SERVER_ID");
-const GAME_SERVER_IP = Deno.env.get("GAME_SERVER_IP");
-const GAME_SERVER_PORT = Deno.env.get("GAME_SERVER_PORT");
-const RCON_PORT = Deno.env.get("RCON_PORT");
-const RCON_PASSWORD = Deno.env.get("RCON_PASSWORD");
+const PTERODACTYL_ACTIONS = new Set(['status', 'start', 'stop', 'restart', 'kill']);
+const RCON_ACTIONS = new Set(['broadcast', 'players', 'rcon']);
 
-const pteroHeaders = {
-  'Authorization': `Bearer ${PTERODACTYL_API_KEY}`,
-  'Accept': 'Application/vnd.pterodactyl.v1+json',
-  'Content-Type': 'application/json',
+const getRequiredEnv = (names) => {
+  const values = Object.fromEntries(names.map((name) => [name, Deno.env.get(name)?.trim() || '']));
+  const missing = names.filter((name) => !values[name]);
+
+  if (missing.length > 0) {
+    throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
+  }
+
+  return values;
 };
 
+const getPterodactylConfig = () => {
+  const values = getRequiredEnv(['PTERODACTYL_URL', 'PTERODACTYL_API_KEY', 'PTERODACTYL_SERVER_ID']);
+  return {
+    url: values.PTERODACTYL_URL.replace(/\/+$/, ''),
+    serverId: values.PTERODACTYL_SERVER_ID,
+    headers: {
+      Authorization: `Bearer ${values.PTERODACTYL_API_KEY}`,
+      Accept: 'Application/vnd.pterodactyl.v1+json',
+      'Content-Type': 'application/json',
+    },
+  };
+};
+
+const getRconConfig = () => {
+  const values = getRequiredEnv(['GAME_SERVER_IP', 'RCON_PORT', 'RCON_PASSWORD']);
+  const port = Number.parseInt(values.RCON_PORT, 10);
+  if (!Number.isInteger(port) || port <= 0) {
+    throw new Error('RCON_PORT must be a valid positive integer.');
+  }
+
+  return {
+    host: values.GAME_SERVER_IP,
+    port,
+    password: values.RCON_PASSWORD,
+  };
+};
+
+const sanitizeBroadcastMessage = (message) => message.replace(/\s+/g, ' ').trim().slice(0, 200);
+
 async function sendRconCommand(command) {
-  const host = GAME_SERVER_IP;
-  const port = parseInt(RCON_PORT);
-  const password = RCON_PASSWORD;
+  const { host, port, password } = getRconConfig();
 
   // Build RCON packet
   function buildPacket(id, type, body) {
@@ -50,8 +77,11 @@ async function sendRconCommand(command) {
     const authPacket = buildPacket(1, 3, password);
     await conn.write(authPacket);
     const authResp = new Uint8Array(4096);
-    await conn.read(authResp);
-    const authResult = readPacket(authResp);
+    const authBytesRead = await conn.read(authResp);
+    if (authBytesRead === null || authBytesRead < 12) {
+      throw new Error("RCON authentication failed");
+    }
+    const authResult = readPacket(authResp.slice(0, authBytesRead));
     if (authResult.id === -1) {
       throw new Error("RCON authentication failed");
     }
@@ -77,13 +107,23 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    const { action, message } = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== 'object') {
+      return Response.json({ error: 'Invalid payload' }, { status: 400 });
+    }
+
+    const action = typeof body.action === 'string' ? body.action.trim() : '';
+    const message = typeof body.message === 'string' ? body.message : '';
+    if (!action) {
+      return Response.json({ error: 'Action is required' }, { status: 400 });
+    }
 
     // --- PTERODACTYL: Get server status & resources ---
     if (action === "status") {
+      const pterodactyl = getPterodactylConfig();
       const res = await fetch(
-        `${PTERODACTYL_URL}/api/client/servers/${PTERODACTYL_SERVER_ID}/resources`,
-        { headers: pteroHeaders }
+        `${pterodactyl.url}/api/client/servers/${pterodactyl.serverId}/resources`,
+        { headers: pterodactyl.headers, signal: AbortSignal.timeout(10_000) }
       );
       if (!res.ok) {
         const text = await res.text();
@@ -107,13 +147,15 @@ Deno.serve(async (req) => {
     }
 
     // --- PTERODACTYL: Power actions ---
-    if (action === "start" || action === "stop" || action === "restart" || action === "kill") {
+    if (PTERODACTYL_ACTIONS.has(action) && action !== 'status') {
+      const pterodactyl = getPterodactylConfig();
       const res = await fetch(
-        `${PTERODACTYL_URL}/api/client/servers/${PTERODACTYL_SERVER_ID}/power`,
+        `${pterodactyl.url}/api/client/servers/${pterodactyl.serverId}/power`,
         {
           method: 'POST',
-          headers: pteroHeaders,
+          headers: pterodactyl.headers,
           body: JSON.stringify({ signal: action }),
+          signal: AbortSignal.timeout(10_000),
         }
       );
       if (!res.ok) {
@@ -125,10 +167,11 @@ Deno.serve(async (req) => {
 
     // --- RCON: Broadcast message ---
     if (action === "broadcast") {
-      if (!message) {
+      const sanitized = sanitizeBroadcastMessage(message);
+      if (!sanitized) {
         return Response.json({ error: "Message is required" }, { status: 400 });
       }
-      const result = await sendRconCommand(`Say ${message}`);
+      const result = await sendRconCommand(`Say ${sanitized}`);
       return Response.json({ status: "ok", result });
     }
 
@@ -140,15 +183,17 @@ Deno.serve(async (req) => {
 
     // --- RCON: Send arbitrary command (admin) ---
     if (action === "rcon") {
-      if (!message) {
+      const command = message.trim();
+      if (!command) {
         return Response.json({ error: "Command is required" }, { status: 400 });
       }
-      const result = await sendRconCommand(message);
+      const result = await sendRconCommand(command);
       return Response.json({ status: "ok", result });
     }
 
     return Response.json({ error: "Unknown action" }, { status: 400 });
   } catch (error) {
+    console.error('serverManager error:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });

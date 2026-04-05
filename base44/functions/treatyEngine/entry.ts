@@ -1,4 +1,63 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.24';
+
+const LEADERSHIP_RANKS = new Set(['trusted', 'allied', 'revered']);
+const NEGOTIABLE_STATUSES = new Set(['proposed', 'negotiating']);
+const ACTIVE_TREATY_STATUSES = new Set(['proposed', 'negotiating', 'accepted']);
+const TREATY_LABELS = {
+  non_aggression: 'Non-Aggression Pact',
+  trade_pact: 'Trade Pact',
+  alliance: 'Alliance',
+};
+const DIPLOMACY_STATUS_BY_TREATY = {
+  non_aggression: 'ceasefire',
+  trade_pact: 'trade_agreement',
+  alliance: 'allied',
+};
+
+const clampDurationDays = (value) => {
+  const parsed = Number.parseInt(String(value ?? 7), 10);
+  if (!Number.isFinite(parsed)) {
+    return 7;
+  }
+  return Math.max(1, Math.min(30, parsed));
+};
+
+const normalizeText = (value, maxLength = 2000) =>
+  typeof value === 'string' ? value.trim().slice(0, maxLength) : '';
+
+const getTreaties = (base44) => base44.asServiceRole.entities.Treaty.filter({});
+const getFactions = (base44) => base44.asServiceRole.entities.Faction.filter({});
+const getDiplomacy = (base44) => base44.asServiceRole.entities.Diplomacy.filter({});
+
+const findTreatyById = (treaties, treatyId) => treaties.find((treaty) => treaty.id === treatyId);
+
+const findDiplomacyRecord = (records, factionAId, factionBId) =>
+  records.find(
+    (record) =>
+      (record.faction_a_id === factionAId && record.faction_b_id === factionBId) ||
+      (record.faction_a_id === factionBId && record.faction_b_id === factionAId),
+  );
+
+const userHasFactionAuthority = async (base44, user, factionId) => {
+  if (user.role === 'admin') {
+    return true;
+  }
+
+  const reps = await base44.asServiceRole.entities.Reputation.filter({
+    player_email: user.email,
+    faction_id: factionId,
+  });
+
+  return Boolean(reps[0] && LEADERSHIP_RANKS.has(reps[0].rank));
+};
+
+const invokeCommodityRefresh = async (base44) => {
+  try {
+    await base44.asServiceRole.functions.invoke('commodityPriceEngine', {});
+  } catch (error) {
+    console.error('Treaty commodity refresh failed:', error);
+  }
+};
 
 Deno.serve(async (req) => {
   try {
@@ -8,43 +67,67 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { action, treaty_id, ...params } = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== 'object') {
+      return Response.json({ error: 'Invalid payload' }, { status: 400 });
+    }
 
-    // ============ PROPOSE TREATY ============
-    if (action === "propose") {
-      const { treaty_type, proposer_faction_id, target_faction_id, terms, duration_days } = params;
+    const action = typeof body.action === 'string' ? body.action.trim() : '';
+    const treaty_id = typeof body.treaty_id === 'string' ? body.treaty_id : '';
 
-      // Verify proposer has standing with the faction (trusted+ reputation)
-      const reps = await base44.asServiceRole.entities.Reputation.filter({
-        player_email: user.email,
-        faction_id: proposer_faction_id,
-      });
-      const rep = reps[0];
-      const isAdmin = user.role === 'admin';
-      if (!isAdmin && (!rep || !['trusted', 'allied', 'revered'].includes(rep.rank))) {
-        return Response.json({ error: 'Insufficient faction standing to propose treaties. You need Trusted rank or higher.' }, { status: 403 });
+    if (!action) {
+      return Response.json({ error: 'Action is required' }, { status: 400 });
+    }
+
+    if (action === 'propose') {
+      const treaty_type = typeof body.treaty_type === 'string' ? body.treaty_type : '';
+      const proposer_faction_id = typeof body.proposer_faction_id === 'string' ? body.proposer_faction_id : '';
+      const target_faction_id = typeof body.target_faction_id === 'string' ? body.target_faction_id : '';
+      const terms = normalizeText(body.terms);
+      const duration_days = clampDurationDays(body.duration_days);
+
+      if (!Object.hasOwn(TREATY_LABELS, treaty_type)) {
+        return Response.json({ error: 'Invalid treaty type' }, { status: 400 });
+      }
+      if (!proposer_faction_id || !target_faction_id) {
+        return Response.json({ error: 'Both proposer and target factions are required' }, { status: 400 });
+      }
+      if (proposer_faction_id === target_faction_id) {
+        return Response.json({ error: 'A faction cannot propose a treaty to itself' }, { status: 400 });
       }
 
-      // Check no existing active treaty between these factions
-      const existing = await base44.asServiceRole.entities.Treaty.filter({});
-      const conflict = existing.find(t =>
-        ['proposed', 'negotiating', 'accepted'].includes(t.status) &&
-        ((t.proposer_faction_id === proposer_faction_id && t.target_faction_id === target_faction_id) ||
-         (t.proposer_faction_id === target_faction_id && t.target_faction_id === proposer_faction_id))
+      const [treaties, factions] = await Promise.all([getTreaties(base44), getFactions(base44)]);
+      const proposerFaction = factions.find((faction) => faction.id === proposer_faction_id);
+      const targetFaction = factions.find((faction) => faction.id === target_faction_id);
+      if (!proposerFaction || !targetFaction) {
+        return Response.json({ error: 'Faction not found' }, { status: 404 });
+      }
+      if (proposerFaction.status !== 'active' || targetFaction.status !== 'active') {
+        return Response.json({ error: 'Treaties can only involve active factions' }, { status: 400 });
+      }
+
+      const canPropose = await userHasFactionAuthority(base44, user, proposer_faction_id);
+      if (!canPropose) {
+        return Response.json(
+          { error: 'Insufficient faction standing to propose treaties. You need Trusted rank or higher.' },
+          { status: 403 },
+        );
+      }
+
+      const conflict = treaties.find(
+        (treaty) =>
+          ACTIVE_TREATY_STATUSES.has(treaty.status) &&
+          ((treaty.proposer_faction_id === proposer_faction_id && treaty.target_faction_id === target_faction_id) ||
+            (treaty.proposer_faction_id === target_faction_id && treaty.target_faction_id === proposer_faction_id)),
       );
       if (conflict) {
-        return Response.json({ error: 'An active or pending treaty already exists between these factions.' }, { status: 400 });
+        return Response.json(
+          { error: 'An active or pending treaty already exists between these factions.' },
+          { status: 409 },
+        );
       }
 
-      // Generate title
-      const [factions] = await Promise.all([
-        base44.asServiceRole.entities.Faction.filter({}),
-      ]);
-      const fA = factions.find(f => f.id === proposer_faction_id);
-      const fB = factions.find(f => f.id === target_faction_id);
-      const typeLabels = { non_aggression: 'Non-Aggression Pact', trade_pact: 'Trade Pact', alliance: 'Alliance' };
-      const title = `${typeLabels[treaty_type]}: ${fA?.name || '?'} — ${fB?.name || '?'}`;
-
+      const title = `${TREATY_LABELS[treaty_type]}: ${proposerFaction.name} — ${targetFaction.name}`;
       const treaty = await base44.asServiceRole.entities.Treaty.create({
         title,
         treaty_type,
@@ -52,21 +135,21 @@ Deno.serve(async (req) => {
         target_faction_id,
         proposer_email: user.email,
         status: 'proposed',
-        terms: terms || '',
-        duration_days: duration_days || 7,
+        terms,
+        duration_days,
         signed_by_proposer: user.email,
       });
 
-      // Notify target faction members
       const targetReps = await base44.asServiceRole.entities.Reputation.filter({ faction_id: target_faction_id });
-      const targetLeads = targetReps.filter(r => ['trusted', 'allied', 'revered'].includes(r.rank));
+      const targetLeads = targetReps.filter((rep) => LEADERSHIP_RANKS.has(rep.rank));
       for (const lead of targetLeads.slice(0, 10)) {
         await base44.asServiceRole.entities.Notification.create({
           player_email: lead.player_email,
-          title: `Treaty Proposal from ${fA?.name}`,
-          message: `${fA?.name} proposes a ${typeLabels[treaty_type]}. Review and respond in the Diplomacy section.`,
+          title: `Treaty Proposal from ${proposerFaction.name}`,
+          message: `${proposerFaction.name} proposes a ${TREATY_LABELS[treaty_type]}. Review and respond in the Diplomacy section.`,
           type: 'system_alert',
           priority: 'high',
+          is_read: false,
           reference_id: treaty.id,
         });
       }
@@ -74,23 +157,24 @@ Deno.serve(async (req) => {
       return Response.json({ status: 'ok', treaty });
     }
 
-    // ============ COUNTER / NEGOTIATE ============
-    if (action === "counter") {
-      const { counter_terms } = params;
-      const treaty = (await base44.asServiceRole.entities.Treaty.filter({})). find(t => t.id === treaty_id);
+    if (action === 'counter') {
+      const counter_terms = normalizeText(body.counter_terms);
+      if (!treaty_id) {
+        return Response.json({ error: 'treaty_id is required' }, { status: 400 });
+      }
+      if (!counter_terms) {
+        return Response.json({ error: 'Counter terms are required' }, { status: 400 });
+      }
+
+      const treaties = await getTreaties(base44);
+      const treaty = findTreatyById(treaties, treaty_id);
       if (!treaty) return Response.json({ error: 'Treaty not found' }, { status: 404 });
-      if (treaty.status !== 'proposed' && treaty.status !== 'negotiating') {
+      if (!NEGOTIABLE_STATUSES.has(treaty.status)) {
         return Response.json({ error: 'Treaty is not in a negotiable state' }, { status: 400 });
       }
 
-      // Verify user is from the target faction
-      const reps = await base44.asServiceRole.entities.Reputation.filter({
-        player_email: user.email,
-        faction_id: treaty.target_faction_id,
-      });
-      const rep = reps[0];
-      const isAdmin = user.role === 'admin';
-      if (!isAdmin && (!rep || !['trusted', 'allied', 'revered'].includes(rep.rank))) {
+      const canCounter = await userHasFactionAuthority(base44, user, treaty.target_faction_id);
+      if (!canCounter) {
         return Response.json({ error: 'Insufficient standing in target faction' }, { status: 403 });
       }
 
@@ -99,65 +183,58 @@ Deno.serve(async (req) => {
         counter_terms,
       });
 
+      await base44.asServiceRole.entities.Notification.create({
+        player_email: treaty.proposer_email,
+        title: 'Treaty Counter-Proposal Received',
+        message: 'The target faction has responded with counter-terms. Review the proposal in Diplomacy.',
+        type: 'system_alert',
+        priority: 'high',
+        is_read: false,
+        reference_id: treaty.id,
+      });
+
       return Response.json({ status: 'ok' });
     }
 
-    // ============ ACCEPT / SIGN TREATY ============
-    if (action === "accept") {
-      const treaties = await base44.asServiceRole.entities.Treaty.filter({});
-      const treaty = treaties.find(t => t.id === treaty_id);
+    if (action === 'accept') {
+      if (!treaty_id) {
+        return Response.json({ error: 'treaty_id is required' }, { status: 400 });
+      }
+
+      const [treaties, factions, territories, economies, diplomacyRecords] = await Promise.all([
+        getTreaties(base44),
+        getFactions(base44),
+        base44.asServiceRole.entities.Territory.filter({}),
+        base44.asServiceRole.entities.FactionEconomy.filter({}),
+        getDiplomacy(base44),
+      ]);
+
+      const treaty = findTreatyById(treaties, treaty_id);
       if (!treaty) return Response.json({ error: 'Treaty not found' }, { status: 404 });
-      if (!['proposed', 'negotiating'].includes(treaty.status)) {
+      if (!NEGOTIABLE_STATUSES.has(treaty.status)) {
         return Response.json({ error: 'Treaty cannot be accepted in its current state' }, { status: 400 });
       }
 
-      // Verify user belongs to the target faction
-      const reps = await base44.asServiceRole.entities.Reputation.filter({
-        player_email: user.email,
-        faction_id: treaty.target_faction_id,
-      });
-      const rep = reps[0];
-      const isAdmin = user.role === 'admin';
-      if (!isAdmin && (!rep || !['trusted', 'allied', 'revered'].includes(rep.rank))) {
+      const canAccept = await userHasFactionAuthority(base44, user, treaty.target_faction_id);
+      if (!canAccept) {
         return Response.json({ error: 'Insufficient standing in target faction' }, { status: 403 });
       }
 
+      const proposerFaction = factions.find((faction) => faction.id === treaty.proposer_faction_id);
+      const targetFaction = factions.find((faction) => faction.id === treaty.target_faction_id);
+      if (!proposerFaction || !targetFaction) {
+        return Response.json({ error: 'Faction not found' }, { status: 404 });
+      }
+
       const now = new Date();
-      const expiresAt = new Date(now.getTime() + (treaty.duration_days || 7) * 86400000);
-
-      // Calculate commodity and territory effects
-      const factions = await base44.asServiceRole.entities.Faction.filter({});
-      const territories = await base44.asServiceRole.entities.Territory.filter({});
-      const economies = await base44.asServiceRole.entities.FactionEconomy.filter({});
-
-      const fA = factions.find(f => f.id === treaty.proposer_faction_id);
-      const fB = factions.find(f => f.id === treaty.target_faction_id);
-      const ecoA = economies.find(e => e.faction_id === treaty.proposer_faction_id);
-      const ecoB = economies.find(e => e.faction_id === treaty.target_faction_id);
-
-      // Determine shared border territories
-      const terrA = territories.filter(t => t.controlling_faction_id === treaty.proposer_faction_id);
-      const terrB = territories.filter(t => t.controlling_faction_id === treaty.target_faction_id);
-
-      // Treaty effects on diplomacy entity
-      const dipStatusMap = {
-        non_aggression: 'ceasefire',
-        trade_pact: 'trade_agreement',
-        alliance: 'allied',
-      };
-      const newDipStatus = dipStatusMap[treaty.treaty_type];
-
-      // Update or create diplomacy record
-      const diplomacyRecords = await base44.asServiceRole.entities.Diplomacy.filter({});
-      const existingDip = diplomacyRecords.find(d =>
-        (d.faction_a_id === treaty.proposer_faction_id && d.faction_b_id === treaty.target_faction_id) ||
-        (d.faction_a_id === treaty.target_faction_id && d.faction_b_id === treaty.proposer_faction_id)
-      );
+      const expiresAt = new Date(now.getTime() + clampDurationDays(treaty.duration_days) * 86400000);
+      const newDipStatus = DIPLOMACY_STATUS_BY_TREATY[treaty.treaty_type];
+      const existingDip = findDiplomacyRecord(diplomacyRecords, treaty.proposer_faction_id, treaty.target_faction_id);
 
       if (existingDip) {
         await base44.asServiceRole.entities.Diplomacy.update(existingDip.id, {
           status: newDipStatus,
-          previous_status: existingDip.status,
+          previous_status: existingDip.status || 'neutral',
           terms: treaty.counter_terms || treaty.terms || '',
           initiated_by: treaty.proposer_faction_id,
           expires_at: expiresAt.toISOString(),
@@ -174,39 +251,46 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Calculate commodity effects
-      const commodityEffects = [];
-      const getProd = (eco) => eco?.resource_production || {};
-      const prodA = getProd(ecoA);
-      const prodB = getProd(ecoB);
+      const ecoA = economies.find((economy) => economy.faction_id === treaty.proposer_faction_id);
+      const ecoB = economies.find((economy) => economy.faction_id === treaty.target_faction_id);
+      const prodA = ecoA?.resource_production || {};
+      const prodB = ecoB?.resource_production || {};
       const resources = [...new Set([...Object.keys(prodA), ...Object.keys(prodB)])];
 
-      for (const res of resources) {
-        let mod = 0;
-        if (treaty.treaty_type === 'trade_pact') mod = -0.15;
-        else if (treaty.treaty_type === 'alliance') mod = -0.20;
-        else if (treaty.treaty_type === 'non_aggression') mod = -0.05;
-        if (mod !== 0) commodityEffects.push({ resource: res, modifier: mod });
-      }
+      const commodityEffects = resources
+        .map((resource) => {
+          let modifier = 0;
+          if (treaty.treaty_type === 'trade_pact') modifier = -0.15;
+          else if (treaty.treaty_type === 'alliance') modifier = -0.2;
+          else if (treaty.treaty_type === 'non_aggression') modifier = -0.05;
+          return modifier === 0 ? null : { resource, modifier };
+        })
+        .filter(Boolean);
 
-      // Calculate territory security effects
       const territoryEffects = [];
-      const allBorderTerr = [...terrA, ...terrB];
-      for (const t of allBorderTerr) {
-        if (t.status === 'contested' || t.status === 'hostile') {
-          let newStatus = t.status;
-          if (treaty.treaty_type === 'alliance') newStatus = 'secured';
-          else if (treaty.treaty_type === 'non_aggression') newStatus = 'secured';
-          else if (treaty.treaty_type === 'trade_pact' && t.status === 'contested') newStatus = 'secured';
+      const affectedTerritories = territories.filter(
+        (territory) =>
+          (territory.controlling_faction_id === treaty.proposer_faction_id ||
+            territory.controlling_faction_id === treaty.target_faction_id) &&
+          (territory.status === 'contested' || territory.status === 'hostile'),
+      );
 
-          if (newStatus !== t.status) {
-            territoryEffects.push({ territory_id: t.id, security_change: newStatus });
-            await base44.asServiceRole.entities.Territory.update(t.id, { status: newStatus });
-          }
+      for (const territory of affectedTerritories) {
+        let nextStatus = territory.status;
+        if (treaty.treaty_type === 'alliance') nextStatus = 'secured';
+        else if (treaty.treaty_type === 'non_aggression') nextStatus = 'secured';
+        else if (treaty.treaty_type === 'trade_pact' && territory.status === 'contested') nextStatus = 'secured';
+
+        if (nextStatus !== territory.status) {
+          territoryEffects.push({
+            territory_id: territory.id,
+            previous_status: territory.status,
+            security_change: nextStatus,
+          });
+          await base44.asServiceRole.entities.Territory.update(territory.id, { status: nextStatus });
         }
       }
 
-      // Update the treaty record
       await base44.asServiceRole.entities.Treaty.update(treaty_id, {
         status: 'accepted',
         signed_at: now.toISOString(),
@@ -216,18 +300,21 @@ Deno.serve(async (req) => {
         territory_effects: territoryEffects,
       });
 
-      // Trigger commodity price recalculation
-      try {
-        await base44.asServiceRole.functions.invoke('commodityPriceEngine', {});
-      } catch (_) {
-        // Non-critical if this fails
-      }
+      await invokeCommodityRefresh(base44);
 
-      // Create world event
-      const typeLabels = { non_aggression: 'Non-Aggression Pact', trade_pact: 'Trade Pact', alliance: 'Alliance' };
+      await base44.asServiceRole.entities.Notification.create({
+        player_email: treaty.proposer_email,
+        title: 'Treaty Accepted',
+        message: `${targetFaction.name} accepted your ${TREATY_LABELS[treaty.treaty_type]}.`,
+        type: 'system_alert',
+        priority: 'high',
+        is_read: false,
+        reference_id: treaty.id,
+      });
+
       await base44.asServiceRole.entities.Event.create({
-        title: `TREATY SIGNED: ${fA?.name} & ${fB?.name} — ${typeLabels[treaty.treaty_type]}`,
-        content: `${fA?.name} and ${fB?.name} have signed a formal ${typeLabels[treaty.treaty_type]}. ${commodityEffects.length > 0 ? `Market effects: ${commodityEffects.map(e => `${e.resource} ${e.modifier > 0 ? '+' : ''}${Math.round(e.modifier * 100)}%`).join(', ')}. ` : ''}${territoryEffects.length > 0 ? `${territoryEffects.length} territory/ies security status updated.` : ''}`,
+        title: `TREATY SIGNED: ${proposerFaction.name} & ${targetFaction.name} — ${TREATY_LABELS[treaty.treaty_type]}`,
+        content: `${proposerFaction.name} and ${targetFaction.name} have signed a formal ${TREATY_LABELS[treaty.treaty_type]}. ${commodityEffects.length > 0 ? `Market effects: ${commodityEffects.map((effect) => `${effect.resource} ${effect.modifier > 0 ? '+' : ''}${Math.round(effect.modifier * 100)}%`).join(', ')}. ` : ''}${territoryEffects.length > 0 ? `${territoryEffects.length} territory/ies security status updated.` : ''}`,
         type: 'world_event',
         severity: treaty.treaty_type === 'alliance' ? 'warning' : 'info',
         is_active: true,
@@ -241,61 +328,85 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ============ REJECT TREATY ============
-    if (action === "reject") {
-      const treaties = await base44.asServiceRole.entities.Treaty.filter({});
-      const treaty = treaties.find(t => t.id === treaty_id);
+    if (action === 'reject') {
+      if (!treaty_id) {
+        return Response.json({ error: 'treaty_id is required' }, { status: 400 });
+      }
+
+      const [treaties, factions] = await Promise.all([getTreaties(base44), getFactions(base44)]);
+      const treaty = findTreatyById(treaties, treaty_id);
       if (!treaty) return Response.json({ error: 'Treaty not found' }, { status: 404 });
+      if (!NEGOTIABLE_STATUSES.has(treaty.status)) {
+        return Response.json({ error: 'Treaty cannot be rejected in its current state' }, { status: 400 });
+      }
+
+      const canReject = await userHasFactionAuthority(base44, user, treaty.target_faction_id);
+      if (!canReject) {
+        return Response.json({ error: 'Insufficient standing in target faction' }, { status: 403 });
+      }
 
       await base44.asServiceRole.entities.Treaty.update(treaty_id, { status: 'rejected' });
 
-      const factions = await base44.asServiceRole.entities.Faction.filter({});
-      const fA = factions.find(f => f.id === treaty.proposer_faction_id);
-      const fB = factions.find(f => f.id === treaty.target_faction_id);
-
+      const targetFaction = factions.find((faction) => faction.id === treaty.target_faction_id);
       await base44.asServiceRole.entities.Notification.create({
         player_email: treaty.proposer_email,
-        title: `Treaty Rejected`,
-        message: `${fB?.name} has rejected your treaty proposal.`,
+        title: 'Treaty Rejected',
+        message: `${targetFaction?.name || 'The target faction'} has rejected your treaty proposal.`,
         type: 'system_alert',
         priority: 'high',
+        is_read: false,
+        reference_id: treaty.id,
       });
 
       return Response.json({ status: 'ok' });
     }
 
-    // ============ REVOKE TREATY ============
-    if (action === "revoke") {
-      const treaties = await base44.asServiceRole.entities.Treaty.filter({});
-      const treaty = treaties.find(t => t.id === treaty_id);
-      if (!treaty) return Response.json({ error: 'Treaty not found' }, { status: 404 });
+    if (action === 'revoke') {
+      if (!treaty_id) {
+        return Response.json({ error: 'treaty_id is required' }, { status: 400 });
+      }
 
-      // Revert diplomacy to neutral
-      const diplomacyRecords = await base44.asServiceRole.entities.Diplomacy.filter({});
-      const dip = diplomacyRecords.find(d =>
-        (d.faction_a_id === treaty.proposer_faction_id && d.faction_b_id === treaty.target_faction_id) ||
-        (d.faction_a_id === treaty.target_faction_id && d.faction_b_id === treaty.proposer_faction_id)
-      );
+      const [treaties, factions, diplomacyRecords] = await Promise.all([
+        getTreaties(base44),
+        getFactions(base44),
+        getDiplomacy(base44),
+      ]);
+      const treaty = findTreatyById(treaties, treaty_id);
+      if (!treaty) return Response.json({ error: 'Treaty not found' }, { status: 404 });
+      if (treaty.status !== 'accepted') {
+        return Response.json({ error: 'Only accepted treaties can be revoked' }, { status: 400 });
+      }
+
+      const canRevokeProposer = await userHasFactionAuthority(base44, user, treaty.proposer_faction_id);
+      const canRevokeTarget = await userHasFactionAuthority(base44, user, treaty.target_faction_id);
+      if (!canRevokeProposer && !canRevokeTarget) {
+        return Response.json({ error: 'Insufficient faction standing to revoke this treaty' }, { status: 403 });
+      }
+
+      const dip = findDiplomacyRecord(diplomacyRecords, treaty.proposer_faction_id, treaty.target_faction_id);
       if (dip) {
         await base44.asServiceRole.entities.Diplomacy.update(dip.id, {
-          status: 'neutral',
-          previous_status: dip.status,
+          status: dip.previous_status || 'neutral',
+          previous_status: dip.status || 'neutral',
+        });
+      }
+
+      for (const effect of treaty.territory_effects || []) {
+        if (!effect?.territory_id || !effect?.previous_status) continue;
+        await base44.asServiceRole.entities.Territory.update(effect.territory_id, {
+          status: effect.previous_status,
         });
       }
 
       await base44.asServiceRole.entities.Treaty.update(treaty_id, { status: 'revoked' });
+      await invokeCommodityRefresh(base44);
 
-      try {
-        await base44.asServiceRole.functions.invoke('commodityPriceEngine', {});
-      } catch (_) {}
-
-      const factions = await base44.asServiceRole.entities.Faction.filter({});
-      const fA = factions.find(f => f.id === treaty.proposer_faction_id);
-      const fB = factions.find(f => f.id === treaty.target_faction_id);
+      const proposerFaction = factions.find((faction) => faction.id === treaty.proposer_faction_id);
+      const targetFaction = factions.find((faction) => faction.id === treaty.target_faction_id);
 
       await base44.asServiceRole.entities.Event.create({
-        title: `TREATY REVOKED: ${fA?.name} — ${fB?.name}`,
-        content: `The treaty between ${fA?.name} and ${fB?.name} has been revoked. Diplomatic relations return to neutral.`,
+        title: `TREATY REVOKED: ${proposerFaction?.name} — ${targetFaction?.name}`,
+        content: `The treaty between ${proposerFaction?.name} and ${targetFaction?.name} has been revoked. Diplomatic relations were reverted.`,
         type: 'faction_conflict',
         severity: 'warning',
         is_active: true,
@@ -304,9 +415,8 @@ Deno.serve(async (req) => {
       return Response.json({ status: 'ok' });
     }
 
-    // ============ LIST TREATIES ============
-    if (action === "list") {
-      const treaties = await base44.asServiceRole.entities.Treaty.filter({});
+    if (action === 'list') {
+      const treaties = await base44.asServiceRole.entities.Treaty.filter({}, '-created_date', 200);
       return Response.json({ treaties });
     }
 

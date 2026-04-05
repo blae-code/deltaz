@@ -1,297 +1,436 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.24';
+
+const ACTIVE_JOB_LIMIT = 5;
+const MAX_COMPLETION_NOTES_LENGTH = 1200;
+const VALID_ACTIONS = new Set(['accept', 'complete', 'abandon', 'fail']);
 
 Deno.serve(async (req) => {
   try {
+    if (req.method !== 'POST') {
+      return Response.json({ error: 'Method not allowed' }, { status: 405 });
+    }
+
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-    if (!user) {
+    const userEmail = normalizeEmail(user?.email);
+
+    if (!user || !userEmail) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { action, job_id, completion_notes } = await req.json();
+    const body = await req.json().catch(() => ({}));
+    const action = normalizeAction(body.action);
+    const jobId = normalizeString(body.job_id, 128);
+    const completionNotes = normalizeString(body.completion_notes, MAX_COMPLETION_NOTES_LENGTH);
 
-    // ============ ACCEPT MISSION ============
+    if (!action) {
+      return Response.json({ error: 'Invalid action' }, { status: 400 });
+    }
+
+    if (!jobId) {
+      return Response.json({ error: 'job_id is required' }, { status: 400 });
+    }
+
+    const jobs = await base44.asServiceRole.entities.Job.filter({});
+    const job = jobs.find((entry) => entry.id === jobId);
+
+    if (!job) {
+      return Response.json({ error: 'Mission not found' }, { status: 404 });
+    }
+
     if (action === 'accept') {
-      const jobs = await base44.asServiceRole.entities.Job.filter({});
-      const job = jobs.find(j => j.id === job_id);
-      if (!job) return Response.json({ error: 'Mission not found' }, { status: 404 });
-      if (job.status !== 'available') {
-        return Response.json({ error: 'Mission is no longer available' }, { status: 400 });
-      }
-      if (job.assigned_to) {
-        return Response.json({ error: 'Mission is already assigned' }, { status: 400 });
-      }
-
-      // Check if player already has too many active missions
-      const activeJobs = jobs.filter(j => j.assigned_to === user.email && j.status === 'in_progress');
-      if (activeJobs.length >= 5) {
-        return Response.json({ error: 'You already have 5 active missions. Complete or abandon some first.' }, { status: 400 });
-      }
-
-      await base44.asServiceRole.entities.Job.update(job_id, {
-        status: 'in_progress',
-        assigned_to: user.email,
-        accepted_at: new Date().toISOString(),
-      });
-
-      // Notify the player
-      await base44.asServiceRole.entities.Notification.create({
-        player_email: user.email,
-        title: `Mission Accepted: ${job.title}`,
-        message: `You have accepted a ${job.difficulty} ${job.type} mission. Good luck, operative.`,
-        type: 'mission_assigned',
-        priority: 'normal',
-        reference_id: job_id,
-      });
-
-      // Get faction name for the event
-      let factionName = 'Unknown';
-      if (job.faction_id) {
-        const factions = await base44.asServiceRole.entities.Faction.filter({});
-        const faction = factions.find(f => f.id === job.faction_id);
-        factionName = faction?.name || 'Unknown';
-      }
-
-      // Create world event
-      await base44.asServiceRole.entities.Event.create({
-        title: `MISSION ACCEPTED: ${job.title}`,
-        content: `An operative has accepted a ${job.difficulty} ${job.type} mission for ${factionName}.`,
-        type: 'broadcast',
-        severity: 'info',
-        is_active: true,
-        faction_id: job.faction_id,
-      });
-
-      return Response.json({ status: 'ok', message: 'Mission accepted' });
+      return await acceptMission(base44, jobs, job, userEmail);
     }
 
-    // ============ COMPLETE MISSION ============
     if (action === 'complete') {
-      const jobs = await base44.asServiceRole.entities.Job.filter({});
-      const job = jobs.find(j => j.id === job_id);
-      if (!job) return Response.json({ error: 'Mission not found' }, { status: 404 });
-      if (job.status !== 'in_progress') {
-        return Response.json({ error: 'Mission is not in progress' }, { status: 400 });
-      }
-      if (job.assigned_to !== user.email && user.role !== 'admin') {
-        return Response.json({ error: 'This mission is not assigned to you' }, { status: 403 });
-      }
-
-      const now = new Date().toISOString();
-
-      // Generate completion narrative
-      let narrative = completion_notes || '';
-      if (!narrative) {
-        try {
-          const resp = await base44.asServiceRole.integrations.Core.InvokeLLM({
-            prompt: `Write a brief 2-sentence post-apocalyptic mission report for a completed "${job.type}" mission titled "${job.title}". Difficulty: ${job.difficulty}. ${job.description || ''}. Keep it gritty and tactical.`,
-          });
-          narrative = resp;
-        } catch (_) {
-          narrative = 'Mission completed successfully. Operative returned to base.';
-        }
-      }
-
-      // Update job
-      await base44.asServiceRole.entities.Job.update(job_id, {
-        status: 'completed',
-        completed_at: now,
-        completion_notes: narrative,
-      });
-
-      // Award reputation
-      const repReward = job.reward_reputation || 0;
-      const creditReward = job.reward_credits || 0;
-      let repResult = null;
-
-      if (repReward > 0 && job.faction_id) {
-        // Find or create reputation record
-        const reps = await base44.asServiceRole.entities.Reputation.filter({
-          player_email: user.email,
-          faction_id: job.faction_id,
-        });
-
-        let rep = reps[0];
-        if (rep) {
-          const newScore = (rep.score || 0) + repReward;
-          // Determine rank based on score
-          let rank = 'unknown';
-          if (newScore >= 100) rank = 'revered';
-          else if (newScore >= 50) rank = 'allied';
-          else if (newScore >= 20) rank = 'trusted';
-          else if (newScore >= 5) rank = 'neutral';
-          else if (newScore <= -50) rank = 'enemy';
-          else if (newScore <= -20) rank = 'hostile';
-
-          await base44.asServiceRole.entities.Reputation.update(rep.id, {
-            score: newScore,
-            rank,
-          });
-          repResult = { score: newScore, rank, delta: repReward };
-        } else {
-          let rank = 'neutral';
-          if (repReward >= 20) rank = 'trusted';
-
-          await base44.asServiceRole.entities.Reputation.create({
-            player_email: user.email,
-            faction_id: job.faction_id,
-            score: repReward,
-            rank,
-          });
-          repResult = { score: repReward, rank, delta: repReward };
-        }
-
-        // Log the reputation change
-        await base44.asServiceRole.entities.ReputationLog.create({
-          player_email: user.email,
-          faction_id: job.faction_id,
-          delta: repReward,
-          reason: `Completed mission: ${job.title}`,
-          source_job_id: job_id,
-        });
-      }
-
-      // Notify player
-      const factions = await base44.asServiceRole.entities.Faction.filter({});
-      const faction = factions.find(f => f.id === job.faction_id);
-
-      await base44.asServiceRole.entities.Notification.create({
-        player_email: user.email,
-        title: `Mission Complete: ${job.title}`,
-        message: `${narrative.substring(0, 200)}${repReward > 0 ? ` | +${repReward} REP with ${faction?.name || 'faction'}` : ''}${creditReward > 0 ? ` | +${creditReward} CR` : ''}`,
-        type: 'mission_update',
-        priority: 'normal',
-        reference_id: job_id,
-      });
-
-      // World event
-      await base44.asServiceRole.entities.Event.create({
-        title: `MISSION COMPLETE: ${job.title}`,
-        content: narrative,
-        type: 'broadcast',
-        severity: 'info',
-        is_active: true,
-        faction_id: job.faction_id,
-      });
-
-      return Response.json({
-        status: 'ok',
-        message: 'Mission completed',
-        narrative,
-        reputation: repResult,
-        credits: creditReward,
-      });
+      return await completeMission(base44, job, user, userEmail, completionNotes);
     }
 
-    // ============ ABANDON MISSION ============
     if (action === 'abandon') {
-      const jobs = await base44.asServiceRole.entities.Job.filter({});
-      const job = jobs.find(j => j.id === job_id);
-      if (!job) return Response.json({ error: 'Mission not found' }, { status: 404 });
-      if (job.status !== 'in_progress') {
-        return Response.json({ error: 'Mission is not in progress' }, { status: 400 });
-      }
-      if (job.assigned_to !== user.email && user.role !== 'admin') {
-        return Response.json({ error: 'This mission is not assigned to you' }, { status: 403 });
-      }
-
-      await base44.asServiceRole.entities.Job.update(job_id, {
-        status: 'available',
-        assigned_to: '',
-        accepted_at: '',
-      });
-
-      // Reputation penalty for abandoning
-      if (job.faction_id) {
-        const penalty = -Math.ceil((job.reward_reputation || 5) * 0.5);
-        const reps = await base44.asServiceRole.entities.Reputation.filter({
-          player_email: user.email,
-          faction_id: job.faction_id,
-        });
-        if (reps[0]) {
-          const newScore = Math.max(-100, (reps[0].score || 0) + penalty);
-          let rank = reps[0].rank;
-          if (newScore <= -50) rank = 'enemy';
-          else if (newScore <= -20) rank = 'hostile';
-          else if (newScore < 5) rank = 'unknown';
-
-          await base44.asServiceRole.entities.Reputation.update(reps[0].id, {
-            score: newScore,
-            rank,
-          });
-        }
-
-        await base44.asServiceRole.entities.ReputationLog.create({
-          player_email: user.email,
-          faction_id: job.faction_id,
-          delta: penalty,
-          reason: `Abandoned mission: ${job.title}`,
-          source_job_id: job_id,
-        });
-      }
-
-      await base44.asServiceRole.entities.Notification.create({
-        player_email: user.email,
-        title: `Mission Abandoned: ${job.title}`,
-        message: `You abandoned the mission. Reputation penalty applied.`,
-        type: 'mission_update',
-        priority: 'normal',
-        reference_id: job_id,
-      });
-
-      return Response.json({ status: 'ok', message: 'Mission abandoned' });
+      return await abandonMission(base44, job, user, userEmail);
     }
 
-    // ============ FAIL MISSION (Admin only) ============
-    if (action === 'fail') {
-      if (user.role !== 'admin') {
-        return Response.json({ error: 'Admin only' }, { status: 403 });
-      }
-      const jobs = await base44.asServiceRole.entities.Job.filter({});
-      const job = jobs.find(j => j.id === job_id);
-      if (!job) return Response.json({ error: 'Mission not found' }, { status: 404 });
-
-      await base44.asServiceRole.entities.Job.update(job_id, {
-        status: 'failed',
-        completed_at: new Date().toISOString(),
-        completion_notes: completion_notes || 'Mission failed.',
-      });
-
-      // Rep penalty for failure
-      if (job.assigned_to && job.faction_id) {
-        const penalty = -Math.ceil((job.reward_reputation || 5) * 0.3);
-        const reps = await base44.asServiceRole.entities.Reputation.filter({
-          player_email: job.assigned_to,
-          faction_id: job.faction_id,
-        });
-        if (reps[0]) {
-          const newScore = Math.max(-100, (reps[0].score || 0) + penalty);
-          await base44.asServiceRole.entities.Reputation.update(reps[0].id, { score: newScore });
-        }
-        await base44.asServiceRole.entities.ReputationLog.create({
-          player_email: job.assigned_to,
-          faction_id: job.faction_id,
-          delta: penalty,
-          reason: `Failed mission: ${job.title}`,
-          source_job_id: job_id,
-        });
-
-        await base44.asServiceRole.entities.Notification.create({
-          player_email: job.assigned_to,
-          title: `Mission Failed: ${job.title}`,
-          message: completion_notes || 'Your mission has been marked as failed by command.',
-          type: 'mission_update',
-          priority: 'high',
-          reference_id: job_id,
-        });
-      }
-
-      return Response.json({ status: 'ok', message: 'Mission marked as failed' });
-    }
-
-    return Response.json({ error: 'Unknown action' }, { status: 400 });
-  } catch (err) {
-    console.error('MissionOps error:', err);
-    return Response.json({ error: err.message }, { status: 500 });
+    return await failMission(base44, job, user, completionNotes);
+  } catch (error) {
+    console.error('MissionOps error:', error);
+    return Response.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 });
+
+async function acceptMission(base44, jobs, job, userEmail) {
+  if (isGeneratedMission(job)) {
+    return Response.json(
+      { error: 'Legacy generated missions are no longer claimable. Generate a fresh mission instead.' },
+      { status: 409 },
+    );
+  }
+
+  if (isJobExpired(job)) {
+    if (job.status === 'available') {
+      await base44.asServiceRole.entities.Job.update(job.id, { status: 'expired' });
+    }
+    return Response.json({ error: 'Mission has expired' }, { status: 409 });
+  }
+
+  if (job.status !== 'available') {
+    return Response.json({ error: 'Mission is no longer available' }, { status: 409 });
+  }
+
+  // The current app contract only stores one assignee string, so multi-slot jobs
+  // still have to behave as single-slot jobs until Base44 lands a matching model.
+  if (normalizeEmail(job.assigned_to)) {
+    return Response.json({ error: 'Mission is already assigned' }, { status: 409 });
+  }
+
+  const activeJobs = jobs.filter((entry) => normalizeEmail(entry.assigned_to) === userEmail && entry.status === 'in_progress');
+  if (activeJobs.length >= ACTIVE_JOB_LIMIT) {
+    return Response.json(
+      { error: `You already have ${ACTIVE_JOB_LIMIT} active missions. Complete or abandon some first.` },
+      { status: 409 },
+    );
+  }
+
+  const factions = job.faction_id ? await base44.asServiceRole.entities.Faction.filter({}) : [];
+  const factionName = factions.find((faction) => faction.id === job.faction_id)?.name || 'Unknown';
+
+  await base44.asServiceRole.entities.Job.update(job.id, {
+    status: 'in_progress',
+    assigned_to: userEmail,
+    accepted_at: new Date().toISOString(),
+    completed_at: '',
+    completion_notes: '',
+  });
+
+  await Promise.all([
+    createNotification(base44, {
+      playerEmail: userEmail,
+      title: `Mission Accepted: ${job.title}`,
+      message: `You have accepted a ${job.difficulty} ${job.type} mission. Good luck, operative.`,
+      type: 'mission_assigned',
+      priority: 'normal',
+      referenceId: job.id,
+    }),
+    createEvent(base44, {
+      title: `MISSION ACCEPTED: ${job.title}`,
+      content: `An operative has accepted a ${job.difficulty} ${job.type} mission for ${factionName}.`,
+      type: 'broadcast',
+      severity: 'info',
+      factionId: job.faction_id,
+      territoryId: job.territory_id,
+    }),
+  ]);
+
+  return Response.json({
+    status: 'ok',
+    message: 'Mission accepted',
+    max_slots: Math.max(1, Number(job.max_slots) || 1),
+    supported_slots: 1,
+  });
+}
+
+async function completeMission(base44, job, user, userEmail, completionNotes) {
+  if (job.status !== 'in_progress') {
+    return Response.json({ error: 'Mission is not in progress' }, { status: 409 });
+  }
+
+  const assigneeEmail = normalizeEmail(job.assigned_to);
+  if (!assigneeEmail) {
+    return Response.json({ error: 'Mission has no assigned operative' }, { status: 409 });
+  }
+
+  if (assigneeEmail !== userEmail && user.role !== 'admin') {
+    return Response.json({ error: 'This mission is not assigned to you' }, { status: 403 });
+  }
+
+  const now = new Date().toISOString();
+  const narrative = completionNotes || await generateCompletionNarrative(base44, job);
+  const repReward = Math.max(0, Math.trunc(Number(job.reward_reputation) || 0));
+  const listedCredits = Math.max(0, Math.trunc(Number(job.reward_credits) || 0));
+
+  await base44.asServiceRole.entities.Job.update(job.id, {
+    status: 'completed',
+    completed_at: now,
+    completion_notes: narrative,
+  });
+
+  const reputation = await applyReputationDelta(base44, {
+    playerEmail: assigneeEmail,
+    factionId: normalizeString(job.faction_id, 128),
+    delta: repReward,
+    reason: `Completed mission: ${job.title}`,
+    sourceJobId: job.id,
+  });
+
+  const factions = job.faction_id ? await base44.asServiceRole.entities.Faction.filter({}) : [];
+  const factionName = factions.find((faction) => faction.id === job.faction_id)?.name || 'faction';
+  const notificationParts = [truncateText(narrative, 200)];
+  if (reputation?.delta > 0) {
+    notificationParts.push(`+${reputation.delta} REP with ${factionName}`);
+  }
+  if (listedCredits > 0) {
+    notificationParts.push(`Listed reward: ${listedCredits} CR`);
+  }
+
+  await Promise.all([
+    createNotification(base44, {
+      playerEmail: assigneeEmail,
+      title: `Mission Complete: ${job.title}`,
+      message: notificationParts.join(' | '),
+      type: 'mission_update',
+      priority: 'normal',
+      referenceId: job.id,
+    }),
+    createEvent(base44, {
+      title: `MISSION COMPLETE: ${job.title}`,
+      content: narrative,
+      type: 'broadcast',
+      severity: 'info',
+      factionId: job.faction_id,
+      territoryId: job.territory_id,
+    }),
+  ]);
+
+  return Response.json({
+    status: 'ok',
+    message: 'Mission completed',
+    narrative,
+    reputation,
+    credits: 0,
+    listed_credits: listedCredits,
+  });
+}
+
+async function abandonMission(base44, job, user, userEmail) {
+  if (job.status !== 'in_progress') {
+    return Response.json({ error: 'Mission is not in progress' }, { status: 409 });
+  }
+
+  const assigneeEmail = normalizeEmail(job.assigned_to);
+  if (!assigneeEmail) {
+    return Response.json({ error: 'Mission has no assigned operative' }, { status: 409 });
+  }
+
+  if (assigneeEmail !== userEmail && user.role !== 'admin') {
+    return Response.json({ error: 'This mission is not assigned to you' }, { status: 403 });
+  }
+
+  const generatedMission = isGeneratedMission(job);
+
+  await base44.asServiceRole.entities.Job.update(job.id, {
+    status: generatedMission ? 'expired' : 'available',
+    assigned_to: '',
+    accepted_at: '',
+    completed_at: '',
+    completion_notes: '',
+  });
+
+  const requestedPenalty = -Math.ceil(Math.max(5, Number(job.reward_reputation) || 0) * 0.5);
+  const reputation = await applyReputationDelta(base44, {
+    playerEmail: assigneeEmail,
+    factionId: normalizeString(job.faction_id, 128),
+    delta: requestedPenalty,
+    reason: `Abandoned mission: ${job.title}`,
+    sourceJobId: job.id,
+  });
+
+  await createNotification(base44, {
+    playerEmail: assigneeEmail,
+    title: `Mission Abandoned: ${job.title}`,
+    message: generatedMission
+      ? `You abandoned the generated mission. It has been retired.${reputation?.delta ? ` Reputation penalty applied (${reputation.delta}).` : ''}`
+      : reputation?.delta
+        ? `You abandoned the mission. Reputation penalty applied (${reputation.delta}).`
+        : 'You abandoned the mission. Reputation penalty applied.',
+    type: 'mission_update',
+    priority: 'normal',
+    referenceId: job.id,
+  });
+
+  return Response.json({
+    status: 'ok',
+    message: generatedMission ? 'Generated mission retired' : 'Mission abandoned',
+    reputation,
+  });
+}
+
+async function failMission(base44, job, user, completionNotes) {
+  if (user.role !== 'admin') {
+    return Response.json({ error: 'Admin only' }, { status: 403 });
+  }
+
+  if (job.status !== 'in_progress') {
+    return Response.json({ error: 'Only in-progress missions can be failed' }, { status: 409 });
+  }
+
+  const assigneeEmail = normalizeEmail(job.assigned_to);
+  const now = new Date().toISOString();
+  const narrative = completionNotes || 'Mission failed.';
+
+  await base44.asServiceRole.entities.Job.update(job.id, {
+    status: 'failed',
+    completed_at: now,
+    completion_notes: narrative,
+  });
+
+  let reputation = null;
+  if (assigneeEmail) {
+    const requestedPenalty = -Math.ceil(Math.max(5, Number(job.reward_reputation) || 0) * 0.3);
+    reputation = await applyReputationDelta(base44, {
+      playerEmail: assigneeEmail,
+      factionId: normalizeString(job.faction_id, 128),
+      delta: requestedPenalty,
+      reason: `Failed mission: ${job.title}`,
+      sourceJobId: job.id,
+    });
+
+    await createNotification(base44, {
+      playerEmail: assigneeEmail,
+      title: `Mission Failed: ${job.title}`,
+      message: narrative,
+      type: 'mission_update',
+      priority: 'high',
+      referenceId: job.id,
+    });
+  }
+
+  await createEvent(base44, {
+    title: `MISSION FAILED: ${job.title}`,
+    content: narrative,
+    type: 'broadcast',
+    severity: 'warning',
+    factionId: job.faction_id,
+    territoryId: job.territory_id,
+  });
+
+  return Response.json({ status: 'ok', message: 'Mission marked as failed', reputation });
+}
+
+async function applyReputationDelta(base44, { playerEmail, factionId, delta, reason, sourceJobId }) {
+  if (!playerEmail || !factionId || !Number.isFinite(delta) || delta === 0) {
+    return null;
+  }
+
+  const reputations = await base44.asServiceRole.entities.Reputation.filter({
+    player_email: playerEmail,
+    faction_id: factionId,
+  });
+
+  const existing = reputations[0];
+  const currentScore = Number(existing?.score) || 0;
+  const nextScore = Math.max(-100, currentScore + Math.trunc(delta));
+  const appliedDelta = nextScore - currentScore;
+  const rank = getReputationRank(nextScore);
+
+  if (existing) {
+    await base44.asServiceRole.entities.Reputation.update(existing.id, {
+      score: nextScore,
+      rank,
+    });
+  } else {
+    await base44.asServiceRole.entities.Reputation.create({
+      player_email: playerEmail,
+      faction_id: factionId,
+      score: nextScore,
+      rank,
+    });
+  }
+
+  if (appliedDelta !== 0) {
+    await base44.asServiceRole.entities.ReputationLog.create({
+      player_email: playerEmail,
+      faction_id: factionId,
+      delta: appliedDelta,
+      reason,
+      source_job_id: sourceJobId,
+    });
+  }
+
+  return { score: nextScore, rank, delta: appliedDelta };
+}
+
+async function createNotification(base44, { playerEmail, title, message, type, priority, referenceId }) {
+  return await base44.asServiceRole.entities.Notification.create({
+    player_email: playerEmail,
+    title,
+    message,
+    type,
+    priority,
+    is_read: false,
+    reference_id: referenceId,
+  });
+}
+
+async function createEvent(base44, { title, content, type, severity, factionId, territoryId }) {
+  return await base44.asServiceRole.entities.Event.create({
+    title,
+    content,
+    type,
+    severity,
+    is_active: true,
+    faction_id: factionId,
+    territory_id: territoryId,
+  });
+}
+
+async function generateCompletionNarrative(base44, job) {
+  try {
+    const response = await base44.asServiceRole.integrations.Core.InvokeLLM({
+      prompt: `Write a brief 2-sentence post-apocalyptic mission report for a completed "${job.type}" mission titled "${job.title}". Difficulty: ${job.difficulty}. ${job.description || ''}. Keep it gritty and tactical.`,
+    });
+
+    if (typeof response === 'string' && response.trim()) {
+      return normalizeString(response, MAX_COMPLETION_NOTES_LENGTH);
+    }
+  } catch (_) {}
+
+  return 'Mission completed successfully. Operative returned to base.';
+}
+
+function normalizeAction(value) {
+  return typeof value === 'string' && VALID_ACTIONS.has(value) ? value : '';
+}
+
+function normalizeString(value, maxLength = 255) {
+  if (typeof value !== 'string') {
+    return '';
+  }
+
+  return value.replace(/\s+/g, ' ').trim().slice(0, maxLength);
+}
+
+function normalizeEmail(value) {
+  return normalizeString(value, 320).toLowerCase();
+}
+
+function truncateText(value, maxLength) {
+  const normalized = normalizeString(value, maxLength);
+  return normalized.length <= maxLength ? normalized : normalized.slice(0, maxLength);
+}
+
+function isJobExpired(job) {
+  if (!job?.expires_at || job.status !== 'available') {
+    return false;
+  }
+
+  const expiresAt = Date.parse(job.expires_at);
+  return Number.isFinite(expiresAt) && expiresAt <= Date.now();
+}
+
+function isGeneratedMission(job) {
+  return typeof job?.description === 'string' && job.description.includes('[GENERATED]');
+}
+
+function getReputationRank(score) {
+  if (score >= 100) return 'revered';
+  if (score >= 50) return 'allied';
+  if (score >= 20) return 'trusted';
+  if (score >= 5) return 'neutral';
+  if (score <= -50) return 'enemy';
+  if (score <= -20) return 'hostile';
+  if (score > 0) return 'neutral';
+  return 'unknown';
+}
+
+function getErrorMessage(error) {
+  return error instanceof Error ? error.message : 'Unexpected error';
+}
