@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, Plus, Trash2 } from "lucide-react";
+import { Shield, Plus, Trash2, Send } from "lucide-react";
+import DispatchPanel from "../components/admin/DispatchPanel";
 import { useToast } from "@/components/ui/use-toast";
 
 function CreateFactionForm({ onCreated }) {
@@ -205,13 +206,25 @@ export default function Admin() {
         <p className="text-xs font-mono text-muted-foreground mt-1">GAME MASTER OPERATIONS</p>
       </div>
 
-      <Tabs defaultValue="jobs" className="w-full">
+      <Tabs defaultValue="dispatch" className="w-full">
         <TabsList className="bg-muted border border-border font-mono">
+          <TabsTrigger value="dispatch" className="text-xs font-mono">DISPATCH</TabsTrigger>
           <TabsTrigger value="jobs" className="text-xs font-mono">JOBS</TabsTrigger>
           <TabsTrigger value="events" className="text-xs font-mono">EVENTS</TabsTrigger>
           <TabsTrigger value="factions" className="text-xs font-mono">FACTIONS</TabsTrigger>
           <TabsTrigger value="territories" className="text-xs font-mono">TERRITORIES</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="dispatch">
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <CardTitle className="text-xs font-mono text-muted-foreground tracking-widest flex items-center gap-2">
+                <Send className="h-3.5 w-3.5" /> DISPATCH OPERATIVE
+              </CardTitle>
+            </CardHeader>
+            <CardContent><DispatchPanel /></CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="jobs">
           <Card className="bg-card border-border">

@@ -1,0 +1,50 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "properties": {
+    "player_email": {
+      "type": "string",
+      "description": "Email of the player to notify"
+    },
+    "title": {
+      "type": "string",
+      "description": "Notification headline"
+    },
+    "message": {
+      "type": "string",
+      "description": "Notification body"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "mission_assigned",
+        "mission_update",
+        "reputation_change",
+        "system_alert"
+      ],
+      "default": "system_alert"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "normal",
+        "high",
+        "critical"
+      ],
+      "default": "normal"
+    },
+    "is_read": {
+      "type": "boolean",
+      "default": false
+    },
+    "reference_id": {
+      "type": "string",
+      "description": "ID of related entity (e.g. job ID)"
+    }
+  },
+  "required": [
+    "player_email",
+    "title",
+    "type"
+  ]
+}

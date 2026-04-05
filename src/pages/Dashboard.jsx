@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import DataCard from "../components/terminal/DataCard";
 import StatusIndicator from "../components/terminal/StatusIndicator";
+import NotificationBanner from "../components/dashboard/NotificationBanner";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Crosshair, Shield, Map } from "lucide-react";
 
@@ -10,6 +11,7 @@ export default function Dashboard() {
   const [events, setEvents] = useState([]);
   const [factions, setFactions] = useState([]);
   const [territories, setTerritories] = useState([]);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,12 +20,14 @@ export default function Dashboard() {
       base44.entities.Event.list("-created_date", 5),
       base44.entities.Faction.list("-created_date", 10),
       base44.entities.Territory.list("-created_date", 10),
+      base44.auth.me(),
     ])
-      .then(([j, e, f, t]) => {
+      .then(([j, e, f, t, u]) => {
         setJobs(j);
         setEvents(e);
         setFactions(f);
         setTerritories(t);
+        setUser(u);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -56,6 +60,9 @@ export default function Dashboard() {
           Operational overview — all sectors
         </p>
       </div>
+
+      {/* Notifications */}
+      {user?.email && <NotificationBanner userEmail={user.email} />}
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
