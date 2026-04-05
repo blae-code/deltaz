@@ -4,37 +4,66 @@
   "properties": {
     "faction_id": {
       "type": "string",
-      "description": "Linked faction ID"
+      "description": "Reference to the faction"
     },
     "wealth": {
       "type": "number",
       "default": 1000,
       "description": "Current faction wealth/credits"
     },
-    "tax_rate": {
-      "type": "number",
-      "default": 10,
-      "description": "Tax rate percentage (0-100)"
+    "resource_production": {
+      "type": "object",
+      "properties": {
+        "fuel": {
+          "type": "number",
+          "default": 0
+        },
+        "munitions": {
+          "type": "number",
+          "default": 0
+        },
+        "tech": {
+          "type": "number",
+          "default": 0
+        },
+        "food": {
+          "type": "number",
+          "default": 0
+        },
+        "medical": {
+          "type": "number",
+          "default": 0
+        }
+      },
+      "description": "Base production rates per cycle"
     },
     "supply_modifier": {
       "type": "number",
       "default": 1.0,
-      "description": "Supply chain efficiency multiplier (0.1 - 3.0)"
+      "description": "Multiplier applied to all production (0.5 = halved, 2.0 = doubled)"
     },
-    "production_rate": {
+    "tax_rate": {
       "type": "number",
-      "default": 100,
-      "description": "Base resource production per cycle"
+      "default": 0.1,
+      "description": "Fraction of production taken as tax (0.0 to 1.0)"
     },
     "trade_balance": {
       "type": "number",
       "default": 0,
-      "description": "Net trade surplus/deficit"
+      "description": "Net trade income/loss per cycle"
     },
-    "sanctions_active": {
-      "type": "boolean",
-      "default": false,
-      "description": "Whether trade sanctions are applied"
+    "upkeep_cost": {
+      "type": "number",
+      "default": 100,
+      "description": "Cost per cycle for maintaining territory and forces"
+    },
+    "last_cycle_income": {
+      "type": "number",
+      "default": 0
+    },
+    "last_cycle_expenses": {
+      "type": "number",
+      "default": 0
     }
   },
   "required": [

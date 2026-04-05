@@ -1,129 +1,139 @@
 import { useState } from "react";
-import { Shield, TrendingUp, TrendingDown, Minus, Ban } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import { Shield, TrendingUp, TrendingDown, Minus, Save } from "lucide-react";
 
-export default function FactionEconomyCard({ economy, faction, territoryCount, resources, onUpdate }) {
-  const [taxRate, setTaxRate] = useState(economy.tax_rate);
-  const [supplyMod, setSupplyMod] = useState(economy.supply_modifier);
-  const [sanctions, setSanctions] = useState(economy.sanctions_active);
+const resourceIcons = { fuel: "⛽", munitions: "💣", tech: "⚙️", food: "🍖", medical: "💊" };
+
+export default function FactionEconomyCard({ faction, economy, territoryCount, onUpdate }) {
+  const [supplyMod, setSupplyMod] = useState(economy.supply_modifier ?? 1.0);
+  const [taxRate, setTaxRate] = useState(economy.tax_rate ?? 0.1);
+  const [tradeBalance, setTradeBalance] = useState(economy.trade_balance ?? 0);
+  const [upkeep, setUpkeep] = useState(economy.upkeep_cost ?? 100);
   const [saving, setSaving] = useState(false);
 
-  const effectiveProduction = Math.round(economy.production_rate * supplyMod * territoryCount * (sanctions ? 0.5 : 1));
-  const taxRevenue = Math.round(effectiveProduction * (taxRate / 100));
-  const netIncome = effectiveProduction - taxRevenue + economy.trade_balance;
-
-  const hasChanges = taxRate !== economy.tax_rate || supplyMod !== economy.supply_modifier || sanctions !== economy.sanctions_active;
+  const net = (economy.last_cycle_income || 0) - (economy.last_cycle_expenses || 0);
+  const prod = economy.resource_production || {};
 
   const handleSave = async () => {
     setSaving(true);
-    await onUpdate({ tax_rate: taxRate, supply_modifier: supplyMod, sanctions_active: sanctions });
+    await onUpdate(economy.id, {
+      supply_modifier: parseFloat(supplyMod) || 1.0,
+      tax_rate: Math.min(1, Math.max(0, parseFloat(taxRate) || 0.1)),
+      trade_balance: parseInt(tradeBalance) || 0,
+      upkeep_cost: parseInt(upkeep) || 100,
+    });
     setSaving(false);
   };
 
-  const resourceList = Object.entries(resources);
-
   return (
-    <div className="border border-border rounded-sm overflow-hidden bg-card">
+    <div className="border border-border bg-card rounded-sm overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-border px-4 py-2.5 bg-secondary/30">
-        <div className="flex items-center gap-2.5">
-          <Shield className="h-4 w-4" style={{ color: faction.color }} />
-          <span className="text-xs font-bold font-display tracking-wider" style={{ color: faction.color }}>{faction.name}</span>
-          <Badge variant="outline" className="text-[9px]">{faction.tag}</Badge>
+      <div className="flex items-center justify-between border-b border-border px-4 py-2 bg-secondary/50">
+        <div className="flex items-center gap-2">
+          <Shield className="h-3.5 w-3.5" style={{ color: faction.color }} />
+          <span className="text-xs font-bold font-display tracking-wider" style={{ color: faction.color }}>
+            {faction.name}
+          </span>
+          <span className="text-[9px] text-muted-foreground">[{faction.tag}]</span>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="text-right">
-            <div className="text-[9px] text-muted-foreground tracking-wider">WEALTH</div>
-            <div className="text-sm font-bold font-display text-primary">{economy.wealth.toLocaleString()}</div>
-          </div>
+        <div className="flex items-center gap-1.5">
+          {net > 0 && <TrendingUp className="h-3 w-3 text-primary" />}
+          {net < 0 && <TrendingDown className="h-3 w-3 text-destructive" />}
+          {net === 0 && <Minus className="h-3 w-3 text-muted-foreground" />}
+          <span className={`text-[10px] font-semibold ${net > 0 ? "text-primary" : net < 0 ? "text-destructive" : "text-muted-foreground"}`}>
+            {net >= 0 ? "+" : ""}{net}/cycle
+          </span>
         </div>
       </div>
 
-      <div className="p-4 space-y-4">
-        {/* Stats row */}
-        <div className="grid grid-cols-4 gap-2">
-          {[
-            { label: "TERRITORIES", value: territoryCount },
-            { label: "BASE PROD", value: economy.production_rate },
-            { label: "EFF. PROD", value: effectiveProduction, color: effectiveProduction > economy.production_rate ? "text-primary" : effectiveProduction < economy.production_rate ? "text-destructive" : "" },
-            { label: "NET INCOME", value: netIncome, color: netIncome > 0 ? "text-primary" : netIncome < 0 ? "text-destructive" : "", icon: netIncome > 0 ? TrendingUp : netIncome < 0 ? TrendingDown : Minus },
-          ].map((s) => (
-            <div key={s.label} className="border border-border rounded-sm p-2 text-center">
-              <div className="text-[8px] text-muted-foreground tracking-wider">{s.label}</div>
-              <div className={`text-sm font-bold font-display ${s.color || "text-foreground"}`}>
-                {s.icon && <s.icon className="h-3 w-3 inline mr-0.5" />}
-                {s.value}
-              </div>
-            </div>
-          ))}
+      <div className="p-4 space-y-3">
+        {/* Wealth & stats */}
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="border border-border rounded-sm p-2">
+            <div className="text-[9px] text-muted-foreground tracking-wider">WEALTH</div>
+            <div className="text-sm font-bold font-display text-primary">{economy.wealth?.toLocaleString()}</div>
+          </div>
+          <div className="border border-border rounded-sm p-2">
+            <div className="text-[9px] text-muted-foreground tracking-wider">INCOME</div>
+            <div className="text-sm font-bold font-display text-primary">+{economy.last_cycle_income || 0}</div>
+          </div>
+          <div className="border border-border rounded-sm p-2">
+            <div className="text-[9px] text-muted-foreground tracking-wider">EXPENSES</div>
+            <div className="text-sm font-bold font-display text-destructive">-{economy.last_cycle_expenses || 0}</div>
+          </div>
         </div>
 
-        {/* Resources */}
-        {resourceList.length > 0 && (
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[9px] text-muted-foreground tracking-wider">RESOURCES:</span>
-            {resourceList.map(([name, count]) => (
-              <Badge key={name} variant="secondary" className="text-[9px]">{name} x{count}</Badge>
+        {/* Resource production */}
+        <div>
+          <div className="text-[9px] text-muted-foreground tracking-wider mb-1.5">RESOURCE PRODUCTION</div>
+          <div className="flex flex-wrap gap-2">
+            {Object.entries(prod).map(([key, val]) => (
+              <div key={key} className="flex items-center gap-1 bg-secondary/50 border border-border rounded-sm px-2 py-1">
+                <span className="text-xs">{resourceIcons[key] || "📦"}</span>
+                <span className="text-[10px] text-foreground uppercase">{key}</span>
+                <span className="text-[10px] font-semibold text-primary">{val || 0}</span>
+              </div>
             ))}
           </div>
-        )}
+        </div>
 
-        {/* Controls */}
-        <div className="grid grid-cols-2 gap-4">
-          {/* Tax Rate */}
-          <div className="space-y-1.5">
-            <Label className="text-[9px] font-mono tracking-wider">TAX RATE: {taxRate}%</Label>
-            <input
-              type="range"
-              min={0}
-              max={50}
-              step={1}
-              value={taxRate}
-              onChange={(e) => setTaxRate(Number(e.target.value))}
-              className="w-full h-1.5 accent-primary bg-muted rounded-full cursor-pointer"
-            />
-            <div className="flex justify-between text-[8px] text-muted-foreground">
-              <span>0%</span><span>50%</span>
-            </div>
-          </div>
-
-          {/* Supply Modifier */}
-          <div className="space-y-1.5">
-            <Label className="text-[9px] font-mono tracking-wider">SUPPLY MOD: {supplyMod.toFixed(1)}x</Label>
-            <input
-              type="range"
-              min={0.1}
-              max={3.0}
-              step={0.1}
+        {/* Modifiers */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label className="text-[9px] tracking-wider">SUPPLY MODIFIER</Label>
+            <Input
+              type="number"
+              step="0.1"
+              min="0.1"
+              max="5"
               value={supplyMod}
-              onChange={(e) => setSupplyMod(Number(e.target.value))}
-              className="w-full h-1.5 accent-primary bg-muted rounded-full cursor-pointer"
+              onChange={(e) => setSupplyMod(e.target.value)}
+              className="h-7 text-[10px] bg-secondary/50 border-border mt-1"
             />
-            <div className="flex justify-between text-[8px] text-muted-foreground">
-              <span>0.1x</span><span>3.0x</span>
-            </div>
+          </div>
+          <div>
+            <Label className="text-[9px] tracking-wider">TAX RATE</Label>
+            <Input
+              type="number"
+              step="0.05"
+              min="0"
+              max="1"
+              value={taxRate}
+              onChange={(e) => setTaxRate(e.target.value)}
+              className="h-7 text-[10px] bg-secondary/50 border-border mt-1"
+            />
+          </div>
+          <div>
+            <Label className="text-[9px] tracking-wider">TRADE BALANCE</Label>
+            <Input
+              type="number"
+              value={tradeBalance}
+              onChange={(e) => setTradeBalance(e.target.value)}
+              className="h-7 text-[10px] bg-secondary/50 border-border mt-1"
+            />
+          </div>
+          <div>
+            <Label className="text-[9px] tracking-wider">UPKEEP COST</Label>
+            <Input
+              type="number"
+              min="0"
+              value={upkeep}
+              onChange={(e) => setUpkeep(e.target.value)}
+              className="h-7 text-[10px] bg-secondary/50 border-border mt-1"
+            />
           </div>
         </div>
 
-        {/* Sanctions toggle + Save */}
+        {/* Territory count + Save */}
         <div className="flex items-center justify-between pt-2 border-t border-border/50">
-          <div className="flex items-center gap-2">
-            <Switch checked={sanctions} onCheckedChange={setSanctions} />
-            <div className="flex items-center gap-1">
-              <Ban className={`h-3 w-3 ${sanctions ? "text-destructive" : "text-muted-foreground"}`} />
-              <span className={`text-[10px] tracking-wider ${sanctions ? "text-destructive font-semibold" : "text-muted-foreground"}`}>
-                TRADE SANCTIONS
-              </span>
-            </div>
-          </div>
-          {hasChanges && (
-            <Button size="sm" onClick={handleSave} disabled={saving} className="text-[10px] uppercase tracking-wider h-7">
-              {saving ? "SAVING..." : "APPLY CHANGES"}
-            </Button>
-          )}
+          <span className="text-[9px] text-muted-foreground tracking-wider">
+            {territoryCount} TERRITOR{territoryCount !== 1 ? "IES" : "Y"} HELD
+          </span>
+          <Button size="sm" onClick={handleSave} disabled={saving} className="text-[10px] uppercase tracking-wider h-7">
+            <Save className="h-3 w-3 mr-1" /> {saving ? "..." : "APPLY"}
+          </Button>
         </div>
       </div>
     </div>
