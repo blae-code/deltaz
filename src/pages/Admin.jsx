@@ -7,10 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, Plus, Trash2, Send, Zap, Flag } from "lucide-react";
+import { Shield, Plus, Trash2, Send, Zap, Flag, Coins } from "lucide-react";
 import DispatchPanel from "../components/admin/DispatchPanel";
 import AutoAssignPanel from "../components/admin/AutoAssignPanel";
 import TerritoryOpsPanel from "../components/admin/TerritoryOpsPanel";
+import ResourceDashboard from "../components/admin/ResourceDashboard";
 import { useToast } from "@/components/ui/use-toast";
 
 function CreateFactionForm({ onCreated }) {
@@ -217,6 +218,7 @@ export default function Admin() {
           <TabsTrigger value="factions" className="text-xs font-mono">FACTIONS</TabsTrigger>
           <TabsTrigger value="territories" className="text-xs font-mono">TERRITORIES</TabsTrigger>
           <TabsTrigger value="territory_ops" className="text-xs font-mono">TERRITORY OPS</TabsTrigger>
+          <TabsTrigger value="economy" className="text-xs font-mono">ECONOMY</TabsTrigger>
         </TabsList>
 
         <TabsContent value="dispatch">
@@ -277,6 +279,17 @@ export default function Admin() {
               </CardTitle>
             </CardHeader>
             <CardContent><TerritoryOpsPanel /></CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="economy">
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <CardTitle className="text-xs font-mono text-muted-foreground tracking-widest flex items-center gap-2">
+                <Coins className="h-3.5 w-3.5" /> GLOBAL RESOURCE ECONOMY
+              </CardTitle>
+            </CardHeader>
+            <CardContent><ResourceDashboard /></CardContent>
           </Card>
         </TabsContent>
       </Tabs>
