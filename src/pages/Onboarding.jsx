@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Radio, User, MessageCircle, ChevronRight, AlertTriangle } from "lucide-react";
+import RoleplayNotice from "../components/onboarding/RoleplayNotice";
 
 export default function Onboarding({ onComplete }) {
   const [step, setStep] = useState(1);
@@ -51,7 +52,7 @@ export default function Onboarding({ onComplete }) {
 
         {/* Progress */}
         <div className="flex gap-2">
-          {[1, 2].map((s) => (
+          {[1, 2, 3].map((s) => (
             <div
               key={s}
               className={`flex-1 h-1 rounded-full transition-colors ${
@@ -113,7 +114,7 @@ export default function Onboarding({ onComplete }) {
         {step === 2 && (
           <div className="border border-border bg-card rounded-sm p-6 space-y-5">
             <div className="flex items-center gap-3">
-              <MessageCircle className="h-5 w-5 text-chart-4" />
+              <MessageCircle className="h-5 w-5 text-primary" />
               <div>
                 <h2 className="text-sm font-semibold font-display tracking-wider text-foreground uppercase">
                   Link Discord Profile
@@ -150,6 +151,35 @@ export default function Onboarding({ onComplete }) {
                 BACK
               </Button>
               <Button
+                onClick={() => {
+                  if (!discord.trim()) {
+                    setError("Discord username is required for identity verification.");
+                    return;
+                  }
+                  setError("");
+                  setStep(3);
+                }}
+                className="flex-1 font-mono text-xs uppercase tracking-wider"
+              >
+                CONTINUE <ChevronRight className="h-3.5 w-3.5 ml-1" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Roleplay Notice */}
+        {step === 3 && (
+          <div className="border border-border bg-card rounded-sm p-6 space-y-5">
+            <RoleplayNotice />
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setStep(2)}
+                className="font-mono text-xs uppercase tracking-wider"
+              >
+                BACK
+              </Button>
+              <Button
                 onClick={handleSubmit}
                 disabled={saving}
                 className="flex-1 font-mono text-xs uppercase tracking-wider"
@@ -169,7 +199,7 @@ export default function Onboarding({ onComplete }) {
         )}
 
         {/* Summary */}
-        {step === 2 && callsign.trim() && (
+        {step >= 2 && callsign.trim() && (
           <div className="border border-primary/20 bg-primary/5 rounded-sm p-3 space-y-1">
             <p className="text-[10px] text-primary tracking-wider font-mono uppercase font-semibold">
               REGISTRATION PREVIEW

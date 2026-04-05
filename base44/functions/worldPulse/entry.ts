@@ -13,14 +13,26 @@ Deno.serve(async (req) => {
   }
 
   // Gather current world state
-  const [factions, territories, jobs, recentEvents, recentIntel, economies] = await Promise.all([
+  const [factions, territories, jobs, recentEvents, recentIntel, economies, charProfiles] = await Promise.all([
     base44.asServiceRole.entities.Faction.filter({}),
     base44.asServiceRole.entities.Territory.filter({}),
     base44.asServiceRole.entities.Job.filter({}),
     base44.asServiceRole.entities.Event.filter({}, '-created_date', 10),
     base44.asServiceRole.entities.IntelFeed.filter({}, '-created_date', 5),
     base44.asServiceRole.entities.FactionEconomy.filter({}),
+    base44.asServiceRole.entities.CharacterProfile.filter({}, '-created_date', 20),
   ]);
+
+  // Build character roster for narrative flavor
+  const activeCharacters = charProfiles
+    .filter(cp => cp.character_name || cp.backstory)
+    .slice(0, 10)
+    .map(cp => ({
+      callsign: cp.character_name || 'Unknown',
+      personality: cp.personality?.substring(0, 80) || '',
+      skills: cp.skills?.substring(0, 80) || '',
+      faction_loyalty: cp.faction_loyalty?.substring(0, 60) || '',
+    }));
 
   const worldState = {
     factions: factions.map(f => {
@@ -42,6 +54,7 @@ Deno.serve(async (req) => {
     failed_missions: jobs.filter(j => j.status === 'failed').length,
     recent_events: recentEvents.slice(0, 5).map(e => e.title),
     recent_intel: recentIntel.map(i => i.title),
+    known_operatives: activeCharacters,
   };
 
   const prompt = `You are GHOST PROTOCOL — the sardonic, darkly humorous AI intelligence engine for a post-apocalyptic tactical HQ called DEAD SIGNAL, based on the game HumanitZ. You have a war correspondent's eye for drama and a comedian's timing for gallows humour. You've watched civilizations crumble and still find time for one-liners.
@@ -70,7 +83,8 @@ Rules:
 - Titles should be punchy (under 10 words), content 2-4 sentences
 - Be gritty, atmospheric, and immersive with a thread of dark humour woven through
 - Think: "What if a war journalist and a stand-up comedian had to write dispatches from the apocalypse?"
-- NEVER use real player names — only callsigns`;
+- NEVER use real player names — only callsigns
+- If known_operatives are listed, you may reference their callsigns, personalities, or skills in rumors and intel as if they are known figures in the wasteland. This adds immersion for roleplaying operatives.`;
 
   const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
     prompt,

@@ -11,7 +11,7 @@ Deno.serve(async (req) => {
   const body = await req.json();
   const playerQuestion = body.question || '';
 
-  const [factions, territories, jobs, reps, repLogs, intel, events] = await Promise.all([
+  const [factions, territories, jobs, reps, repLogs, intel, events, charProfiles] = await Promise.all([
     base44.asServiceRole.entities.Faction.filter({}),
     base44.asServiceRole.entities.Territory.filter({}),
     base44.asServiceRole.entities.Job.filter({}),
@@ -19,7 +19,10 @@ Deno.serve(async (req) => {
     base44.entities.ReputationLog.filter({ player_email: user.email }, '-created_date', 10),
     base44.asServiceRole.entities.IntelFeed.filter({ is_active: true }, '-created_date', 5),
     base44.asServiceRole.entities.Event.filter({ is_active: true }, '-created_date', 5),
+    base44.asServiceRole.entities.CharacterProfile.filter({ player_email: user.email }, '-created_date', 1),
   ]);
+
+  const charProfile = charProfiles.length > 0 ? charProfiles[0] : null;
 
   const playerReps = reps.map(r => {
     const f = factions.find(fc => fc.id === r.faction_id);
@@ -37,8 +40,23 @@ Deno.serve(async (req) => {
     title: j.title, type: j.type, difficulty: j.difficulty,
   }));
 
-  const prompt = `You are ARTEMIS, the tactical AI advisor embedded in the DEAD SIGNAL field terminal. You're a sardonic, battle-hardened AI with dark humour who's seen too many operatives come and go. You address the operative by callsign "${user.callsign || 'Operative'}".
+  const charBlock = charProfile ? `
+CHARACTER ROLEPLAY DATA (use this to flavor your responses — reference their backstory, personality, and goals when relevant):
+- Character Name: ${charProfile.character_name || 'Not set'}
+- Age: ${charProfile.age || 'Unknown'}
+- Origin: ${charProfile.origin || 'Unknown'}
+- Backstory: ${charProfile.backstory || 'Not provided'}
+- Personality: ${charProfile.personality || 'Not provided'}
+- Skills: ${charProfile.skills || 'Not provided'}
+- Weaknesses: ${charProfile.weaknesses || 'Not provided'}
+- Appearance: ${charProfile.appearance || 'Not provided'}
+- Faction Loyalty: ${charProfile.faction_loyalty || 'Not provided'}
+- Goals: ${charProfile.goals || 'Not provided'}
+- Catchphrase: ${charProfile.catchphrase || 'None'}
+` : '';
 
+  const prompt = `You are ARTEMIS, the tactical AI advisor embedded in the DEAD SIGNAL field terminal. You're a sardonic, battle-hardened AI with dark humour who's seen too many operatives come and go. You address the operative by callsign "${user.callsign || 'Operative'}".
+${charBlock}
 OPERATIVE PROFILE:
 - Callsign: ${user.callsign || 'Undesignated'}
 - Discord: ${user.discord_username || 'Unlinked'}

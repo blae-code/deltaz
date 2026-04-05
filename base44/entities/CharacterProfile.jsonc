@@ -1,0 +1,57 @@
+{
+  "name": "CharacterProfile",
+  "type": "object",
+  "properties": {
+    "player_email": {
+      "type": "string",
+      "description": "Email of the player who owns this character"
+    },
+    "character_name": {
+      "type": "string",
+      "description": "In-character name (can differ from callsign)"
+    },
+    "backstory": {
+      "type": "string",
+      "description": "Character backstory / biography"
+    },
+    "personality": {
+      "type": "string",
+      "description": "Personality traits, quirks, motivations"
+    },
+    "skills": {
+      "type": "string",
+      "description": "Character skills and specializations"
+    },
+    "weaknesses": {
+      "type": "string",
+      "description": "Character flaws, fears, vulnerabilities"
+    },
+    "appearance": {
+      "type": "string",
+      "description": "Physical description"
+    },
+    "faction_loyalty": {
+      "type": "string",
+      "description": "Which faction they feel loyal to and why"
+    },
+    "goals": {
+      "type": "string",
+      "description": "What they want to achieve in the wasteland"
+    },
+    "catchphrase": {
+      "type": "string",
+      "description": "A signature line or motto"
+    },
+    "age": {
+      "type": "string",
+      "description": "Character age"
+    },
+    "origin": {
+      "type": "string",
+      "description": "Where they came from before the apocalypse"
+    }
+  },
+  "required": [
+    "player_email"
+  ]
+}

@@ -32,6 +32,9 @@ Deno.serve(async (req) => {
     return u?.callsign || u?.discord_username || 'an unknown operative';
   };
 
+  // Fetch character profile for the involved player if applicable
+  let charContext = '';
+
   let contextDescription = '';
   let targetPlayerEmail = null;
   let shouldBroadcast = false;
@@ -95,10 +98,23 @@ Deno.serve(async (req) => {
     return Response.json({ status: 'skipped', reason: 'No narration trigger matched' });
   }
 
+  // Fetch character profile for narrator flavor
+  if (targetPlayerEmail) {
+    const profiles = await base44.asServiceRole.entities.CharacterProfile.filter({ player_email: targetPlayerEmail }, '-created_date', 1);
+    if (profiles.length > 0) {
+      const cp = profiles[0];
+      const traits = [cp.personality, cp.skills, cp.weaknesses, cp.catchphrase, cp.backstory].filter(Boolean);
+      if (traits.length > 0) {
+        charContext = `\nCHARACTER RP DATA for ${getCallsign(targetPlayerEmail)}: ${cp.character_name ? `Name: ${cp.character_name}. ` : ''}${cp.personality ? `Personality: ${cp.personality}. ` : ''}${cp.skills ? `Skills: ${cp.skills}. ` : ''}${cp.weaknesses ? `Weaknesses: ${cp.weaknesses}. ` : ''}${cp.catchphrase ? `Catchphrase: "${cp.catchphrase}". ` : ''}${cp.backstory ? `Backstory: ${cp.backstory.substring(0, 200)}` : ''}`;
+      }
+    }
+  }
+
   // --- GENERATE AI NARRATION ---
   const prompt = `You are GHOST PROTOCOL — the sardonic, dark-humoured AI narrator for DEAD SIGNAL, a post-apocalyptic survival HQ system based on HumanitZ.
 
 EVENT: ${contextDescription}
+${charContext ? `${charContext}\nUse the character's RP data to add personal flavor to both the broadcast and personal message — reference their personality, skills, or catchphrase when appropriate.` : ''}
 
 Generate EXACTLY the following JSON response:
 
