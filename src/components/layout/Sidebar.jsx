@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
+import NavTooltip from "./NavTooltip";
 
 const playerNav = [
   { path: "/", label: "SITREP", icon: LayoutDashboard },
@@ -103,20 +104,21 @@ export default function Sidebar() {
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
-            <Link
-              key={item.path}
-              to={item.path}
-              onClick={() => setMobileOpen(false)}
-              className={cn(
-                "flex items-center gap-3 rounded-sm px-3 py-2.5 text-xs font-medium tracking-wider transition-colors",
-                isActive
-                  ? "bg-primary/10 text-primary border border-primary/30"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/50 border border-transparent"
-              )}
-            >
-              <item.icon className="h-4 w-4 shrink-0" />
-              {!collapsed && <span>{item.label}</span>}
-            </Link>
+            <NavTooltip key={item.path} path={item.path} collapsed={collapsed}>
+              <Link
+                to={item.path}
+                onClick={() => setMobileOpen(false)}
+                className={cn(
+                  "flex items-center gap-3 rounded-sm px-3 py-2.5 text-xs font-medium tracking-wider transition-colors",
+                  isActive
+                    ? "bg-primary/10 text-primary border border-primary/30"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/50 border border-transparent"
+                )}
+              >
+                <item.icon className="h-4 w-4 shrink-0" />
+                {!collapsed && <span>{item.label}</span>}
+              </Link>
+            </NavTooltip>
           );
         })}
       </nav>

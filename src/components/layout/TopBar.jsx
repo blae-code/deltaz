@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import StatusIndicator from "../terminal/StatusIndicator";
-import { Signal, Clock } from "lucide-react";
+import { Signal, Clock, Lock } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function TopBar() {
   const [user, setUser] = useState(null);
@@ -17,30 +18,64 @@ export default function TopBar() {
     d.toISOString().replace("T", " ").substring(0, 19) + " UTC";
 
   return (
+    <TooltipProvider delayDuration={200}>
     <header className="flex items-center justify-between border-b border-border bg-card px-4 py-2">
       <div className="flex items-center gap-4">
-        <StatusIndicator status="online" label="SYSTEM ONLINE" />
-        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-          <Signal className="h-3 w-3" />
-          <span className="tracking-wider">ENCRYPTED CHANNEL</span>
-        </div>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div><StatusIndicator status="online" label="SYSTEM ONLINE" className="cursor-help" /></div>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="font-mono text-[11px] bg-card border-primary/30">
+            <p className="text-primary font-semibold text-[10px] mb-0.5">CONNECTION STATUS</p>
+            <p className="text-muted-foreground">All backend systems nominal. Real-time subscriptions active.</p>
+          </TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground cursor-help">
+              <Lock className="h-3 w-3" />
+              <span className="tracking-wider">ENCRYPTED</span>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="font-mono text-[11px] bg-card border-primary/30">
+            <p className="text-primary font-semibold text-[10px] mb-0.5">SECURE CHANNEL</p>
+            <p className="text-muted-foreground">End-to-end encrypted data link between your terminal and Dead Signal HQ.</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
       <div className="flex items-center gap-4">
-        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-mono">
-          <Clock className="h-3 w-3" />
-          <span>{formatTime(time)}</span>
-        </div>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-mono cursor-help">
+              <Clock className="h-3 w-3" />
+              <span>{formatTime(time)}</span>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="font-mono text-[11px] bg-card border-primary/30">
+            <p className="text-muted-foreground">Coordinated Universal Time — used across all Dead Signal operations for sync.</p>
+          </TooltipContent>
+        </Tooltip>
         {user && (
-          <div className="flex items-center gap-2 border-l border-border pl-4">
-            <span className="text-xs text-primary font-semibold tracking-wider">
-              {user.callsign || user.full_name || "OPERATIVE"}
-            </span>
-            <span className="text-[10px] text-muted-foreground uppercase">
-              [{user.role || "player"}]
-            </span>
-          </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-2 border-l border-border pl-4 cursor-help">
+                <span className="text-xs text-primary font-semibold tracking-wider">
+                  {user.callsign || user.full_name || "OPERATIVE"}
+                </span>
+                <span className="text-[10px] text-muted-foreground uppercase">
+                  [{user.role || "player"}]
+                </span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="font-mono text-[11px] bg-card border-primary/30 max-w-[220px]">
+              <p className="text-primary font-semibold text-[10px] mb-0.5">OPERATIVE ID</p>
+              <p className="text-muted-foreground text-[10px]">{user.email}</p>
+              <p className="text-muted-foreground mt-1">Clearance: <span className="text-foreground uppercase">{user.role || "player"}</span></p>
+            </TooltipContent>
+          </Tooltip>
         )}
       </div>
     </header>
+    </TooltipProvider>
   );
 }

@@ -10,6 +10,7 @@ import WorldPulseStatus from "../components/dashboard/WorldPulseStatus";
 
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Crosshair, Shield, Map } from "lucide-react";
+import StatCard from "../components/dashboard/StatCard";
 
 export default function Dashboard() {
   const [jobs, setJobs] = useState([]);
@@ -75,18 +76,40 @@ export default function Dashboard() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: "ACTIVE MISSIONS", value: jobs.filter((j) => j.status === "available" || j.status === "in_progress").length, icon: Crosshair, color: "text-primary" },
-          { label: "ACTIVE EVENTS", value: events.filter((e) => e.is_active).length, icon: AlertTriangle, color: "text-accent" },
-          { label: "CLANS", value: factions.length, icon: Shield, color: "text-chart-4" },
-          { label: "TERRITORIES", value: territories.length, icon: Map, color: "text-chart-5" },
+          {
+            label: "ACTIVE MISSIONS",
+            value: jobs.filter((j) => j.status === "available" || j.status === "in_progress").length,
+            icon: Crosshair,
+            color: "text-primary",
+            description: "Missions currently available or being executed by operatives",
+            detail: `${jobs.filter(j => j.status === "available").length} available · ${jobs.filter(j => j.status === "in_progress").length} in progress`
+          },
+          {
+            label: "ACTIVE EVENTS",
+            value: events.filter((e) => e.is_active).length,
+            icon: AlertTriangle,
+            color: "text-accent",
+            description: "World events, broadcasts, and anomalies currently affecting the AO",
+            detail: events.length > 0 ? `Latest: ${events[0]?.title?.substring(0, 30)}...` : "No recent events"
+          },
+          {
+            label: "CLANS",
+            value: factions.length,
+            icon: Shield,
+            color: "text-chart-4",
+            description: "Registered factions operating across all sectors",
+            detail: `${factions.filter(f => f.status === "active").length} active · ${factions.filter(f => f.status === "hostile").length} hostile`
+          },
+          {
+            label: "TERRITORIES",
+            value: territories.length,
+            icon: Map,
+            color: "text-chart-5",
+            description: "Mapped zones across the 5×5 tactical grid",
+            detail: `${territories.filter(t => t.status === "contested").length} contested · ${territories.filter(t => t.status === "hostile").length} hostile`
+          },
         ].map((stat) => (
-          <div key={stat.label} className="border border-border bg-card rounded-sm p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <stat.icon className={`h-4 w-4 ${stat.color}`} />
-              <span className="text-[10px] text-muted-foreground tracking-widest">{stat.label}</span>
-            </div>
-            <div className={`text-2xl font-bold font-display ${stat.color}`}>{stat.value}</div>
-          </div>
+          <StatCard key={stat.label} {...stat} />
         ))}
       </div>
 
