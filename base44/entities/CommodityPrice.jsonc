@@ -1,0 +1,83 @@
+{
+  "name": "CommodityPrice",
+  "type": "object",
+  "properties": {
+    "resource_type": {
+      "type": "string",
+      "enum": [
+        "fuel",
+        "metals",
+        "tech",
+        "food",
+        "munitions"
+      ],
+      "description": "The commodity being tracked"
+    },
+    "base_price": {
+      "type": "number",
+      "default": 10,
+      "description": "Base price per unit in credits"
+    },
+    "current_price": {
+      "type": "number",
+      "default": 10,
+      "description": "Current market price after modifiers"
+    },
+    "availability": {
+      "type": "string",
+      "enum": [
+        "scarce",
+        "low",
+        "normal",
+        "high",
+        "surplus"
+      ],
+      "default": "normal",
+      "description": "Current market availability"
+    },
+    "price_trend": {
+      "type": "string",
+      "enum": [
+        "rising",
+        "stable",
+        "falling"
+      ],
+      "default": "stable"
+    },
+    "diplomacy_modifier": {
+      "type": "number",
+      "default": 0,
+      "description": "Price modifier from diplomatic agreements (negative = cheaper)"
+    },
+    "supply_modifier": {
+      "type": "number",
+      "default": 0,
+      "description": "Supply modifier from production and trade routes"
+    },
+    "demand_modifier": {
+      "type": "number",
+      "default": 0,
+      "description": "Demand modifier from active conflicts and territory needs"
+    },
+    "previous_price": {
+      "type": "number",
+      "default": 10,
+      "description": "Price from last cycle for trend calculation"
+    },
+    "price_history": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "description": "Last 10 price points for sparkline"
+    },
+    "notes": {
+      "type": "string",
+      "description": "AI-generated market commentary"
+    }
+  },
+  "required": [
+    "resource_type",
+    "base_price"
+  ]
+}

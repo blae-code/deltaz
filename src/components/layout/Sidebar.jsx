@@ -13,6 +13,7 @@ import {
   Eye,
   Menu,
   X,
+  TrendingUp,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
@@ -25,6 +26,7 @@ const playerNav = [
   { path: "/map", label: "AO MAP", icon: Map },
   { path: "/events", label: "COMMS", icon: Radio },
   { path: "/factions", label: "CLANS", icon: Shield },
+  { path: "/market", label: "MARKET", icon: TrendingUp },
   { path: "/intel", label: "INTEL", icon: Eye },
   { path: "/profile", label: "DOSSIER", icon: User },
 ];
