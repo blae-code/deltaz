@@ -10,7 +10,7 @@ const typeConfig = {
   event: { icon: Radio, color: "text-chart-4", label: "BROADCAST" },
   job_new: { icon: Crosshair, color: "text-accent", label: "NEW MISSION" },
   job_update: { icon: Crosshair, color: "text-primary", label: "MISSION UPDATE" },
-  faction: { icon: Shield, color: "text-chart-5", label: "FACTION" },
+  faction: { icon: Shield, color: "text-chart-5", label: "CLAN" },
   territory: { icon: MapPin, color: "text-accent", label: "TERRITORY" },
   reputation: { icon: Zap, color: "text-primary", label: "REP CHANGE" },
 };

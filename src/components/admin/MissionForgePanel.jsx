@@ -29,7 +29,7 @@ export default function MissionForgePanel() {
   return (
     <div className="space-y-4">
       <p className="text-[10px] text-muted-foreground leading-relaxed">
-        MISSION FORGE analyzes territory status, faction resource needs, and current economic conditions
+        MISSION FORGE analyzes territory status, clan resource needs, and current economic conditions
         to generate context-aware operations with tiered rewards. Scarce economies boost reputation payouts by 1.5x.
       </p>
 
@@ -52,7 +52,7 @@ export default function MissionForgePanel() {
               </Badge>
             </div>
             <div className="flex items-center gap-3 text-[10px]">
-              <span className="text-muted-foreground">Avg Faction Wealth:</span>
+              <span className="text-muted-foreground">Avg Clan Wealth:</span>
               <span className="text-foreground font-semibold">{result.avg_faction_wealth}</span>
               {result.economy_tier === "scarce" && (
                 <span className="text-accent flex items-center gap-1">

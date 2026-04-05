@@ -73,7 +73,7 @@ export default function Dashboard() {
         {[
           { label: "ACTIVE MISSIONS", value: jobs.filter((j) => j.status === "available" || j.status === "in_progress").length, icon: Crosshair, color: "text-primary" },
           { label: "ACTIVE EVENTS", value: events.filter((e) => e.is_active).length, icon: AlertTriangle, color: "text-accent" },
-          { label: "FACTIONS", value: factions.length, icon: Shield, color: "text-chart-4" },
+          { label: "CLANS", value: factions.length, icon: Shield, color: "text-chart-4" },
           { label: "TERRITORIES", value: territories.length, icon: Map, color: "text-chart-5" },
         ].map((stat) => (
           <div key={stat.label} className="border border-border bg-card rounded-sm p-4">

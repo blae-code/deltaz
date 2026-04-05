@@ -25,7 +25,7 @@ export default function Factions() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-primary text-xs tracking-widest animate-pulse">DECRYPTING FACTION DATA...</div>
+        <div className="text-primary text-xs tracking-widest animate-pulse">DECRYPTING CLAN DATA...</div>
       </div>
     );
   }
@@ -34,14 +34,14 @@ export default function Factions() {
     <div className="space-y-6">
       <div>
         <h2 className="text-lg font-bold font-display tracking-wider text-primary uppercase">
-          Faction Registry
+          Clan Registry
         </h2>
-        <p className="text-xs text-muted-foreground mt-1">Known organizations and their status</p>
+        <p className="text-xs text-muted-foreground mt-1">Known clans and their status</p>
       </div>
 
       {factions.length === 0 ? (
-        <DataCard title="No Factions">
-          <p className="text-xs text-muted-foreground">No factions registered in the system.</p>
+        <DataCard title="No Clans">
+          <p className="text-xs text-muted-foreground">No clans registered in the system.</p>
         </DataCard>
       ) : (
         <div className="grid md:grid-cols-2 gap-4">

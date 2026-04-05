@@ -96,7 +96,7 @@ export default function TerritoryOpsPanel() {
   return (
     <div className="space-y-4">
       <p className="text-[10px] text-muted-foreground">
-        Claim uncontrolled territories or transfer control between factions. Changes are broadcast to all operatives in real-time.
+        Claim uncontrolled territories or transfer control between clans. Changes are broadcast to all operatives in real-time.
       </p>
 
       {/* Territory selector */}
@@ -138,7 +138,7 @@ export default function TerritoryOpsPanel() {
       {/* Target faction */}
       <div>
         <Label className="text-[10px] font-mono tracking-wider">
-          {currentFaction ? "TRANSFER TO FACTION" : "CLAIM FOR FACTION"}
+          {currentFaction ? "TRANSFER TO CLAN" : "CLAIM FOR CLAN"}
         </Label>
         <Select value={targetFaction} onValueChange={setTargetFaction}>
           <SelectTrigger className="h-9 font-mono text-xs bg-muted mt-1">

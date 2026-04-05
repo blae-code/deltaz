@@ -99,9 +99,9 @@ export default function Profile() {
       </DataCard>
 
       {/* Reputation Bars */}
-      <DataCard title="Faction Standing">
+      <DataCard title="Clan Standing">
         {reputations.length === 0 ? (
-          <p className="text-xs text-muted-foreground">No faction reputation records found.</p>
+          <p className="text-xs text-muted-foreground">No clan reputation records found.</p>
         ) : (
           <div className="space-y-3">
             {reputations.map((rep) => {

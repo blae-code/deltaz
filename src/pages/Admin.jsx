@@ -217,7 +217,7 @@ export default function Admin() {
           <TabsTrigger value="autoassign" className="text-xs font-mono">AUTO-ASSIGN</TabsTrigger>
           <TabsTrigger value="jobs" className="text-xs font-mono">JOBS</TabsTrigger>
           <TabsTrigger value="events" className="text-xs font-mono">EVENTS</TabsTrigger>
-          <TabsTrigger value="factions" className="text-xs font-mono">FACTIONS</TabsTrigger>
+          <TabsTrigger value="factions" className="text-xs font-mono">CLANS</TabsTrigger>
           <TabsTrigger value="territories" className="text-xs font-mono">TERRITORIES</TabsTrigger>
           <TabsTrigger value="territory_ops" className="text-xs font-mono">TERRITORY OPS</TabsTrigger>
           <TabsTrigger value="mission_forge" className="text-xs font-mono">MISSION FORGE</TabsTrigger>
@@ -263,7 +263,7 @@ export default function Admin() {
 
         <TabsContent value="factions">
           <Card className="bg-card border-border">
-            <CardHeader><CardTitle className="text-xs font-mono text-muted-foreground tracking-widest">REGISTER FACTION</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-xs font-mono text-muted-foreground tracking-widest">REGISTER CLAN</CardTitle></CardHeader>
             <CardContent><CreateFactionForm onCreated={refresh} /></CardContent>
           </Card>
         </TabsContent>

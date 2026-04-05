@@ -53,6 +53,7 @@ export default function Intel() {
   const getTerritory = (id) => territories.find((t) => t.id === id)?.name;
 
   const categories = ["all", "rumor", "mission_brief", "faction_intel", "world_event", "anomaly_report", "tactical_advisory"];
+  const categoryLabels = { faction_intel: "clan intel" };
   const filtered = filter === "all" ? items : items.filter((i) => i.category === filter);
   const isAdmin = user?.role === "admin";
 
@@ -103,7 +104,7 @@ export default function Intel() {
             className="text-[10px] uppercase tracking-wider h-7"
             onClick={() => setFilter(c)}
           >
-            {c.replace("_", " ")}
+            {(categoryLabels[c] || c).replace("_", " ")}
           </Button>
         ))}
       </div>

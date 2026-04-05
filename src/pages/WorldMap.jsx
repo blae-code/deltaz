@@ -67,7 +67,7 @@ export default function WorldMap() {
       {filtered.length === 0 ? (
         <DataCard title="No Territories">
           <p className="text-xs text-muted-foreground">
-            {selectedFaction ? "No territories controlled by this faction." : "No territories discovered yet."}
+            {selectedFaction ? "No territories controlled by this clan." : "No territories discovered yet."}
           </p>
         </DataCard>
       ) : (

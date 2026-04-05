@@ -135,7 +135,7 @@ export default function AutoAssignPanel() {
   return (
     <div className="space-y-4">
       <p className="text-[10px] text-muted-foreground">
-        Automatically match available missions to operatives based on faction reputation standing and mission difficulty requirements.
+        Automatically match available missions to operatives based on clan reputation standing and mission difficulty requirements.
       </p>
 
       <Button

@@ -69,7 +69,7 @@ export default function ResourceDashboard() {
           TOTAL PRODUCTION: {Math.round(globalProd).toLocaleString()}/cycle
         </Badge>
         <Badge variant="outline" className="text-[10px] font-mono">
-          FACTIONS TRACKED: {economies.length}
+          CLANS TRACKED: {economies.length}
         </Badge>
         <div className="flex-1" />
         <Button size="sm" variant="outline" onClick={loadData} className="text-[10px] font-mono h-7">
@@ -81,7 +81,7 @@ export default function ResourceDashboard() {
       {missingFactions.length > 0 && (
         <div className="border border-accent/30 bg-accent/5 rounded-sm p-3 flex items-center justify-between">
           <span className="text-[10px] font-mono text-accent">
-            {missingFactions.length} FACTION(S) WITHOUT ECONOMIC PROFILE: {missingFactions.map((f) => f.tag).join(", ")}
+            {missingFactions.length} CLAN(S) WITHOUT ECONOMIC PROFILE: {missingFactions.map((f) => f.tag).join(", ")}
           </span>
           <Button size="sm" onClick={initializeMissing} disabled={initializing} className="text-[10px] font-mono h-7">
             <Plus className="h-3 w-3 mr-1" /> {initializing ? "INITIALIZING..." : "INITIALIZE"}
@@ -93,7 +93,7 @@ export default function ResourceDashboard() {
       {economies.length > 0 && (
         <div className="border border-border rounded-sm p-4 bg-card">
           <h4 className="text-[10px] font-mono tracking-widest text-muted-foreground mb-3">
-            EFFECTIVE RESOURCE OUTPUT BY FACTION (AFTER MODIFIERS)
+            EFFECTIVE RESOURCE OUTPUT BY CLAN (AFTER MODIFIERS)
           </h4>
           <ResourceProductionChart economies={economies} factions={factions} />
         </div>

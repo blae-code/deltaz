@@ -10,7 +10,7 @@ export default function FactionFilter({ factions, selectedFactionId, onSelect })
         className="text-[10px] uppercase tracking-wider h-7"
         onClick={() => onSelect(null)}
       >
-        ALL FACTIONS
+        ALL CLANS
       </Button>
       {factions.map((f) => (
         <Button

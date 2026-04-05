@@ -20,7 +20,7 @@ const playerNav = [
   { path: "/jobs", label: "MISSIONS", icon: Crosshair },
   { path: "/map", label: "AO MAP", icon: Map },
   { path: "/events", label: "COMMS", icon: Radio },
-  { path: "/factions", label: "FACTIONS", icon: Shield },
+  { path: "/factions", label: "CLANS", icon: Shield },
   { path: "/intel", label: "INTEL", icon: Eye },
   { path: "/profile", label: "DOSSIER", icon: User },
 ];

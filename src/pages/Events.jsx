@@ -50,7 +50,9 @@ export default function Events() {
       </div>
 
       <div className="flex gap-2 flex-wrap">
-        {["all", "world_event", "faction_conflict", "anomaly", "broadcast", "system_alert"].map((f) => (
+        {["all", "world_event", "faction_conflict", "anomaly", "broadcast", "system_alert"].map((f) => {
+          const labelMap = { faction_conflict: "clan conflict" };
+          return (
           <Button
             key={f}
             variant={filter === f ? "default" : "outline"}
@@ -58,9 +60,10 @@ export default function Events() {
             className="text-[10px] uppercase tracking-wider h-7"
             onClick={() => setFilter(f)}
           >
-            {f.replace("_", " ")}
+            {(labelMap[f] || f).replace("_", " ")}
           </Button>
-        ))}
+        );
+        })}
       </div>
 
       {filtered.length === 0 ? (

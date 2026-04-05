@@ -19,7 +19,7 @@ const EVENT_TYPES = [
 ];
 
 const typeConfig = {
-  faction_conflict: { icon: Shield, color: "text-chart-5", prefix: "[TERRITORY]" },
+  faction_conflict: { icon: Shield, color: "text-chart-5", prefix: "[CLAN WAR]" },
   world_event: { icon: AlertTriangle, color: "text-accent", prefix: "[WORLD]" },
   system_alert: { icon: Coins, color: "text-primary", prefix: "[SYSTEM]" },
   broadcast: { icon: Radio, color: "text-chart-4", prefix: "[COMMS]" },

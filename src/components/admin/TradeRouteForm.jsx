@@ -49,9 +49,9 @@ export default function TradeRouteForm({ factions, economies, onCreated }) {
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <Label className="text-[9px] font-mono tracking-widest text-muted-foreground">EXPORTER</Label>
+          <Label className="text-[9px] font-mono tracking-widest text-muted-foreground">EXPORTING CLAN</Label>
           <Select value={fromId} onValueChange={setFromId}>
-            <SelectTrigger className="h-8 font-mono text-xs bg-muted mt-1"><SelectValue placeholder="Select faction..." /></SelectTrigger>
+            <SelectTrigger className="h-8 font-mono text-xs bg-muted mt-1"><SelectValue placeholder="Select clan..." /></SelectTrigger>
             <SelectContent>
               {factions.filter(f => f.status === "active").map(f => {
                 const eco = economies.find(e => e.faction_id === f.id);
@@ -69,9 +69,9 @@ export default function TradeRouteForm({ factions, economies, onCreated }) {
           </Select>
         </div>
         <div>
-          <Label className="text-[9px] font-mono tracking-widest text-muted-foreground">IMPORTER</Label>
+          <Label className="text-[9px] font-mono tracking-widest text-muted-foreground">IMPORTING CLAN</Label>
           <Select value={toId} onValueChange={setToId}>
-            <SelectTrigger className="h-8 font-mono text-xs bg-muted mt-1"><SelectValue placeholder="Select faction..." /></SelectTrigger>
+            <SelectTrigger className="h-8 font-mono text-xs bg-muted mt-1"><SelectValue placeholder="Select clan..." /></SelectTrigger>
             <SelectContent>
               {factions.filter(f => f.status === "active" && f.id !== fromId).map(f => {
                 const eco = economies.find(e => e.faction_id === f.id);

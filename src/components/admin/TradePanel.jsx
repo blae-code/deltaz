@@ -67,7 +67,7 @@ export default function TradePanel() {
       {activeRoutes.length > 0 && (
         <div className="border border-border rounded-sm p-4 bg-card">
           <h4 className="text-[10px] font-mono tracking-widest text-muted-foreground mb-3">
-            NET TRADE BALANCE PER CYCLE (CR)
+            NET CLAN TRADE BALANCE PER CYCLE (CR)
           </h4>
           <TradeBalanceChart routes={activeRoutes} factions={factions} />
         </div>
