@@ -7,11 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, Plus, Trash2, Send, Zap, Flag, Coins } from "lucide-react";
+import { Shield, Plus, Trash2, Send, Zap, Flag, Coins, Crosshair } from "lucide-react";
 import DispatchPanel from "../components/admin/DispatchPanel";
 import AutoAssignPanel from "../components/admin/AutoAssignPanel";
 import TerritoryOpsPanel from "../components/admin/TerritoryOpsPanel";
 import ResourceDashboard from "../components/admin/ResourceDashboard";
+import MissionForgePanel from "../components/admin/MissionForgePanel";
 import { useToast } from "@/components/ui/use-toast";
 
 function CreateFactionForm({ onCreated }) {
@@ -218,6 +219,7 @@ export default function Admin() {
           <TabsTrigger value="factions" className="text-xs font-mono">FACTIONS</TabsTrigger>
           <TabsTrigger value="territories" className="text-xs font-mono">TERRITORIES</TabsTrigger>
           <TabsTrigger value="territory_ops" className="text-xs font-mono">TERRITORY OPS</TabsTrigger>
+          <TabsTrigger value="mission_forge" className="text-xs font-mono">MISSION FORGE</TabsTrigger>
           <TabsTrigger value="economy" className="text-xs font-mono">ECONOMY</TabsTrigger>
         </TabsList>
 
@@ -279,6 +281,17 @@ export default function Admin() {
               </CardTitle>
             </CardHeader>
             <CardContent><TerritoryOpsPanel /></CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="mission_forge">
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <CardTitle className="text-xs font-mono text-muted-foreground tracking-widest flex items-center gap-2">
+                <Crosshair className="h-3.5 w-3.5" /> AUTOMATED MISSION GENERATOR
+              </CardTitle>
+            </CardHeader>
+            <CardContent><MissionForgePanel /></CardContent>
           </Card>
         </TabsContent>
 
