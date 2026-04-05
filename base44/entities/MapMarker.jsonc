@@ -1,0 +1,56 @@
+{
+  "name": "MapMarker",
+  "type": "object",
+  "properties": {
+    "label": {
+      "type": "string",
+      "description": "Short label for the marker"
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional details about this location"
+    },
+    "grid_x": {
+      "type": "number",
+      "description": "X position on the grid (0-100 percent)"
+    },
+    "grid_y": {
+      "type": "number",
+      "description": "Y position on the grid (0-100 percent)"
+    },
+    "sector": {
+      "type": "string",
+      "description": "Grid sector code e.g. A-3"
+    },
+    "marker_type": {
+      "type": "string",
+      "enum": [
+        "poi",
+        "danger",
+        "loot",
+        "base",
+        "mission",
+        "custom"
+      ],
+      "default": "custom"
+    },
+    "faction_id": {
+      "type": "string",
+      "description": "Optional faction that placed this marker"
+    },
+    "is_shared": {
+      "type": "boolean",
+      "default": true,
+      "description": "If true, visible to all players"
+    },
+    "color": {
+      "type": "string",
+      "description": "Optional hex color override"
+    }
+  },
+  "required": [
+    "label",
+    "grid_x",
+    "grid_y"
+  ]
+}

@@ -1,43 +1,99 @@
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import DataCard from "../components/terminal/DataCard";
-import TerritoryPin from "../components/map/TerritoryPin";
+import GridMap from "../components/map/GridMap";
+import MapMarkerPin from "../components/map/MapPin";
+import TerritoryOverlay from "../components/map/TerritoryOverlay";
+import MarkerPanel from "../components/map/MarkerPanel";
 import FactionFilter from "../components/map/FactionFilter";
-
-
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { MapPin, Layers, Eye, EyeOff } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function WorldMap() {
   const [territories, setTerritories] = useState([]);
   const [factions, setFactions] = useState([]);
-  const [jobs, setJobs] = useState([]);
-  const [events, setEvents] = useState([]);
+  const [markers, setMarkers] = useState([]);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedFaction, setSelectedFaction] = useState(null);
-  const [openPinId, setOpenPinId] = useState(null);
+  const [selectedMarker, setSelectedMarker] = useState(null);
+  const [pendingPosition, setPendingPosition] = useState(null);
+  const [showTerritories, setShowTerritories] = useState(true);
+  const [showMarkers, setShowMarkers] = useState(true);
+  const [hoveredSector, setHoveredSector] = useState(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     Promise.all([
       base44.entities.Territory.list("-created_date", 50),
       base44.entities.Faction.list("-created_date", 50),
-      base44.entities.Job.list("-created_date", 50),
-      base44.entities.Event.list("-created_date", 50),
+      base44.entities.MapMarker.list("-created_date", 100),
+      base44.auth.me(),
     ])
-      .then(([t, f, j, e]) => {
+      .then(([t, f, m, u]) => {
         setTerritories(t);
         setFactions(f);
-        setJobs(j);
-        setEvents(e);
+        setMarkers(m);
+        setUser(u);
       })
       .finally(() => setLoading(false));
   }, []);
 
-  const getFaction = (id) => factions.find((f) => f.id === id);
-  const getJobsForTerritory = (tId) => jobs.filter((j) => j.territory_id === tId && (j.status === "available" || j.status === "in_progress"));
-  const getEventsForTerritory = (tId) => events.filter((e) => e.territory_id === tId && e.is_active);
+  // Real-time marker updates
+  useEffect(() => {
+    const unsub = base44.entities.MapMarker.subscribe((ev) => {
+      if (ev.type === "create") {
+        setMarkers((prev) => [ev.data, ...prev]);
+      } else if (ev.type === "delete") {
+        setMarkers((prev) => prev.filter((m) => m.id !== ev.id));
+      } else if (ev.type === "update") {
+        setMarkers((prev) => prev.map((m) => (m.id === ev.id ? ev.data : m)));
+      }
+    });
+    return unsub;
+  }, []);
 
-  const filtered = selectedFaction
+  const getFaction = (id) => factions.find((f) => f.id === id);
+
+  const filteredTerritories = selectedFaction
     ? territories.filter((t) => t.controlling_faction_id === selectedFaction)
     : territories;
+
+  const visibleMarkers = markers.filter((m) => {
+    if (!m.is_shared && m.created_by !== user?.email) return false;
+    return true;
+  });
+
+  const handleGridClick = ({ x, y, sector }) => {
+    setSelectedMarker(null);
+    setPendingPosition({ x, y, sector });
+  };
+
+  const handleCreateMarker = async (data) => {
+    await base44.entities.MapMarker.create(data);
+    toast({ title: "Marker dropped", description: `${data.label} at ${data.sector}` });
+    setPendingPosition(null);
+  };
+
+  const handleDeleteMarker = async (id) => {
+    await base44.entities.MapMarker.delete(id);
+    toast({ title: "Marker removed" });
+    setSelectedMarker(null);
+  };
+
+  const handleSelectMarker = (marker) => {
+    setPendingPosition(null);
+    setSelectedMarker(marker);
+  };
+
+  // Count territories per sector for the info display
+  const sectorTerritories = hoveredSector
+    ? territories.filter((t) => t.sector === hoveredSector)
+    : [];
+  const sectorMarkers = hoveredSector
+    ? visibleMarkers.filter((m) => m.sector === hoveredSector)
+    : [];
 
   if (loading) {
     return (
@@ -48,12 +104,37 @@ export default function WorldMap() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-bold font-display tracking-wider text-primary uppercase">
-          Area of Operations
-        </h2>
-        <p className="text-xs text-muted-foreground mt-1">Territory control and threat assessment</p>
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-bold font-display tracking-wider text-primary uppercase">
+            Tactical Grid
+          </h2>
+          <p className="text-xs text-muted-foreground mt-1">
+            5×5 sector map — click to drop markers, share intel
+          </p>
+        </div>
+        <div className="flex gap-1.5">
+          <Button
+            variant={showTerritories ? "default" : "outline"}
+            size="sm"
+            className="h-7 text-[9px] tracking-wider"
+            onClick={() => setShowTerritories(!showTerritories)}
+          >
+            <Layers className="h-3 w-3 mr-1" />
+            ZONES
+          </Button>
+          <Button
+            variant={showMarkers ? "default" : "outline"}
+            size="sm"
+            className="h-7 text-[9px] tracking-wider"
+            onClick={() => setShowMarkers(!showMarkers)}
+          >
+            <MapPin className="h-3 w-3 mr-1" />
+            MARKERS
+          </Button>
+        </div>
       </div>
 
       {/* Faction Filter */}
@@ -63,32 +144,146 @@ export default function WorldMap() {
         onSelect={setSelectedFaction}
       />
 
-      {/* Territory Pins */}
-      {filtered.length === 0 ? (
-        <DataCard title="No Territories">
-          <p className="text-xs text-muted-foreground">
-            {selectedFaction ? "No territories controlled by this clan." : "No territories discovered yet."}
-          </p>
-        </DataCard>
-      ) : (
-        <div className="grid md:grid-cols-2 gap-3">
-          {filtered.map((t) => {
-            const faction = getFaction(t.controlling_faction_id);
-            return (
-              <TerritoryPin
-                key={t.id}
-                territory={t}
-                factionName={faction?.name || "UNCLAIMED"}
-                factionColor={faction?.color}
-                jobs={getJobsForTerritory(t.id)}
-                events={getEventsForTerritory(t.id)}
-                isOpen={openPinId === t.id}
-                onToggle={() => setOpenPinId(openPinId === t.id ? null : t.id)}
+      {/* Map + Side Panel */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Grid Map */}
+        <div className="lg:col-span-2">
+          <GridMap
+            onGridClick={handleGridClick}
+            selectedSector={selectedMarker?.sector || pendingPosition?.sector}
+            onSectorHover={setHoveredSector}
+          >
+            {/* Territory zone overlays */}
+            {showTerritories &&
+              filteredTerritories.map((t) => {
+                const faction = getFaction(t.controlling_faction_id);
+                return (
+                  <TerritoryOverlay
+                    key={t.id}
+                    territory={t}
+                    factionColor={faction?.color}
+                  />
+                );
+              })}
+
+            {/* Territory center pins */}
+            {showTerritories &&
+              filteredTerritories
+                .filter((t) => t.sector)
+                .map((t) => {
+                  const faction = getFaction(t.controlling_faction_id);
+                  const parts = t.sector.split("-");
+                  if (parts.length !== 2) return null;
+                  const rowIdx = ["A", "B", "C", "D", "E"].indexOf(parts[0].toUpperCase());
+                  const colIdx = parseInt(parts[1]) - 1;
+                  if (rowIdx < 0 || colIdx < 0) return null;
+                  // Place in center of sector
+                  const x = colIdx * 20 + 10;
+                  const y = rowIdx * 20 + 10;
+                  return (
+                    <MapMarkerPin
+                      key={`t-${t.id}`}
+                      x={x}
+                      y={y}
+                      label={t.name}
+                      type="territory"
+                      color={faction?.color}
+                      size="sm"
+                      onClick={() => {}}
+                    />
+                  );
+                })}
+
+            {/* User markers */}
+            {showMarkers &&
+              visibleMarkers.map((m) => (
+                <MapMarkerPin
+                  key={m.id}
+                  x={m.grid_x}
+                  y={m.grid_y}
+                  label={m.label}
+                  type={m.marker_type}
+                  color={m.color}
+                  isSelected={selectedMarker?.id === m.id}
+                  onClick={() => handleSelectMarker(m)}
+                />
+              ))}
+
+            {/* Pending position indicator */}
+            {pendingPosition && (
+              <div
+                className="absolute z-20 h-6 w-6 rounded-full border-2 border-primary bg-primary/20 animate-pulse pointer-events-none"
+                style={{
+                  left: `${pendingPosition.x}%`,
+                  top: `${pendingPosition.y}%`,
+                  transform: "translate(-50%, -50%)",
+                }}
               />
-            );
-          })}
+            )}
+          </GridMap>
+
+          {/* Sector info bar */}
+          {hoveredSector && (sectorTerritories.length > 0 || sectorMarkers.length > 0) && (
+            <div className="mt-2 flex items-center gap-3 text-[10px] text-muted-foreground">
+              {sectorTerritories.length > 0 && (
+                <span>
+                  <Layers className="h-3 w-3 inline mr-1" />
+                  {sectorTerritories.map((t) => t.name).join(", ")}
+                </span>
+              )}
+              {sectorMarkers.length > 0 && (
+                <span>
+                  <MapPin className="h-3 w-3 inline mr-1" />
+                  {sectorMarkers.length} marker{sectorMarkers.length !== 1 ? "s" : ""}
+                </span>
+              )}
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Side Panel */}
+        <div className="space-y-3">
+          <MarkerPanel
+            selectedMarker={selectedMarker}
+            pendingPosition={pendingPosition}
+            onCreateMarker={handleCreateMarker}
+            onDeleteMarker={handleDeleteMarker}
+            onClose={() => {
+              setSelectedMarker(null);
+              setPendingPosition(null);
+            }}
+            markers={visibleMarkers}
+            onSelectMarker={handleSelectMarker}
+          />
+
+          {/* Territory legend */}
+          {showTerritories && filteredTerritories.length > 0 && (
+            <div className="border border-border bg-card rounded-sm overflow-hidden">
+              <div className="border-b border-border px-3 py-2 bg-secondary/50">
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-primary font-display">
+                  TERRITORY CONTROL
+                </span>
+              </div>
+              <div className="p-2 space-y-1 max-h-48 overflow-y-auto">
+                {filteredTerritories.map((t) => {
+                  const faction = getFaction(t.controlling_faction_id);
+                  return (
+                    <div key={t.id} className="flex items-center gap-2 px-2 py-1 text-[10px]">
+                      <span
+                        className="h-2 w-2 rounded-full shrink-0"
+                        style={{ backgroundColor: faction?.color || "hsl(var(--muted-foreground))" }}
+                      />
+                      <span className="text-foreground flex-1 truncate">{t.name}</span>
+                      <Badge variant="outline" className="text-[8px]">{t.sector}</Badge>
+                      <span className="text-muted-foreground uppercase">{t.status}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
