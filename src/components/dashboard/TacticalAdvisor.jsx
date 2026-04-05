@@ -75,7 +75,7 @@ export default function TacticalAdvisor() {
                 {entry.question && (
                   <div className="flex items-start gap-2 mb-1.5">
                     <MessageSquare className="h-3 w-3 text-accent mt-0.5 shrink-0" />
-                    <p className="text-[10px] text-accent">{entry.question}</p>
+                    <p className="text-[10px] text-accent/80">{entry.question}</p>
                   </div>
                 )}
                 <div className="flex items-start gap-2">

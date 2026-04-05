@@ -49,10 +49,10 @@ export default function Dashboard() {
   }
 
   const severityColor = {
-    info: "bg-primary/20 text-primary border-primary/30",
-    warning: "bg-accent/20 text-accent border-accent/30",
-    critical: "bg-destructive/20 text-destructive border-destructive/30",
-    emergency: "bg-destructive/30 text-destructive border-destructive/50",
+    info: "bg-primary/10 text-primary border-primary/20",
+    warning: "bg-accent/10 text-accent border-accent/20",
+    critical: "bg-status-danger/10 text-status-danger border-status-danger/20",
+    emergency: "bg-status-danger/15 text-status-danger border-status-danger/30",
   };
 
   return (
