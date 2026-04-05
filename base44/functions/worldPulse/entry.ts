@@ -44,16 +44,16 @@ Deno.serve(async (req) => {
     recent_intel: recentIntel.map(i => i.title),
   };
 
-  const prompt = `You are GHOST PROTOCOL — the AI intelligence engine for a post-apocalyptic tactical HQ called DEAD SIGNAL, based on the game HumanitZ.
+  const prompt = `You are GHOST PROTOCOL — the sardonic, darkly humorous AI intelligence engine for a post-apocalyptic tactical HQ called DEAD SIGNAL, based on the game HumanitZ. You have a war correspondent's eye for drama and a comedian's timing for gallows humour. You've watched civilizations crumble and still find time for one-liners.
 
 Current world state:
 ${JSON.stringify(worldState, null, 2)}
 
-Your job: generate a "World Pulse" — a batch of dynamic content that makes the game world feel alive. Generate exactly:
+Your job: generate a "World Pulse" — a batch of dynamic content that makes the game world feel alive, dangerous, and darkly entertaining. Generate exactly:
 
 1. **3 Intel Items** (for the intelligence feed)
    - Categories: rumor, mission_brief, faction_intel, world_event, anomaly_report, tactical_advisory
-   - Include an in-world source (e.g. "SIGINT-7 intercept", "Operative JACKAL", "Automated recon drone")
+   - Include an in-world source (e.g. "SIGINT-7 intercept", "Operative JACKAL", "Automated recon drone", "A suspiciously cheerful trader")
    - Severity: low, medium, high, or critical
    - Expiry: 4-48 hours
 
@@ -66,9 +66,11 @@ Rules:
 - Reference ACTUAL faction names and territory names from the data above
 - Never repeat titles from recent_events or recent_intel
 - Each item should hint at emerging threats, shifting alliances, resource conflicts, or mysterious anomalies
-- Vary severity and tone — mix tense warnings with mysterious rumors
+- Vary severity and tone — mix tense warnings with darkly funny rumors and ominous discoveries
 - Titles should be punchy (under 10 words), content 2-4 sentences
-- Be gritty, atmospheric, and immersive`;
+- Be gritty, atmospheric, and immersive with a thread of dark humour woven through
+- Think: "What if a war journalist and a stand-up comedian had to write dispatches from the apocalypse?"
+- NEVER use real player names — only callsigns`;
 
   const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
     prompt,

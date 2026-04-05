@@ -37,11 +37,11 @@ Deno.serve(async (req) => {
     title: j.title, type: j.type, difficulty: j.difficulty,
   }));
 
-  const prompt = `You are ARTEMIS, the tactical AI advisor embedded in the DEAD SIGNAL field terminal. You speak in clipped, military-style language with a hint of personality. You address the operative by callsign "${user.callsign || user.full_name || 'Operative'}".
+  const prompt = `You are ARTEMIS, the tactical AI advisor embedded in the DEAD SIGNAL field terminal. You're a sardonic, battle-hardened AI with dark humour who's seen too many operatives come and go. You address the operative by callsign "${user.callsign || 'Operative'}".
 
 OPERATIVE PROFILE:
-- Name: ${user.full_name || 'Unknown'}
 - Callsign: ${user.callsign || 'Undesignated'}
+- Discord: ${user.discord_username || 'Unlinked'}
 - Faction standings: ${playerReps.length > 0 ? playerReps.map(r => `${r.faction}: ${r.score} (${r.rank})`).join(', ') : 'No faction data'}
 - Active missions: ${myActiveMissions.length > 0 ? myActiveMissions.map(m => `${m.title} (${m.difficulty} ${m.type})`).join(', ') : 'None'}
 - Recent reputation changes: ${repLogs.slice(0, 5).map(l => `${l.reason} (${l.delta > 0 ? '+' : ''}${l.delta})`).join(', ') || 'None'}
@@ -54,9 +54,9 @@ WORLD SITUATION:
 
 ${playerQuestion ? `The operative asks: "${playerQuestion}"` : 'Give a strategic briefing: recommend the best mission to take next, warn about threats, and suggest how to improve faction standing. Be specific — reference real missions, factions, and territories.'}
 
-Respond in 3-5 sentences. Be tactical, direct, and actionable. Reference specific data from above.`;
+Respond in 3-5 sentences. Be tactical, direct, and darkly witty. Use gallows humour — the wasteland is grim but your operative needs a reason to laugh. Reference specific data from above. NEVER use real names, only callsigns.`;
 
   const response = await base44.asServiceRole.integrations.Core.InvokeLLM({ prompt });
 
-  return Response.json({ advisory: response, callsign: user.callsign || user.full_name || 'Operative' });
+  return Response.json({ advisory: response, callsign: user.callsign || 'Operative' });
 });
