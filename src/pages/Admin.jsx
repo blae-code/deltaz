@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, Plus, Trash2, Send, Zap, Flag, Coins, Crosshair, ArrowLeftRight, Users } from "lucide-react";
+import { Shield, Plus, Trash2, Send, Zap, Flag, Coins, Crosshair, ArrowLeftRight, Users, Server } from "lucide-react";
 import DispatchPanel from "../components/admin/DispatchPanel";
+import ServerDashboard from "../components/admin/ServerDashboard";
 import AutoAssignPanel from "../components/admin/AutoAssignPanel";
 import TerritoryOpsPanel from "../components/admin/TerritoryOpsPanel";
 import ResourceDashboard from "../components/admin/ResourceDashboard";
@@ -213,8 +214,9 @@ export default function Admin() {
         <p className="text-xs font-mono text-muted-foreground mt-1">GAME MASTER OPERATIONS</p>
       </div>
 
-      <Tabs defaultValue="dispatch" className="w-full">
+      <Tabs defaultValue="server" className="w-full">
         <TabsList className="bg-muted border border-border font-mono">
+          <TabsTrigger value="server" className="text-xs font-mono">SERVER</TabsTrigger>
           <TabsTrigger value="dispatch" className="text-xs font-mono">DISPATCH</TabsTrigger>
           <TabsTrigger value="autoassign" className="text-xs font-mono">AUTO-ASSIGN</TabsTrigger>
           <TabsTrigger value="jobs" className="text-xs font-mono">JOBS</TabsTrigger>
@@ -228,6 +230,17 @@ export default function Admin() {
           <TabsTrigger value="economy" className="text-xs font-mono">ECONOMY</TabsTrigger>
           <TabsTrigger value="survivors" className="text-xs font-mono">SURVIVORS</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="server">
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <CardTitle className="text-xs font-mono text-muted-foreground tracking-widest flex items-center gap-2">
+                <Server className="h-3.5 w-3.5" /> SERVER MANAGEMENT
+              </CardTitle>
+            </CardHeader>
+            <CardContent><ServerDashboard /></CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="dispatch">
           <Card className="bg-card border-border">
