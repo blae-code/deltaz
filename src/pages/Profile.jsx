@@ -7,10 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { User, Shield, Award, LogOut } from "lucide-react";
+import ReputationBar from "../components/profile/ReputationBar";
+import ReputationHistory from "../components/profile/ReputationHistory";
 
 export default function Profile() {
   const [user, setUser] = useState(null);
   const [reputations, setReputations] = useState([]);
+  const [repLogs, setRepLogs] = useState([]);
   const [factions, setFactions] = useState([]);
   const [callsign, setCallsign] = useState("");
   const [saving, setSaving] = useState(false);
@@ -27,6 +30,9 @@ export default function Profile() {
       if (u.email) {
         base44.entities.Reputation.filter({ player_email: u.email })
           .then(setReputations)
+          .catch(() => {});
+        base44.entities.ReputationLog.filter({ player_email: u.email }, "-created_date", 20)
+          .then(setRepLogs)
           .catch(() => {});
       }
     }).finally(() => setLoading(false));
@@ -92,29 +98,30 @@ export default function Profile() {
         </div>
       </DataCard>
 
-      {/* Reputation */}
+      {/* Reputation Bars */}
       <DataCard title="Faction Standing">
         {reputations.length === 0 ? (
           <p className="text-xs text-muted-foreground">No faction reputation records found.</p>
         ) : (
           <div className="space-y-3">
-            {reputations.map((rep) => (
-              <div key={rep.id} className="flex items-center justify-between border border-border rounded-sm p-3">
-                <div className="flex items-center gap-2">
-                  <Shield className="h-3.5 w-3.5 text-primary" />
-                  <span className="text-xs font-medium text-foreground">{getFactionName(rep.faction_id)}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1 text-[10px] text-accent">
-                    <Award className="h-3 w-3" />
-                    <span>{rep.score}</span>
-                  </div>
-                  <Badge variant="outline" className="text-[10px] uppercase">{rep.rank}</Badge>
-                </div>
-              </div>
-            ))}
+            {reputations.map((rep) => {
+              const faction = factions.find((f) => f.id === rep.faction_id);
+              return (
+                <ReputationBar
+                  key={rep.id}
+                  reputation={rep}
+                  factionName={faction?.name || "Unknown"}
+                  factionColor={faction?.color}
+                />
+              );
+            })}
           </div>
         )}
+      </DataCard>
+
+      {/* Reputation History */}
+      <DataCard title="Reputation Activity Log">
+        <ReputationHistory logs={repLogs} factions={factions} />
       </DataCard>
 
       {/* Actions */}

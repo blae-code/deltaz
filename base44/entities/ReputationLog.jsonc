@@ -2,30 +2,31 @@
   "name": "ReputationLog",
   "type": "object",
   "properties": {
-    "operative": {
+    "player_email": {
       "type": "string",
-      "title": "Operative Email"
+      "description": "Player's email"
     },
-    "faction": {
+    "faction_id": {
       "type": "string",
-      "title": "Faction"
+      "description": "Faction affected"
     },
-    "change": {
+    "delta": {
       "type": "number",
-      "title": "Rep Change"
+      "description": "Points gained or lost"
     },
     "reason": {
       "type": "string",
-      "title": "Reason"
+      "description": "Description of what caused the change"
     },
-    "job_id": {
+    "source_job_id": {
       "type": "string",
-      "title": "Related Job"
+      "description": "Optional job that triggered this change"
     }
   },
   "required": [
-    "operative",
-    "faction",
-    "change"
+    "player_email",
+    "faction_id",
+    "delta",
+    "reason"
   ]
 }
