@@ -10,6 +10,7 @@ import WorldPulseStatus from "../components/dashboard/WorldPulseStatus";
 import ScavengeLog from "../components/dashboard/ScavengeLog";
 import ColonyMonitor from "../components/dashboard/ColonyMonitor";
 import LiveEventWatcher from "../components/dashboard/LiveEventWatcher";
+import TacticalMapWidget from "../components/dashboard/TacticalMapWidget";
 
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Crosshair, Shield, Map } from "lucide-react";
@@ -121,6 +122,9 @@ export default function Dashboard() {
           <StatCard key={stat.label} {...stat} />
         ))}
       </div>
+
+      {/* Tactical Map Overview */}
+      <TacticalMapWidget />
 
       {/* Activity Feed (Live + Combat Log) */}
       <ActivityFeed />
