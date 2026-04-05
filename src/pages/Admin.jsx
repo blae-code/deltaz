@@ -7,9 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, Plus, Trash2, Send, Zap } from "lucide-react";
+import { Shield, Plus, Trash2, Send, Zap, Flag } from "lucide-react";
 import DispatchPanel from "../components/admin/DispatchPanel";
 import AutoAssignPanel from "../components/admin/AutoAssignPanel";
+import TerritoryOpsPanel from "../components/admin/TerritoryOpsPanel";
 import { useToast } from "@/components/ui/use-toast";
 
 function CreateFactionForm({ onCreated }) {
@@ -215,6 +216,7 @@ export default function Admin() {
           <TabsTrigger value="events" className="text-xs font-mono">EVENTS</TabsTrigger>
           <TabsTrigger value="factions" className="text-xs font-mono">FACTIONS</TabsTrigger>
           <TabsTrigger value="territories" className="text-xs font-mono">TERRITORIES</TabsTrigger>
+          <TabsTrigger value="territory_ops" className="text-xs font-mono">TERRITORY OPS</TabsTrigger>
         </TabsList>
 
         <TabsContent value="dispatch">
@@ -264,6 +266,17 @@ export default function Admin() {
           <Card className="bg-card border-border">
             <CardHeader><CardTitle className="text-xs font-mono text-muted-foreground tracking-widest">ADD TERRITORY</CardTitle></CardHeader>
             <CardContent><CreateTerritoryForm onCreated={refresh} /></CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="territory_ops">
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <CardTitle className="text-xs font-mono text-muted-foreground tracking-widest flex items-center gap-2">
+                <Flag className="h-3.5 w-3.5" /> TERRITORY OPERATIONS
+              </CardTitle>
+            </CardHeader>
+            <CardContent><TerritoryOpsPanel /></CardContent>
           </Card>
         </TabsContent>
       </Tabs>
