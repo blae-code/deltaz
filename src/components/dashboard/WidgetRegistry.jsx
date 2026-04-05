@@ -1,6 +1,6 @@
 import {
   Crosshair, AlertTriangle, Shield, Map, Radio, Activity,
-  Eye, TrendingUp, Home, Zap, Coins, ScrollText, Target,
+  Eye, TrendingUp, Home, Zap, Coins, ScrollText, Target, Swords,
 } from "lucide-react";
 
 import TacticalMapWidget from "./TacticalMapWidget";
@@ -11,6 +11,7 @@ import ScavengeLog from "./ScavengeLog";
 import ColonyMonitor from "./ColonyMonitor";
 import FactionEconomyWidget from "./FactionEconomyWidget";
 import MissionForgeFeed from "./MissionForgeFeed";
+import ConflictLog from "./ConflictLog";
 
 // Each widget definition
 // sizes: "sm" = 1 col, "md" = 1 col, "lg" = 2 col, "full" = full width
@@ -94,6 +95,14 @@ const WIDGET_REGISTRY = [
     defaultSize: "md",
     sizes: ["md", "lg", "full"],
     component: TacticalAdvisor,
+  },
+  {
+    id: "conflict_log",
+    label: "Conflict Log",
+    icon: Swords,
+    defaultSize: "lg",
+    sizes: ["md", "lg", "full"],
+    component: ConflictLog,
   },
 ];
 
