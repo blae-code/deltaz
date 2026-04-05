@@ -1,0 +1,48 @@
+{
+  "name": "Diplomacy",
+  "type": "object",
+  "properties": {
+    "faction_a_id": {
+      "type": "string",
+      "description": "First faction in the relationship"
+    },
+    "faction_b_id": {
+      "type": "string",
+      "description": "Second faction in the relationship"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "neutral",
+        "allied",
+        "trade_agreement",
+        "ceasefire",
+        "hostile",
+        "war"
+      ],
+      "default": "neutral",
+      "description": "Current diplomatic status"
+    },
+    "previous_status": {
+      "type": "string",
+      "description": "Status before the last change"
+    },
+    "terms": {
+      "type": "string",
+      "description": "Description of the agreement terms"
+    },
+    "initiated_by": {
+      "type": "string",
+      "description": "Which faction initiated the current status"
+    },
+    "expires_at": {
+      "type": "string",
+      "description": "ISO date when this agreement expires (optional)"
+    }
+  },
+  "required": [
+    "faction_a_id",
+    "faction_b_id",
+    "status"
+  ]
+}

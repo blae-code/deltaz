@@ -14,6 +14,7 @@ import TerritoryOpsPanel from "../components/admin/TerritoryOpsPanel";
 import ResourceDashboard from "../components/admin/ResourceDashboard";
 import MissionForgePanel from "../components/admin/MissionForgePanel";
 import TradePanel from "../components/admin/TradePanel";
+import DiplomacyPanel from "../components/admin/DiplomacyPanel";
 import { useToast } from "@/components/ui/use-toast";
 
 function CreateFactionForm({ onCreated }) {
@@ -221,6 +222,7 @@ export default function Admin() {
           <TabsTrigger value="territories" className="text-xs font-mono">TERRITORIES</TabsTrigger>
           <TabsTrigger value="territory_ops" className="text-xs font-mono">TERRITORY OPS</TabsTrigger>
           <TabsTrigger value="mission_forge" className="text-xs font-mono">MISSION FORGE</TabsTrigger>
+          <TabsTrigger value="diplomacy" className="text-xs font-mono">DIPLOMACY</TabsTrigger>
           <TabsTrigger value="trade" className="text-xs font-mono">TRADE</TabsTrigger>
           <TabsTrigger value="economy" className="text-xs font-mono">ECONOMY</TabsTrigger>
         </TabsList>
@@ -294,6 +296,17 @@ export default function Admin() {
               </CardTitle>
             </CardHeader>
             <CardContent><MissionForgePanel /></CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="diplomacy">
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <CardTitle className="text-xs font-mono text-muted-foreground tracking-widest flex items-center gap-2">
+                <Shield className="h-3.5 w-3.5" /> INTER-FACTION DIPLOMACY
+              </CardTitle>
+            </CardHeader>
+            <CardContent><DiplomacyPanel /></CardContent>
           </Card>
         </TabsContent>
 

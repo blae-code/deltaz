@@ -1,19 +1,32 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 Deno.serve(async (req) => {
+  try {
   const base44 = createClientFromRequest(req);
-  const user = await base44.auth.me();
 
-  if (user?.role !== 'admin') {
-    return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+  // Allow both admin manual trigger and scheduled automation
+  try {
+    const user = await base44.auth.me();
+    if (user && user.role !== 'admin') {
+      return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+    }
+  } catch (_) {
+    // Scheduled automation — no user context, proceed with service role
   }
 
-  const [factions, territories, jobs, economies] = await Promise.all([
-    base44.asServiceRole.entities.Faction.filter({}),
-    base44.asServiceRole.entities.Territory.filter({}),
-    base44.asServiceRole.entities.Job.filter({}),
-    base44.asServiceRole.entities.FactionEconomy.filter({}),
-  ]);
+  let factions, territories, jobs, economies, diplomacy;
+  try {
+    [factions, territories, jobs, economies, diplomacy] = await Promise.all([
+      base44.asServiceRole.entities.Faction.filter({}),
+      base44.asServiceRole.entities.Territory.filter({}),
+      base44.asServiceRole.entities.Job.filter({}),
+      base44.asServiceRole.entities.FactionEconomy.filter({}),
+      base44.asServiceRole.entities.Diplomacy.filter({}),
+    ]);
+  } catch (err) {
+    console.error('Data fetch error:', err.message);
+    return Response.json({ error: err.message }, { status: 500 });
+  }
 
   const activeJobs = jobs.filter(j => j.status === 'available' || j.status === 'in_progress');
   const contestedZones = territories.filter(t => t.status === 'contested' || t.status === 'hostile');
@@ -33,7 +46,8 @@ Deno.serve(async (req) => {
   // Territory threat analysis
   const territoryDetail = territories.map(t => {
     const ctrl = factions.find(f => f.id === t.controlling_faction_id);
-    const resources = (t.resources || []).join(', ') || 'none';
+    const rawRes = Array.isArray(t.resources) ? t.resources : [];
+    const resources = rawRes.join(', ') || 'none';
     return `${t.name} (${t.sector}): controller=${ctrl?.name || 'UNCLAIMED'}, status=${t.status}, threat=${t.threat_level}, resources=[${resources}]`;
   }).join('\n');
 
@@ -56,6 +70,14 @@ Deno.serve(async (req) => {
     return `${f.name}: ${needs.length > 0 ? needs.join(', ') : 'stable'}`;
   }).join('\n');
 
+  // Build diplomacy context
+  const diplomacySummary = diplomacy.map(d => {
+    const fA = factions.find(f => f.id === d.faction_a_id);
+    const fB = factions.find(f => f.id === d.faction_b_id);
+    if (!fA || !fB) return null;
+    return `${fA.name} [${fA.tag}] ↔ ${fB.name} [${fB.tag}]: ${d.status}${d.terms ? ' — ' + d.terms : ''}`;
+  }).filter(Boolean).join('\n') || 'No formal relationships established.';
+
   // Determine global economic state for reward scaling
   const totalWealth = economies.reduce((s, e) => s + (e.wealth || 0), 0);
   const avgWealth = economies.length > 0 ? Math.round(totalWealth / economies.length) : 1000;
@@ -65,6 +87,9 @@ Deno.serve(async (req) => {
 
 === FACTION ECONOMICS ===
 ${economicSummary}
+
+=== DIPLOMATIC RELATIONS ===
+${diplomacySummary}
 
 === FACTION NEEDS ===
 ${factionNeeds}
@@ -100,7 +125,15 @@ Generate exactly 3 new missions following these rules:
 8. Reward descriptions should mention specific resources matching the issuing faction's needs
 9. Write gritty, immersive 2-3 sentence briefings
 10. Set expiry between 12-72 hours (harder = longer window)
-11. At least one mission in a contested/hostile territory if any exist`;
+11. At least one mission in a contested/hostile territory if any exist
+12. DIPLOMACY RULES — diplomatic status MUST influence mission generation:
+    - WAR between factions → generate sabotage/elimination missions targeting the enemy faction's territories or supply lines
+    - HOSTILE factions → generate recon/sabotage missions, increased difficulty in shared borders
+    - ALLIED factions → generate cooperative escort/extraction missions, avoid pitting allies against each other
+    - TRADE AGREEMENT → generate scavenge/escort missions protecting trade routes between partners
+    - CEASEFIRE → generate recon missions monitoring compliance, no direct attacks between ceasefire parties
+    - NEUTRAL → standard mission generation, no special diplomatic considerations
+    If two factions are at war, at LEAST one mission should directly involve that conflict`;
 
   const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
     prompt,
@@ -175,4 +208,8 @@ Generate exactly 3 new missions following these rules:
     generated: created.length,
     missions: created.map(c => ({ title: c.title, type: c.type, difficulty: c.difficulty, reward: c.reward_reputation }))
   });
+  } catch (err) {
+    console.error('Mission Forge error:', err);
+    return Response.json({ error: err.message }, { status: 500 });
+  }
 });
