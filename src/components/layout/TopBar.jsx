@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import StatusIndicator from "../terminal/StatusIndicator";
-import { Clock, Lock } from "lucide-react";
+import { Clock, Lock, Bell, User } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { getDisplayName } from "../../lib/displayName";
 
@@ -61,24 +62,35 @@ export default function TopBar() {
           </TooltipContent>
         </Tooltip>
         {user && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="flex items-center gap-2 border-l border-border pl-4 cursor-help">
-                <span className="text-xs text-primary font-semibold tracking-wider">
-                  {getDisplayName(user)}
-                </span>
-                <span className="text-[10px] text-muted-foreground uppercase">
-                  [{user.role || "player"}]
-                </span>
-              </div>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="font-mono text-[11px] bg-card border-primary/30 max-w-[220px]">
-              <p className="text-primary font-semibold text-[10px] mb-0.5">OPERATIVE ID</p>
-              <p className="text-muted-foreground text-[10px]">Callsign: {getDisplayName(user)}</p>
-              {user.discord_username && <p className="text-muted-foreground text-[10px]">Discord: {user.discord_username}</p>}
-              <p className="text-muted-foreground mt-1">Clearance: <span className="text-foreground uppercase">{user.role || "player"}</span></p>
-            </TooltipContent>
-          </Tooltip>
+          <>
+            <Link
+              to="/profile"
+              className="flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors border-l border-border pl-4"
+            >
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-2 cursor-pointer">
+                    <div className="h-6 w-6 rounded-sm bg-primary/10 border border-primary/30 flex items-center justify-center">
+                      <User className="h-3 w-3 text-primary" />
+                    </div>
+                    <div className="hidden sm:block">
+                      <span className="text-xs text-primary font-semibold tracking-wider block leading-tight">
+                        {getDisplayName(user)}
+                      </span>
+                      <span className="text-[8px] text-muted-foreground uppercase tracking-widest leading-tight">
+                        {user.role || "player"}
+                      </span>
+                    </div>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="font-mono text-[11px] bg-card border-primary/30 max-w-[220px]">
+                  <p className="text-primary font-semibold text-[10px] mb-0.5">OPERATIVE DOSSIER</p>
+                  <p className="text-muted-foreground text-[10px]">Click to view your profile, reputation, and mission stats.</p>
+                  {user.discord_username && <p className="text-muted-foreground text-[10px]">Discord: {user.discord_username}</p>}
+                </TooltipContent>
+              </Tooltip>
+            </Link>
+          </>
         )}
       </div>
     </header>

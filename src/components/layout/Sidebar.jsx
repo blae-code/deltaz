@@ -143,8 +143,29 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Logout + Collapse */}
+      {/* User identity + Logout + Collapse */}
       <div className="border-t border-border">
+        {user && !collapsed && (
+          <Link
+            to="/profile"
+            onClick={() => setMobileOpen(false)}
+            className="flex items-center gap-2.5 px-4 py-3 border-b border-border/50 hover:bg-secondary/30 transition-colors group"
+          >
+            <div className="h-7 w-7 rounded-sm bg-primary/10 border border-primary/30 flex items-center justify-center shrink-0 group-hover:border-primary/50 transition-colors">
+              <span className="text-[10px] font-bold text-primary font-display">
+                {(user.callsign || user.full_name || "?")[0].toUpperCase()}
+              </span>
+            </div>
+            <div className="min-w-0">
+              <span className="text-[10px] font-semibold text-foreground truncate block leading-tight">
+                {user.callsign || user.full_name || "Operative"}
+              </span>
+              <span className="text-[8px] text-muted-foreground uppercase tracking-widest leading-tight">
+                {user.role || "player"}
+              </span>
+            </div>
+          </Link>
+        )}
         <NavTooltip path="#logout" collapsed={collapsed}>
           <button
             onClick={() => {
