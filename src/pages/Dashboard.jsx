@@ -6,6 +6,7 @@ import NotificationBanner from "../components/dashboard/NotificationBanner";
 import ActivityFeed from "../components/dashboard/ActivityFeed";
 import IntelHighlights from "../components/dashboard/IntelHighlights";
 import TacticalAdvisor from "../components/dashboard/TacticalAdvisor";
+import WorldPulseStatus from "../components/dashboard/WorldPulseStatus";
 
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Crosshair, Shield, Map } from "lucide-react";
@@ -64,6 +65,9 @@ export default function Dashboard() {
           Operational overview — all sectors
         </p>
       </div>
+
+      {/* World Pulse Status */}
+      <WorldPulseStatus isAdmin={user?.role === "admin"} />
 
       {/* Notifications */}
       {user?.email && <NotificationBanner userEmail={user.email} />}

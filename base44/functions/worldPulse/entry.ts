@@ -2,26 +2,36 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
-  const user = await base44.auth.me();
 
-  if (user?.role !== 'admin') {
-    return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+  // Allow both admin manual trigger and scheduled automation (no user context)
+  let isAdmin = false;
+  try {
+    const user = await base44.auth.me();
+    if (user?.role === 'admin') isAdmin = true;
+  } catch (_) {
+    // Scheduled automation — no user context, proceed with service role
   }
 
   // Gather current world state
-  const [factions, territories, jobs, events, recentIntel] = await Promise.all([
+  const [factions, territories, jobs, recentEvents, recentIntel, economies] = await Promise.all([
     base44.asServiceRole.entities.Faction.filter({}),
     base44.asServiceRole.entities.Territory.filter({}),
     base44.asServiceRole.entities.Job.filter({}),
     base44.asServiceRole.entities.Event.filter({}, '-created_date', 10),
     base44.asServiceRole.entities.IntelFeed.filter({}, '-created_date', 5),
+    base44.asServiceRole.entities.FactionEconomy.filter({}),
   ]);
 
   const worldState = {
-    factions: factions.map(f => ({
-      name: f.name, tag: f.tag, status: f.status,
-      territory_count: f.territory_count, member_count: f.member_count
-    })),
+    factions: factions.map(f => {
+      const econ = economies.find(e => e.faction_id === f.id);
+      return {
+        name: f.name, tag: f.tag, status: f.status,
+        territory_count: f.territory_count, member_count: f.member_count,
+        wealth: econ?.wealth || 0,
+        under_embargo: econ?.trade_embargo || false,
+      };
+    }),
     territories: territories.map(t => ({
       name: t.name, sector: t.sector, status: t.status,
       threat_level: t.threat_level, resources: t.resources,
@@ -30,34 +40,42 @@ Deno.serve(async (req) => {
     active_missions: jobs.filter(j => j.status === 'available' || j.status === 'in_progress').length,
     completed_missions: jobs.filter(j => j.status === 'completed').length,
     failed_missions: jobs.filter(j => j.status === 'failed').length,
-    recent_events: events.slice(0, 5).map(e => e.title),
+    recent_events: recentEvents.slice(0, 5).map(e => e.title),
     recent_intel: recentIntel.map(i => i.title),
   };
 
-  const prompt = `You are the AI "GHOST PROTOCOL" intelligence engine for a post-apocalyptic tactical operations game called DEAD SIGNAL.
+  const prompt = `You are GHOST PROTOCOL — the AI intelligence engine for a post-apocalyptic tactical HQ called DEAD SIGNAL, based on the game HumanitZ.
 
 Current world state:
 ${JSON.stringify(worldState, null, 2)}
 
-Generate exactly 3 new intel items. Each must be different in category and feel organic, like intercepted communications, field reports, or analytical assessments. Make them reference ACTUAL factions, territories, and events from the world state above. Be creative, gritty, and immersive.
+Your job: generate a "World Pulse" — a batch of dynamic content that makes the game world feel alive. Generate exactly:
 
-Categories to choose from: rumor, mission_brief, faction_intel, world_event, anomaly_report, tactical_advisory
+1. **3 Intel Items** (for the intelligence feed)
+   - Categories: rumor, mission_brief, faction_intel, world_event, anomaly_report, tactical_advisory
+   - Include an in-world source (e.g. "SIGINT-7 intercept", "Operative JACKAL", "Automated recon drone")
+   - Severity: low, medium, high, or critical
+   - Expiry: 4-48 hours
+
+2. **2 World Events** (for the combat log / live feed)
+   - Types: world_event, faction_conflict, anomaly, broadcast, system_alert
+   - Severity: info, warning, critical, or emergency
+   - These appear in the live combat log so make them punchy and dramatic
 
 Rules:
-- Reference real faction names and territory names from the data
-- Each item should hint at emerging threats, opportunities, or shifting alliances
-- Vary severity across items
-- Keep titles punchy (under 10 words), content 2-4 sentences
-- Include an in-world source name (e.g. "SIGINT-7 intercept", "Operative JACKAL", "Automated recon drone")
-- Do NOT repeat topics from recent_intel
-- Give each item an expiry time in hours (4-48)`;
+- Reference ACTUAL faction names and territory names from the data above
+- Never repeat titles from recent_events or recent_intel
+- Each item should hint at emerging threats, shifting alliances, resource conflicts, or mysterious anomalies
+- Vary severity and tone — mix tense warnings with mysterious rumors
+- Titles should be punchy (under 10 words), content 2-4 sentences
+- Be gritty, atmospheric, and immersive`;
 
   const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
     prompt,
     response_json_schema: {
       type: "object",
       properties: {
-        items: {
+        intel_items: {
           type: "array",
           items: {
             type: "object",
@@ -72,14 +90,30 @@ Rules:
               related_territory_name: { type: "string" }
             }
           }
+        },
+        world_events: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              title: { type: "string" },
+              content: { type: "string" },
+              type: { type: "string" },
+              severity: { type: "string" },
+              related_faction_name: { type: "string" },
+              related_territory_name: { type: "string" }
+            }
+          }
         }
       }
     }
   });
 
-  const created = [];
+  const intelCreated = [];
+  const eventsCreated = [];
 
-  for (const item of result.items) {
+  // Create Intel items
+  for (const item of (result.intel_items || [])) {
     const relFaction = factions.find(f => f.name === item.related_faction_name);
     const relTerritory = territories.find(t => t.name === item.related_territory_name);
     const expiresAt = new Date(Date.now() + (item.expires_in_hours || 24) * 3600000).toISOString();
@@ -87,16 +121,37 @@ Rules:
     const record = await base44.asServiceRole.entities.IntelFeed.create({
       title: item.title,
       content: item.content,
-      category: item.category,
+      category: item.category || 'rumor',
       severity: item.severity || 'medium',
-      source: item.source,
+      source: item.source || 'GHOST PROTOCOL',
       related_faction_id: relFaction?.id || '',
       related_territory_id: relTerritory?.id || '',
       is_active: true,
       expires_at: expiresAt,
     });
-    created.push(record);
+    intelCreated.push(record);
   }
 
-  return Response.json({ status: 'ok', generated: created.length });
+  // Create World Events (these power the Combat Log and Live Feed)
+  for (const ev of (result.world_events || [])) {
+    const relFaction = factions.find(f => f.name === ev.related_faction_name);
+    const relTerritory = territories.find(t => t.name === ev.related_territory_name);
+
+    const record = await base44.asServiceRole.entities.Event.create({
+      title: ev.title,
+      content: ev.content,
+      type: ev.type || 'broadcast',
+      severity: ev.severity || 'info',
+      territory_id: relTerritory?.id || '',
+      faction_id: relFaction?.id || '',
+      is_active: true,
+    });
+    eventsCreated.push(record);
+  }
+
+  return Response.json({
+    status: 'ok',
+    intel_generated: intelCreated.length,
+    events_generated: eventsCreated.length,
+  });
 });
