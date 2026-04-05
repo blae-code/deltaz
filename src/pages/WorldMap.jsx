@@ -8,9 +8,11 @@ import HeatmapLegend from "../components/map/HeatmapLegend";
 import ThreatPredictionPanel from "../components/map/ThreatPredictionPanel";
 import MarkerPanel from "../components/map/MarkerPanel";
 import FactionFilter from "../components/map/FactionFilter";
+import MissionPlanOverlay from "../components/map/MissionPlanOverlay";
+import PlanRouteLines from "../components/map/PlanRouteLines";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Layers, Flame, Loader2 } from "lucide-react";
+import { MapPin, Layers, Flame, Loader2, Route } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function WorldMap() {
@@ -28,6 +30,10 @@ export default function WorldMap() {
   const [heatmapData, setHeatmapData] = useState(null);
   const [heatmapLoading, setHeatmapLoading] = useState(false);
   const [hoveredSector, setHoveredSector] = useState(null);
+  const [showPlanner, setShowPlanner] = useState(false);
+  const [planAnchor, setPlanAnchor] = useState(null);
+  const [planJobs, setPlanJobs] = useState([]);
+  const [availableJobs, setAvailableJobs] = useState([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -36,12 +42,14 @@ export default function WorldMap() {
       base44.entities.Faction.list("-created_date", 50),
       base44.entities.MapMarker.list("-created_date", 100),
       base44.auth.me(),
+      base44.entities.Job.filter({ status: "available" }, "-created_date", 100),
     ])
-      .then(([t, f, m, u]) => {
+      .then(([t, f, m, u, j]) => {
         setTerritories(t);
         setFactions(f);
         setMarkers(m);
         setUser(u);
+        setAvailableJobs(j);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -91,6 +99,17 @@ export default function WorldMap() {
   const handleSelectMarker = (marker) => {
     setPendingPosition(null);
     setSelectedMarker(marker);
+  };
+
+  const handleStartPlan = (marker) => {
+    setPlanAnchor(marker);
+    setPlanJobs([]);
+    setShowPlanner(true);
+    setSelectedMarker(null);
+  };
+
+  const handleTogglePlanJob = (jobId) => {
+    setPlanJobs(prev => prev.includes(jobId) ? prev.filter(id => id !== jobId) : [...prev, jobId]);
   };
 
   const loadHeatmap = useCallback(async () => {
@@ -160,6 +179,19 @@ export default function WorldMap() {
           >
             <MapPin className="h-3 w-3 mr-1" />
             MARKERS
+          </Button>
+          <Button
+            variant={showPlanner ? "default" : "outline"}
+            size="sm"
+            className="h-7 text-[9px] tracking-wider"
+            onClick={() => {
+              if (showPlanner) { setShowPlanner(false); setPlanAnchor(null); setPlanJobs([]); }
+              else if (selectedMarker) { handleStartPlan(selectedMarker); }
+              else { setShowPlanner(true); }
+            }}
+          >
+            <Route className="h-3 w-3 mr-1" />
+            PLANNER
           </Button>
           <Button
             variant={showHeatmap ? "default" : "outline"}
@@ -265,6 +297,16 @@ export default function WorldMap() {
                 }}
               />
             )}
+
+            {/* Mission planning route lines */}
+            {showPlanner && planAnchor && (
+              <PlanRouteLines
+                anchorMarker={planAnchor}
+                selectedJobs={planJobs}
+                jobs={availableJobs}
+                territories={territories}
+              />
+            )}
           </GridMap>
 
           {/* Heatmap legend + Sector info bar */}
@@ -317,7 +359,21 @@ export default function WorldMap() {
             }}
             markers={visibleMarkers}
             onSelectMarker={handleSelectMarker}
+            onStartPlan={handleStartPlan}
           />
+
+          {/* Mission Planner Overlay */}
+          {showPlanner && (
+            <MissionPlanOverlay
+              availableJobs={availableJobs}
+              territories={territories}
+              anchorMarker={planAnchor}
+              selectedJobs={planJobs}
+              onToggleJob={handleTogglePlanJob}
+              onClear={() => setPlanJobs([])}
+              onClose={() => { setShowPlanner(false); setPlanAnchor(null); setPlanJobs([]); }}
+            />
+          )}
 
           {/* Territory legend */}
           {showTerritories && filteredTerritories.length > 0 && (

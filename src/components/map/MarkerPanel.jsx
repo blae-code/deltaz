@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { X, Plus, MapPin, Trash2, Share2, Eye, EyeOff } from "lucide-react";
+import { X, Plus, MapPin, Trash2, Share2, Eye, EyeOff, Route } from "lucide-react";
 import moment from "moment";
 
 const MARKER_TYPES = [
@@ -25,6 +25,7 @@ export default function MarkerPanel({
   onClose,
   markers,
   onSelectMarker,
+  onStartPlan,
 }) {
   const [label, setLabel] = useState("");
   const [description, setDescription] = useState("");
@@ -94,6 +95,14 @@ export default function MarkerPanel({
               }}
             >
               <Share2 className="h-3 w-3 mr-1" />COPY COORDS
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 text-[9px] text-primary"
+              onClick={() => onStartPlan?.(selectedMarker)}
+            >
+              <Route className="h-3 w-3 mr-1" />PLAN RUN
             </Button>
             <Button
               variant="ghost"
