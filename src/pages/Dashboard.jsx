@@ -9,6 +9,7 @@ import TacticalAdvisor from "../components/dashboard/TacticalAdvisor";
 import WorldPulseStatus from "../components/dashboard/WorldPulseStatus";
 import ScavengeLog from "../components/dashboard/ScavengeLog";
 import ColonyMonitor from "../components/dashboard/ColonyMonitor";
+import LiveEventWatcher from "../components/dashboard/LiveEventWatcher";
 
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Crosshair, Shield, Map } from "lucide-react";
@@ -68,6 +69,9 @@ export default function Dashboard() {
           Operational overview — all sectors
         </p>
       </div>
+
+      {/* Real-time event watcher — fires toasts on territory changes & new missions */}
+      {user?.email && <LiveEventWatcher userEmail={user.email} />}
 
       {/* World Pulse Status */}
       <WorldPulseStatus isAdmin={user?.role === "admin"} />
