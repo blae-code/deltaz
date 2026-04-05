@@ -7,11 +7,18 @@ import {
   isRefAncestorOfHead,
 } from './lib/backend-workflow.mjs';
 
-const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const against = 'origin/main';
 
 const runNpmScript = (scriptName) => {
-  execFileSync(npmCommand, ['run', scriptName], {
+  if (process.platform === 'win32') {
+    execFileSync('cmd.exe', ['/d', '/s', '/c', `npm.cmd run ${scriptName}`], {
+      cwd: process.cwd(),
+      stdio: 'inherit',
+    });
+    return;
+  }
+
+  execFileSync('npm', ['run', scriptName], {
     cwd: process.cwd(),
     stdio: 'inherit',
   });
