@@ -7,12 +7,14 @@ import {
   Radio,
   Shield,
   User,
+  Terminal,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { base44 } from "@/api/base44Client";
 
-const navItems = [
+const playerNav = [
   { path: "/", label: "SITREP", icon: LayoutDashboard },
   { path: "/jobs", label: "MISSIONS", icon: Crosshair },
   { path: "/map", label: "AO MAP", icon: Map },
@@ -21,9 +23,21 @@ const navItems = [
   { path: "/profile", label: "DOSSIER", icon: User },
 ];
 
+const adminNav = [
+  { path: "/admin", label: "COMMAND", icon: Terminal },
+];
+
 export default function Sidebar() {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    base44.auth.me().then(setUser).catch(() => {});
+  }, []);
+
+  const isAdmin = user?.role === "admin" || user?.role === "game_master";
+  const navItems = isAdmin ? [...playerNav, ...adminNav] : playerNav;
 
   return (
     <aside

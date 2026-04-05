@@ -12,6 +12,7 @@ import WorldMap from './pages/WorldMap';
 import Events from './pages/Events';
 import Factions from './pages/Factions';
 import Profile from './pages/Profile';
+import Admin from './pages/Admin';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -46,6 +47,7 @@ const AuthenticatedApp = () => {
         <Route path="/events" element={<Events />} />
         <Route path="/factions" element={<Factions />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/admin" element={<Admin />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>
     </Routes>
