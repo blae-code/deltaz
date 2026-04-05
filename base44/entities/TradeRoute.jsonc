@@ -1,0 +1,65 @@
+{
+  "name": "TradeRoute",
+  "type": "object",
+  "properties": {
+    "from_faction_id": {
+      "type": "string",
+      "description": "Faction sending resources"
+    },
+    "to_faction_id": {
+      "type": "string",
+      "description": "Faction receiving resources"
+    },
+    "resource_type": {
+      "type": "string",
+      "enum": [
+        "fuel",
+        "metals",
+        "tech",
+        "food",
+        "munitions"
+      ],
+      "description": "Type of resource being traded"
+    },
+    "amount": {
+      "type": "number",
+      "default": 0,
+      "description": "Units transferred per cycle"
+    },
+    "price_per_unit": {
+      "type": "number",
+      "default": 10,
+      "description": "Credits per unit of resource"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "paused",
+        "cancelled"
+      ],
+      "default": "active"
+    },
+    "total_transferred": {
+      "type": "number",
+      "default": 0,
+      "description": "Cumulative units transferred"
+    },
+    "total_revenue": {
+      "type": "number",
+      "default": 0,
+      "description": "Cumulative credits exchanged"
+    },
+    "cycles_active": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of cycles this route has been active"
+    }
+  },
+  "required": [
+    "from_faction_id",
+    "to_faction_id",
+    "resource_type",
+    "amount"
+  ]
+}
