@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import DataCard from "../components/terminal/DataCard";
 import StatusIndicator from "../components/terminal/StatusIndicator";
 import NotificationBanner from "../components/dashboard/NotificationBanner";
+import LiveStream from "../components/dashboard/LiveStream";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Crosshair, Shield, Map } from "lucide-react";
 
@@ -82,30 +83,12 @@ export default function Dashboard() {
         ))}
       </div>
 
+      {/* Live Stream */}
+      <LiveStream />
+
       <div className="grid md:grid-cols-2 gap-4">
         {/* Recent Events */}
         <DataCard title="Latest Transmissions">
-          {events.length === 0 ? (
-            <p className="text-xs text-muted-foreground">No transmissions intercepted.</p>
-          ) : (
-            <div className="space-y-3">
-              {events.map((event) => (
-                <div key={event.id} className="flex items-start gap-3">
-                  <div className={`mt-1 rounded-sm border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${severityColor[event.severity] || severityColor.info}`}>
-                    {event.severity}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{event.title}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">{event.type?.replace("_", " ")}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </DataCard>
-
-        {/* Active Jobs */}
-        <DataCard title="Mission Board">
           {jobs.length === 0 ? (
             <p className="text-xs text-muted-foreground">No missions available.</p>
           ) : (
