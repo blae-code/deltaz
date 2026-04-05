@@ -1,0 +1,58 @@
+{
+  "name": "IntelFeed",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Intel headline"
+    },
+    "content": {
+      "type": "string",
+      "description": "Full intel body text"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "rumor",
+        "mission_brief",
+        "faction_intel",
+        "world_event",
+        "anomaly_report",
+        "tactical_advisory"
+      ],
+      "default": "rumor"
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ],
+      "default": "medium"
+    },
+    "source": {
+      "type": "string",
+      "description": "In-world source of the intel e.g. intercepted comms, field operative, AI analysis"
+    },
+    "related_faction_id": {
+      "type": "string"
+    },
+    "related_territory_id": {
+      "type": "string"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "expires_at": {
+      "type": "string",
+      "description": "ISO date when this intel becomes stale"
+    }
+  },
+  "required": [
+    "title",
+    "category"
+  ]
+}

@@ -4,6 +4,7 @@ import DataCard from "../components/terminal/DataCard";
 import StatusIndicator from "../components/terminal/StatusIndicator";
 import NotificationBanner from "../components/dashboard/NotificationBanner";
 import LiveStream from "../components/dashboard/LiveStream";
+import IntelHighlights from "../components/dashboard/IntelHighlights";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Crosshair, Shield, Map } from "lucide-react";
 
@@ -85,6 +86,9 @@ export default function Dashboard() {
 
       {/* Live Stream */}
       <LiveStream />
+
+      {/* Intel Highlights */}
+      <IntelHighlights />
 
       <div className="grid md:grid-cols-2 gap-4">
         {/* Recent Events */}

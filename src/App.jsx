@@ -13,6 +13,7 @@ import Events from './pages/Events';
 import Factions from './pages/Factions';
 import Profile from './pages/Profile';
 import Admin from './pages/Admin';
+import Intel from './pages/Intel';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -47,6 +48,7 @@ const AuthenticatedApp = () => {
         <Route path="/events" element={<Events />} />
         <Route path="/factions" element={<Factions />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/intel" element={<Intel />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>
