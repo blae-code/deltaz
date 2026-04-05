@@ -12,10 +12,10 @@ const RANKS = [
 ];
 
 const rankColor = {
-  enemy: "bg-destructive",
-  hostile: "bg-destructive/70",
+  enemy: "bg-status-danger",
+  hostile: "bg-status-danger/70",
   unknown: "bg-muted-foreground",
-  neutral: "bg-chart-4",
+  neutral: "bg-foreground/50",
   trusted: "bg-primary/70",
   allied: "bg-primary",
   revered: "bg-accent",
@@ -57,7 +57,7 @@ export default function ReputationBar({ reputation, factionName, factionColor })
           <span className="text-xs font-semibold text-foreground">{factionName}</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 text-[10px] text-accent">
+          <div className="flex items-center gap-1 text-[10px] text-primary">
             <Award className="h-3 w-3" />
             <span>{reputation.score} PTS</span>
           </div>
@@ -77,7 +77,7 @@ export default function ReputationBar({ reputation, factionName, factionColor })
           <span className="uppercase tracking-wider">{currentRank}</span>
           {nextRank ? (
             <span>
-              <span className="text-accent">{pointsToNext}</span> pts to{" "}
+              <span className="text-primary">{pointsToNext}</span> pts to{" "}
               <span className="uppercase text-foreground">{nextRank}</span>
             </span>
           ) : (

@@ -3,11 +3,11 @@ import { Badge } from "@/components/ui/badge";
 import StatusIndicator from "../terminal/StatusIndicator";
 
 const threatColors = {
-  minimal: "text-primary",
-  low: "text-chart-4",
-  moderate: "text-accent",
-  high: "text-destructive",
-  critical: "text-destructive",
+  minimal: "text-muted-foreground",
+  low: "text-foreground",
+  moderate: "text-status-warn",
+  high: "text-status-danger",
+  critical: "text-status-danger",
 };
 
 const statusColors = {
@@ -19,9 +19,9 @@ const statusColors = {
 
 const severityIcon = {
   info: "text-primary",
-  warning: "text-accent",
-  critical: "text-destructive",
-  emergency: "text-destructive",
+  warning: "text-status-warn",
+  critical: "text-status-danger",
+  emergency: "text-status-danger",
 };
 
 export default function TerritoryPin({ territory, factionName, factionColor, jobs, events, isOpen, onToggle }) {
@@ -61,7 +61,7 @@ export default function TerritoryPin({ territory, factionName, factionColor, job
             </span>
           )}
           {events.length > 0 && (
-            <span className="flex items-center gap-0.5 text-[10px] text-chart-4">
+            <span className="flex items-center gap-0.5 text-[10px] text-primary">
               <Radio className="h-3 w-3" />
               {events.length}
             </span>

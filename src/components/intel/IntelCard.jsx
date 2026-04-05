@@ -3,20 +3,20 @@ import { Eye, Radio, Crosshair, Shield, AlertTriangle, Zap, FileText } from "luc
 import moment from "moment";
 
 const categoryConfig = {
-  rumor: { icon: Radio, color: "text-chart-4", bg: "bg-chart-4/10 border-chart-4/20" },
+  rumor: { icon: Radio, color: "text-muted-foreground", bg: "bg-secondary/50 border-border" },
   mission_brief: { icon: Crosshair, color: "text-accent", bg: "bg-accent/10 border-accent/20" },
-  clan_intel: { icon: Shield, color: "text-chart-5", bg: "bg-chart-5/10 border-chart-5/20" },
-  faction_intel: { icon: Shield, color: "text-chart-5", bg: "bg-chart-5/10 border-chart-5/20" },
-  world_event: { icon: AlertTriangle, color: "text-destructive", bg: "bg-destructive/10 border-destructive/20" },
-  anomaly_report: { icon: Zap, color: "text-primary", bg: "bg-primary/10 border-primary/20" },
-  tactical_advisory: { icon: FileText, color: "text-accent", bg: "bg-accent/10 border-accent/20" },
+  clan_intel: { icon: Shield, color: "text-primary", bg: "bg-primary/10 border-primary/20" },
+  faction_intel: { icon: Shield, color: "text-primary", bg: "bg-primary/10 border-primary/20" },
+  world_event: { icon: AlertTriangle, color: "text-foreground", bg: "bg-secondary/50 border-border" },
+  anomaly_report: { icon: Zap, color: "text-accent", bg: "bg-accent/10 border-accent/20" },
+  tactical_advisory: { icon: FileText, color: "text-primary", bg: "bg-primary/10 border-primary/20" },
 };
 
 const severityBadge = {
   low: "bg-muted text-muted-foreground",
   medium: "bg-primary/20 text-primary",
-  high: "bg-accent/20 text-accent",
-  critical: "bg-destructive/20 text-destructive",
+  high: "bg-status-warn/20 text-status-warn",
+  critical: "bg-status-danger/20 text-status-danger",
 };
 
 export default function IntelCard({ item, factionName, territoryName, compact = false }) {
@@ -67,7 +67,7 @@ export default function IntelCard({ item, factionName, territoryName, compact = 
               SRC: {item.source || "UNKNOWN"}
             </span>
             {factionName && (
-              <span className="text-[9px] text-chart-5 tracking-wider">
+              <span className="text-[9px] text-primary tracking-wider">
                 ▸ {factionName}
               </span>
             )}
@@ -80,7 +80,7 @@ export default function IntelCard({ item, factionName, territoryName, compact = 
               {moment(item.created_date).fromNow()}
             </span>
             {item.expires_at && !isExpired && (
-              <span className="text-[9px] text-destructive/70">
+              <span className="text-[9px] text-status-warn/70">
                 EXPIRES {moment(item.expires_at).fromNow()}
               </span>
             )}

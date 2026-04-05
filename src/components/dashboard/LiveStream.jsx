@@ -7,12 +7,12 @@ const MAX_ITEMS = 20;
 const FADE_AFTER_MS = 30000;
 
 const typeConfig = {
-  event: { icon: Radio, color: "text-chart-4", label: "BROADCAST" },
+  event: { icon: Radio, color: "text-primary", label: "BROADCAST" },
   job_new: { icon: Crosshair, color: "text-accent", label: "NEW MISSION" },
-  job_update: { icon: Crosshair, color: "text-primary", label: "MISSION UPDATE" },
-  faction: { icon: Shield, color: "text-chart-5", label: "CLAN" },
+  job_update: { icon: Crosshair, color: "text-foreground", label: "MISSION UPDATE" },
+  faction: { icon: Shield, color: "text-primary", label: "CLAN" },
   territory: { icon: MapPin, color: "text-accent", label: "TERRITORY" },
-  reputation: { icon: Zap, color: "text-primary", label: "REP CHANGE" },
+  reputation: { icon: Zap, color: "text-foreground", label: "REP CHANGE" },
 };
 
 function StreamItem({ item }) {
@@ -137,7 +137,7 @@ export default function LiveStream() {
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border px-3 py-2 bg-secondary/50">
         <div className="flex items-center gap-2">
-          <span className="h-1.5 w-1.5 rounded-full bg-destructive animate-pulse" />
+          <span className="h-1.5 w-1.5 rounded-full bg-status-danger animate-pulse" />
           <h3 className="text-[10px] font-semibold uppercase tracking-widest text-primary font-display">
             LIVE FEED
           </h3>

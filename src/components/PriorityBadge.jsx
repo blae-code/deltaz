@@ -2,9 +2,9 @@ import { Badge } from "@/components/ui/badge";
 
 const PRIORITY_STYLES = {
   low: "bg-muted text-muted-foreground",
-  medium: "bg-chart-2/20 text-chart-2 border-chart-2/30",
-  high: "bg-threat-orange/20 text-threat-orange border-threat-orange/30",
-  critical: "bg-destructive/20 text-destructive border-destructive/30",
+  medium: "bg-primary/20 text-primary border-primary/30",
+  high: "bg-status-warn/20 text-status-warn border-status-warn/30",
+  critical: "bg-status-danger/20 text-status-danger border-status-danger/30",
 };
 
 export default function PriorityBadge({ priority }) {

@@ -1,14 +1,14 @@
 import { cn } from "@/lib/utils";
 
 const statusColors = {
-  online: "bg-primary",
+  online: "bg-status-ok",
   offline: "bg-muted-foreground",
-  warning: "bg-accent",
-  critical: "bg-destructive",
-  active: "bg-primary",
-  mia: "bg-accent",
-  kia: "bg-destructive",
-  extracted: "bg-chart-4",
+  warning: "bg-status-warn",
+  critical: "bg-status-danger",
+  active: "bg-status-ok",
+  mia: "bg-status-warn",
+  kia: "bg-status-danger",
+  extracted: "bg-status-info",
 };
 
 export default function StatusIndicator({ status = "online", label, className }) {

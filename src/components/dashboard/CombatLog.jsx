@@ -19,18 +19,18 @@ const EVENT_TYPES = [
 ];
 
 const typeConfig = {
-  faction_conflict: { icon: Shield, color: "text-chart-5", prefix: "[CLAN WAR]" },
+  faction_conflict: { icon: Shield, color: "text-primary", prefix: "[CLAN WAR]" },
   world_event: { icon: AlertTriangle, color: "text-accent", prefix: "[WORLD]" },
-  system_alert: { icon: Coins, color: "text-primary", prefix: "[SYSTEM]" },
-  broadcast: { icon: Radio, color: "text-chart-4", prefix: "[COMMS]" },
-  anomaly: { icon: AlertTriangle, color: "text-destructive", prefix: "[ANOMALY]" },
+  system_alert: { icon: Coins, color: "text-foreground", prefix: "[SYSTEM]" },
+  broadcast: { icon: Radio, color: "text-primary", prefix: "[COMMS]" },
+  anomaly: { icon: AlertTriangle, color: "text-accent", prefix: "[ANOMALY]" },
 };
 
 const severityColors = {
   info: "text-muted-foreground",
-  warning: "text-accent",
-  critical: "text-destructive",
-  emergency: "text-destructive font-bold",
+  warning: "text-status-warn",
+  critical: "text-status-danger",
+  emergency: "text-status-danger font-bold",
 };
 
 function LogEntry({ event, index }) {

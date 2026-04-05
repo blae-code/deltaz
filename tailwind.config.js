@@ -54,6 +54,21 @@ module.exports = {
           4: 'hsl(var(--chart-4))',
           5: 'hsl(var(--chart-5))',
         },
+        // Status colors — ONLY for indicators, badges, and alerts
+        status: {
+          ok: '#22c55e',
+          warn: '#f59e0b',
+          danger: '#ef4444',
+          info: '#3b82f6',
+        },
+        // Threat level colors for tactical displays
+        threat: {
+          green: '#22c55e',
+          yellow: '#eab308',
+          orange: '#f97316',
+          red: '#ef4444',
+          black: '#18181b',
+        },
         sidebar: {
           DEFAULT: 'hsl(var(--sidebar-background))',
           foreground: 'hsl(var(--sidebar-foreground))',

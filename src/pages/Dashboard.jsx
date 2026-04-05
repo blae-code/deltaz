@@ -96,7 +96,7 @@ export default function Dashboard() {
             label: "CLANS",
             value: factions.length,
             icon: Shield,
-            color: "text-chart-4",
+            color: "text-primary",
             description: "Registered factions operating across all sectors",
             detail: `${factions.filter(f => f.status === "active").length} active · ${factions.filter(f => f.status === "hostile").length} hostile`
           },
@@ -104,7 +104,7 @@ export default function Dashboard() {
             label: "TERRITORIES",
             value: territories.length,
             icon: Map,
-            color: "text-chart-5",
+            color: "text-accent",
             description: "Mapped zones across the 5×5 tactical grid",
             detail: `${territories.filter(t => t.status === "contested").length} contested · ${territories.filter(t => t.status === "hostile").length} hostile`
           },

@@ -6,14 +6,14 @@ import moment from "moment";
 
 const priorityStyle = {
   normal: "border-border bg-card",
-  high: "border-accent/40 bg-accent/5",
-  critical: "border-destructive/40 bg-destructive/5",
+  high: "border-status-warn/40 bg-status-warn/5",
+  critical: "border-status-danger/40 bg-status-danger/5",
 };
 
 const priorityBadge = {
   normal: "bg-primary/20 text-primary",
-  high: "bg-accent/20 text-accent",
-  critical: "bg-destructive/20 text-destructive",
+  high: "bg-status-warn/20 text-status-warn",
+  critical: "bg-status-danger/20 text-status-danger",
 };
 
 export default function NotificationBanner({ userEmail }) {
@@ -58,8 +58,8 @@ export default function NotificationBanner({ userEmail }) {
     <div className="space-y-2 mb-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Bell className="h-4 w-4 text-accent" />
-          <span className="text-xs font-semibold font-display tracking-wider text-accent uppercase">
+          <Bell className="h-4 w-4 text-primary" />
+          <span className="text-xs font-semibold font-display tracking-wider text-primary uppercase">
             Incoming Transmissions ({visible.length})
           </span>
         </div>
