@@ -111,8 +111,8 @@ export default function NotificationBanner({ userEmail }) {
             </span>
           </div>
           <button
-            onClick={() => markRead(n.id)}
-            className="text-muted-foreground hover:text-foreground shrink-0"
+            onClick={(e) => { e.stopPropagation(); markRead(n.id); }}
+            className="text-muted-foreground hover:text-foreground shrink-0 p-1.5 -m-1 rounded-sm hover:bg-secondary/50 transition-colors"
           >
             <X className="h-3.5 w-3.5" />
           </button>
