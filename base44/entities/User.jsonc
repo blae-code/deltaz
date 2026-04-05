@@ -5,49 +5,46 @@
     "role": {
       "type": "string",
       "enum": [
-        "player",
-        "game_master",
-        "admin"
+        "admin",
+        "user",
+        "game_master"
       ],
-      "default": "player",
-      "description": "User role in the Dead Signal world"
+      "default": "user"
     },
     "callsign": {
       "type": "string",
-      "description": "Player's tactical callsign \u2014 required during onboarding"
+      "description": "Player callsign / handle"
     },
     "discord_username": {
       "type": "string",
-      "description": "Player's Discord username for identity linking"
+      "description": "Discord username"
     },
-    "is_onboarded": {
-      "type": "boolean",
-      "default": false,
-      "description": "Whether the user has completed the onboarding process"
+    "credits": {
+      "type": "number",
+      "default": 500,
+      "description": "Wallet balance in Dead Signal Credits"
     },
-    "faction_id": {
-      "type": "string",
-      "description": "ID of the faction the player belongs to"
-    },
-    "reputation_score": {
+    "total_earned": {
       "type": "number",
       "default": 0,
-      "description": "Overall reputation score"
+      "description": "Lifetime credits earned"
     },
-    "status": {
-      "type": "string",
-      "enum": [
-        "active",
-        "mia",
-        "kia",
-        "extracted"
-      ],
-      "default": "active"
+    "total_spent": {
+      "type": "number",
+      "default": 0,
+      "description": "Lifetime credits spent"
     },
-    "avatar_url": {
+    "steam_id": {
       "type": "string",
-      "description": "Profile image URL"
+      "description": "Verified Steam 64-bit ID"
+    },
+    "steam_name": {
+      "type": "string",
+      "description": "Steam display name at time of linking"
+    },
+    "steam_linked_at": {
+      "type": "string",
+      "description": "ISO date when Steam was linked"
     }
-  },
-  "required": []
+  }
 }

@@ -11,6 +11,7 @@ import ReputationBar from "../components/profile/ReputationBar";
 import ReputationHistory from "../components/profile/ReputationHistory";
 import CharacterProfileEditor from "../components/profile/CharacterProfileEditor";
 import PerformanceAnalytics from "../components/profile/PerformanceAnalytics";
+import SteamLinker from "../components/profile/SteamLinker";
 import { getDisplayName } from "../lib/displayName";
 
 export default function Profile() {
@@ -117,6 +118,9 @@ export default function Profile() {
           </Button>
         </div>
       </DataCard>
+
+      {/* Steam Account */}
+      <SteamLinker />
 
       {/* Reputation Bars */}
       <DataCard title="Clan Standing">
