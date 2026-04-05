@@ -1,0 +1,75 @@
+{
+  "name": "InventoryItem",
+  "type": "object",
+  "properties": {
+    "owner_email": {
+      "type": "string",
+      "description": "Email of the player who owns this item"
+    },
+    "name": {
+      "type": "string",
+      "description": "Item name"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "weapon",
+        "armor",
+        "tool",
+        "consumable",
+        "material",
+        "ammo",
+        "misc"
+      ],
+      "default": "misc"
+    },
+    "quantity": {
+      "type": "number",
+      "default": 1,
+      "description": "Stack quantity"
+    },
+    "rarity": {
+      "type": "string",
+      "enum": [
+        "common",
+        "uncommon",
+        "rare",
+        "epic",
+        "legendary"
+      ],
+      "default": "common"
+    },
+    "is_equipped": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the item is currently equipped"
+    },
+    "condition": {
+      "type": "number",
+      "default": 100,
+      "description": "Item durability 0-100"
+    },
+    "value": {
+      "type": "number",
+      "default": 0,
+      "description": "Credit value per unit"
+    },
+    "source": {
+      "type": "string",
+      "description": "Where the item was obtained (e.g. scavenge run, trade, crafted)"
+    },
+    "sector": {
+      "type": "string",
+      "description": "Sector where the item is located (for trading proximity)"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Player notes about this item"
+    }
+  },
+  "required": [
+    "owner_email",
+    "name",
+    "category"
+  ]
+}

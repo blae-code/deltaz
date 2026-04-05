@@ -1,0 +1,61 @@
+{
+  "name": "TradeOffer",
+  "type": "object",
+  "properties": {
+    "seller_email": {
+      "type": "string",
+      "description": "Email of the player offering the trade"
+    },
+    "buyer_email": {
+      "type": "string",
+      "description": "Email of the player who accepts (filled on accept)"
+    },
+    "item_id": {
+      "type": "string",
+      "description": "InventoryItem being offered"
+    },
+    "item_name": {
+      "type": "string",
+      "description": "Snapshot of item name"
+    },
+    "item_category": {
+      "type": "string"
+    },
+    "quantity": {
+      "type": "number",
+      "default": 1,
+      "description": "Quantity being offered"
+    },
+    "asking_price": {
+      "type": "number",
+      "default": 0,
+      "description": "Credits requested"
+    },
+    "asking_items": {
+      "type": "string",
+      "description": "Description of items wanted in return (barter)"
+    },
+    "sector": {
+      "type": "string",
+      "description": "Sector where the trade is available"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "accepted",
+        "cancelled",
+        "expired"
+      ],
+      "default": "open"
+    },
+    "seller_callsign": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "seller_email",
+    "item_name",
+    "sector"
+  ]
+}
