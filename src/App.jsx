@@ -22,6 +22,7 @@ import Treaties from './pages/Treaties';
 import Inventory from './pages/Inventory';
 import Records from './pages/Records';
 import WeeklyDossier from './pages/WeeklyDossier';
+import MissionLog from './pages/MissionLog';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -57,6 +58,7 @@ const AuthenticatedApp = () => {
         <Route path="/inventory" element={<Inventory />} />
         <Route path="/records" element={<Records />} />
         <Route path="/dossier" element={<WeeklyDossier />} />
+        <Route path="/mission-log" element={<MissionLog />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>

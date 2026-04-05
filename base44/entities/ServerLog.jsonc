@@ -1,0 +1,58 @@
+{
+  "name": "ServerLog",
+  "type": "object",
+  "properties": {
+    "category": {
+      "type": "string",
+      "enum": [
+        "rcon_command",
+        "power_action",
+        "broadcast",
+        "status_change",
+        "player_event",
+        "system"
+      ],
+      "default": "system",
+      "description": "Log entry category"
+    },
+    "action": {
+      "type": "string",
+      "description": "Specific action performed (e.g. start, stop, rcon, broadcast)"
+    },
+    "detail": {
+      "type": "string",
+      "description": "Human-readable description of what happened"
+    },
+    "actor_email": {
+      "type": "string",
+      "description": "Email of the user who triggered the action (null for automated)"
+    },
+    "actor_callsign": {
+      "type": "string",
+      "description": "Display name of the actor"
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "info",
+        "warning",
+        "error",
+        "critical"
+      ],
+      "default": "info"
+    },
+    "server_state": {
+      "type": "string",
+      "description": "Server state at time of log (running, stopped, etc.)"
+    },
+    "metadata": {
+      "type": "string",
+      "description": "JSON string with additional context (RCON output, resource stats, etc.)"
+    }
+  },
+  "required": [
+    "category",
+    "action",
+    "detail"
+  ]
+}

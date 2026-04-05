@@ -19,6 +19,7 @@ import {
   Package,
   Trophy,
   FileText,
+  ScrollText,
   LogOut,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -39,6 +40,7 @@ const playerNav = [
   { path: "/treaties", label: "TREATIES", icon: FileSignature },
   { path: "/records", label: "RECORDS", icon: Trophy },
   { path: "/dossier", label: "DOSSIER", icon: FileText },
+  { path: "/mission-log", label: "MISSION LOG", icon: ScrollText },
   { path: "/profile", label: "PROFILE", icon: User },
 ];
 

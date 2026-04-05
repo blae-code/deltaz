@@ -118,6 +118,23 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Action is required' }, { status: 400 });
     }
 
+    // Helper: write a log entry
+    const writeLog = async (category, actionName, detail, severity = 'info', metadata = null) => {
+      try {
+        await base44.asServiceRole.entities.ServerLog.create({
+          category,
+          action: actionName,
+          detail,
+          actor_email: user.email,
+          actor_callsign: user.callsign || user.full_name || user.email,
+          severity,
+          metadata: metadata ? JSON.stringify(metadata) : null,
+        });
+      } catch (e) {
+        console.warn('Failed to write server log:', e.message);
+      }
+    };
+
     // --- PTERODACTYL: Get server status & resources ---
     if (action === "status") {
       const pterodactyl = getPterodactylConfig();
@@ -132,7 +149,6 @@ Deno.serve(async (req) => {
       const data = await res.json();
       const attrs = data.attributes;
       return Response.json({
-        current_state: attrs.current_state,
         is_suspended: attrs.is_suspended,
         resources: {
           memory_bytes: attrs.resources?.memory_bytes || 0,
@@ -160,8 +176,10 @@ Deno.serve(async (req) => {
       );
       if (!res.ok) {
         const text = await res.text();
+        await writeLog('power_action', action, `Power action '${action}' FAILED: ${text}`, 'error');
         throw new Error(`Power action failed (${res.status}): ${text}`);
       }
+      await writeLog('power_action', action, `Server power action: ${action.toUpperCase()}`, action === 'kill' ? 'warning' : 'info');
       return Response.json({ status: "ok", action });
     }
 
@@ -176,6 +194,7 @@ Deno.serve(async (req) => {
         rconResult = await sendRconCommand(`Say ${sanitized}`);
       } catch (rconErr) {
         console.warn('RCON broadcast failed (server may be offline):', rconErr.message);
+        await writeLog('broadcast', 'broadcast', `Broadcast FAILED (server offline): ${sanitized}`, 'error');
       }
 
       // Also create an in-app notification for all players
@@ -197,7 +216,36 @@ Deno.serve(async (req) => {
         is_active: true,
       });
 
+      await writeLog('broadcast', 'broadcast', `Server broadcast: "${sanitized}"`, 'info');
       return Response.json({ status: "ok", result: rconResult });
+    }
+
+    // --- RCON: Arbitrary command ---
+    if (action === "rcon") {
+      const command = typeof body.command === 'string' ? body.command.trim() : '';
+      if (!command) {
+        return Response.json({ error: "Command is required" }, { status: 400 });
+      }
+      let result = '';
+      try {
+        result = await sendRconCommand(command);
+        await writeLog('rcon_command', 'rcon', `RCON command: ${command}`, 'info', { command, output: result });
+      } catch (rconErr) {
+        await writeLog('rcon_command', 'rcon', `RCON command FAILED: ${command} — ${rconErr.message}`, 'error', { command, error: rconErr.message });
+        throw rconErr;
+      }
+      return Response.json({ status: "ok", result });
+    }
+
+    // --- RCON: Player list ---
+    if (action === "players") {
+      let result = '';
+      try {
+        result = await sendRconCommand('ListPlayers');
+      } catch (rconErr) {
+        console.warn('RCON players list failed:', rconErr.message);
+      }
+      return Response.json({ status: "ok", result });
     }
 
     return Response.json({ error: "Unknown action" }, { status: 400 });
