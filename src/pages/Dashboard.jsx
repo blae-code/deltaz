@@ -8,6 +8,7 @@ import IntelHighlights from "../components/dashboard/IntelHighlights";
 import TacticalAdvisor from "../components/dashboard/TacticalAdvisor";
 import WorldPulseStatus from "../components/dashboard/WorldPulseStatus";
 import ScavengeLog from "../components/dashboard/ScavengeLog";
+import ColonyMonitor from "../components/dashboard/ColonyMonitor";
 
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Crosshair, Shield, Map } from "lucide-react";
@@ -70,6 +71,9 @@ export default function Dashboard() {
 
       {/* World Pulse Status */}
       <WorldPulseStatus isAdmin={user?.role === "admin"} />
+
+      {/* Colony Status Monitor */}
+      <ColonyMonitor isAdmin={user?.role === "admin" || user?.role === "game_master"} />
 
       {/* Notifications */}
       {user?.email && <NotificationBanner userEmail={user.email} />}
