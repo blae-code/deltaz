@@ -6,10 +6,14 @@ const GM_EMAIL = "blae@katrasoluta.com";
  */
 export function getDisplayName(user) {
   if (!user) return "UNKNOWN";
-  if (user.email === GM_EMAIL) return "Game Master";
+  if (isGameMaster(user)) return "Game Master";
   return user.callsign || user.discord_username || "OPERATIVE";
 }
 
 export function isGameMaster(user) {
   return user?.email === GM_EMAIL;
+}
+
+export function isAdminOrGM(user) {
+  return user?.role === "admin" || user?.role === "game_master" || isGameMaster(user);
 }

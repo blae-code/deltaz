@@ -17,6 +17,7 @@ import {
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import NavTooltip from "./NavTooltip";
+import { isAdminOrGM } from "../../lib/displayName";
 
 const playerNav = [
   { path: "/", label: "SITREP", icon: LayoutDashboard },
@@ -42,7 +43,7 @@ export default function Sidebar() {
     base44.auth.me().then(setUser).catch(() => {});
   }, []);
 
-  const isAdmin = user?.role === "admin" || user?.role === "game_master";
+  const isAdmin = isAdminOrGM(user);
   const navItems = isAdmin ? [...playerNav, ...adminNav] : playerNav;
 
   return (
