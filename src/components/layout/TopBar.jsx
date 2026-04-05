@@ -15,8 +15,12 @@ export default function TopBar() {
     return () => clearInterval(interval);
   }, []);
 
-  const formatTime = (d) =>
-    d.toISOString().replace("T", " ").substring(0, 19) + " UTC";
+  const formatTime = (d) => {
+    const date = d.toLocaleDateString(undefined, { year: "numeric", month: "2-digit", day: "2-digit" });
+    const clock = d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone?.split("/").pop()?.replace(/_/g, " ") || "LOCAL";
+    return `${date} ${clock} ${tz}`;
+  };
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -53,7 +57,7 @@ export default function TopBar() {
             </div>
           </TooltipTrigger>
           <TooltipContent side="bottom" className="font-mono text-[11px] bg-card border-primary/30">
-            <p className="text-muted-foreground">Coordinated Universal Time — used across all Dead Signal operations for sync.</p>
+            <p className="text-muted-foreground">Local time — synced to your terminal's system clock.</p>
           </TooltipContent>
         </Tooltip>
         {user && (
