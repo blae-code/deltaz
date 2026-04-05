@@ -18,6 +18,7 @@ import {
   FileSignature,
   Package,
   Trophy,
+  FileText,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
@@ -36,7 +37,8 @@ const playerNav = [
   { path: "/intel", label: "INTEL", icon: Eye },
   { path: "/treaties", label: "TREATIES", icon: FileSignature },
   { path: "/records", label: "RECORDS", icon: Trophy },
-  { path: "/profile", label: "DOSSIER", icon: User },
+  { path: "/dossier", label: "DOSSIER", icon: FileText },
+  { path: "/profile", label: "PROFILE", icon: User },
 ];
 
 const adminNav = [
