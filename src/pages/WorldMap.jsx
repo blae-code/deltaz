@@ -1,13 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import GridMap from "../components/map/GridMap";
 import MapMarkerPin from "../components/map/MapPin";
 import TerritoryOverlay from "../components/map/TerritoryOverlay";
+import HeatmapOverlay from "../components/map/HeatmapOverlay";
+import HeatmapLegend from "../components/map/HeatmapLegend";
+import ThreatPredictionPanel from "../components/map/ThreatPredictionPanel";
 import MarkerPanel from "../components/map/MarkerPanel";
 import FactionFilter from "../components/map/FactionFilter";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Layers, Eye, EyeOff } from "lucide-react";
+import { MapPin, Layers, Flame, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function WorldMap() {
@@ -21,6 +24,9 @@ export default function WorldMap() {
   const [pendingPosition, setPendingPosition] = useState(null);
   const [showTerritories, setShowTerritories] = useState(true);
   const [showMarkers, setShowMarkers] = useState(true);
+  const [showHeatmap, setShowHeatmap] = useState(false);
+  const [heatmapData, setHeatmapData] = useState(null);
+  const [heatmapLoading, setHeatmapLoading] = useState(false);
   const [hoveredSector, setHoveredSector] = useState(null);
   const { toast } = useToast();
 
@@ -87,6 +93,27 @@ export default function WorldMap() {
     setSelectedMarker(marker);
   };
 
+  const loadHeatmap = useCallback(async () => {
+    setHeatmapLoading(true);
+    try {
+      const res = await base44.functions.invoke("threatAnalysis", {});
+      setHeatmapData(res.data);
+    } catch (err) {
+      toast({ title: "Threat analysis failed", description: err.message, variant: "destructive" });
+    } finally {
+      setHeatmapLoading(false);
+    }
+  }, [toast]);
+
+  const toggleHeatmap = () => {
+    if (!showHeatmap && !heatmapData) loadHeatmap();
+    setShowHeatmap(!showHeatmap);
+  };
+
+  const handleHeatmapSectorClick = (sector) => {
+    setHoveredSector(sector);
+  };
+
   // Count territories per sector for the info display
   const sectorTerritories = hoveredSector
     ? territories.filter((t) => t.sector === hoveredSector)
@@ -134,6 +161,16 @@ export default function WorldMap() {
             <MapPin className="h-3 w-3 mr-1" />
             MARKERS
           </Button>
+          <Button
+            variant={showHeatmap ? "default" : "outline"}
+            size="sm"
+            className="h-7 text-[9px] tracking-wider"
+            onClick={toggleHeatmap}
+            disabled={heatmapLoading}
+          >
+            {heatmapLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Flame className="h-3 w-3 mr-1" />}
+            THREAT MAP
+          </Button>
         </div>
       </div>
 
@@ -153,6 +190,14 @@ export default function WorldMap() {
             selectedSector={selectedMarker?.sector || pendingPosition?.sector}
             onSectorHover={setHoveredSector}
           >
+            {/* Heatmap overlay */}
+            {showHeatmap && heatmapData?.sector_scores && (
+              <HeatmapOverlay
+                sectorScores={heatmapData.sector_scores}
+                onSectorClick={handleHeatmapSectorClick}
+              />
+            )}
+
             {/* Territory zone overlays */}
             {showTerritories &&
               filteredTerritories.map((t) => {
@@ -222,27 +267,45 @@ export default function WorldMap() {
             )}
           </GridMap>
 
-          {/* Sector info bar */}
-          {hoveredSector && (sectorTerritories.length > 0 || sectorMarkers.length > 0) && (
-            <div className="mt-2 flex items-center gap-3 text-[10px] text-muted-foreground">
-              {sectorTerritories.length > 0 && (
-                <span>
-                  <Layers className="h-3 w-3 inline mr-1" />
-                  {sectorTerritories.map((t) => t.name).join(", ")}
-                </span>
-              )}
-              {sectorMarkers.length > 0 && (
-                <span>
-                  <MapPin className="h-3 w-3 inline mr-1" />
-                  {sectorMarkers.length} marker{sectorMarkers.length !== 1 ? "s" : ""}
-                </span>
-              )}
-            </div>
-          )}
+          {/* Heatmap legend + Sector info bar */}
+          <div className="mt-2 space-y-1.5">
+            {showHeatmap && heatmapData && <HeatmapLegend />}
+            {hoveredSector && (sectorTerritories.length > 0 || sectorMarkers.length > 0 || (showHeatmap && heatmapData)) && (
+              <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                {showHeatmap && heatmapData?.sector_scores?.[hoveredSector] != null && (
+                  <span className="font-mono">
+                    <Flame className="h-3 w-3 inline mr-1" />
+                    THREAT: {heatmapData.sector_scores[hoveredSector]}
+                  </span>
+                )}
+                {sectorTerritories.length > 0 && (
+                  <span>
+                    <Layers className="h-3 w-3 inline mr-1" />
+                    {sectorTerritories.map((t) => t.name).join(", ")}
+                  </span>
+                )}
+                {sectorMarkers.length > 0 && (
+                  <span>
+                    <MapPin className="h-3 w-3 inline mr-1" />
+                    {sectorMarkers.length} marker{sectorMarkers.length !== 1 ? "s" : ""}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Side Panel */}
         <div className="space-y-3">
+          {/* Threat Predictions */}
+          {showHeatmap && heatmapData?.predictions && (
+            <ThreatPredictionPanel
+              predictions={heatmapData.predictions}
+              summary={heatmapData.summary}
+              onSectorClick={handleHeatmapSectorClick}
+            />
+          )}
+
           <MarkerPanel
             selectedMarker={selectedMarker}
             pendingPosition={pendingPosition}
