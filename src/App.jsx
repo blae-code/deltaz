@@ -24,6 +24,7 @@ import Records from './pages/Records';
 import WeeklyDossier from './pages/WeeklyDossier';
 import MissionLog from './pages/MissionLog';
 import CraftingTracker from './pages/CraftingTracker';
+import Logistics from './pages/Logistics';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -61,6 +62,7 @@ const AuthenticatedApp = () => {
         <Route path="/dossier" element={<WeeklyDossier />} />
         <Route path="/mission-log" element={<MissionLog />} />
         <Route path="/workbench" element={<CraftingTracker />} />
+        <Route path="/logistics" element={<Logistics />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>
