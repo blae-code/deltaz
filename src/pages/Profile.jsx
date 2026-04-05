@@ -10,6 +10,7 @@ import { User, Shield, Award, LogOut, MessageCircle } from "lucide-react";
 import ReputationBar from "../components/profile/ReputationBar";
 import ReputationHistory from "../components/profile/ReputationHistory";
 import CharacterProfileEditor from "../components/profile/CharacterProfileEditor";
+import PerformanceAnalytics from "../components/profile/PerformanceAnalytics";
 import { getDisplayName } from "../lib/displayName";
 
 export default function Profile() {
@@ -137,6 +138,9 @@ export default function Profile() {
           </div>
         )}
       </DataCard>
+
+      {/* Performance Analytics */}
+      {user?.email && <PerformanceAnalytics userEmail={user.email} />}
 
       {/* Reputation History */}
       <DataCard title="Reputation Activity Log">
