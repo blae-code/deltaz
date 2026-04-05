@@ -14,7 +14,16 @@
     },
     "callsign": {
       "type": "string",
-      "description": "Player's tactical callsign"
+      "description": "Player's tactical callsign \u2014 required during onboarding"
+    },
+    "discord_username": {
+      "type": "string",
+      "description": "Player's Discord username for identity linking"
+    },
+    "is_onboarded": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the user has completed the onboarding process"
     },
     "faction_id": {
       "type": "string",

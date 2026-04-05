@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Crosshair, Send, User } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { getDisplayName } from "../../lib/displayName";
 
 const difficultyColor = {
   routine: "text-primary",
@@ -57,7 +58,7 @@ export default function DispatchPanel() {
       is_read: false,
     });
 
-    toast({ title: "Operative dispatched", description: `${user.full_name || user.email} assigned to ${job.title}` });
+    toast({ title: "Operative dispatched", description: `${getDisplayName(user)} assigned to ${job.title}` });
 
     // Refresh available jobs
     setJobs((prev) => prev.filter((j) => j.id !== selectedJob));
@@ -123,7 +124,7 @@ export default function DispatchPanel() {
               <SelectItem key={u.id} value={u.id}>
                 <span className="flex items-center gap-2">
                   <User className="h-3 w-3" />
-                  <span>{u.full_name || u.email}</span>
+                  <span>{getDisplayName(u)}</span>
                   <span className="text-[10px] text-muted-foreground">[{u.role}]</span>
                 </span>
               </SelectItem>

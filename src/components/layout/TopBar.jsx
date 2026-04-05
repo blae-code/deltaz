@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import StatusIndicator from "../terminal/StatusIndicator";
-import { Signal, Clock, Lock } from "lucide-react";
+import { Clock, Lock } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { getDisplayName } from "../../lib/displayName";
 
 export default function TopBar() {
   const [user, setUser] = useState(null);
@@ -60,7 +61,7 @@ export default function TopBar() {
             <TooltipTrigger asChild>
               <div className="flex items-center gap-2 border-l border-border pl-4 cursor-help">
                 <span className="text-xs text-primary font-semibold tracking-wider">
-                  {user.callsign || user.full_name || "OPERATIVE"}
+                  {getDisplayName(user)}
                 </span>
                 <span className="text-[10px] text-muted-foreground uppercase">
                   [{user.role || "player"}]
@@ -69,7 +70,8 @@ export default function TopBar() {
             </TooltipTrigger>
             <TooltipContent side="bottom" className="font-mono text-[11px] bg-card border-primary/30 max-w-[220px]">
               <p className="text-primary font-semibold text-[10px] mb-0.5">OPERATIVE ID</p>
-              <p className="text-muted-foreground text-[10px]">{user.email}</p>
+              <p className="text-muted-foreground text-[10px]">Callsign: {getDisplayName(user)}</p>
+              {user.discord_username && <p className="text-muted-foreground text-[10px]">Discord: {user.discord_username}</p>}
               <p className="text-muted-foreground mt-1">Clearance: <span className="text-foreground uppercase">{user.role || "player"}</span></p>
             </TooltipContent>
           </Tooltip>

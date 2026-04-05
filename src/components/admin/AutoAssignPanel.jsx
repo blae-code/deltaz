@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Zap, Check, User, Crosshair, RefreshCw, AlertTriangle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { getDisplayName } from "../../lib/displayName";
 
 const difficultyColor = {
   routine: "text-primary",
@@ -188,7 +189,7 @@ export default function AutoAssignPanel() {
                   <div className="flex items-center gap-2">
                     <User className="h-3 w-3 text-chart-4 shrink-0" />
                     <span className="text-[10px] text-chart-4">
-                      {a.user.full_name || a.user.email}
+                      {getDisplayName(a.user)}
                     </span>
                     <span className="text-[9px] text-muted-foreground">
                       MATCH: {a.score > 0 ? "+" : ""}
