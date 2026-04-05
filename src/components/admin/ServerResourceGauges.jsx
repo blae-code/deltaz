@@ -51,21 +51,33 @@ export default function ServerResourceGauges({ resources }) {
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-      {gauges.map((g) => (
-        <div key={g.label} className="border border-border bg-card rounded-sm p-3">
-          <div className="flex items-center gap-2 mb-2">
-            <g.icon className="h-3.5 w-3.5 text-primary" />
-            <span className="text-[10px] font-mono text-muted-foreground tracking-wider">{g.label}</span>
+      {gauges.map((g) => {
+        const isHigh = g.percent !== null && g.percent > 80;
+        const isCritical = g.percent !== null && g.percent > 90;
+        return (
+          <div key={g.label} className={`border rounded-sm p-3 transition-colors ${
+            isCritical ? 'border-destructive/40 bg-destructive/5' :
+            isHigh ? 'border-accent/40 bg-accent/5' :
+            'border-border bg-card'
+          }`}>
+            <div className="flex items-center gap-2 mb-2">
+              <g.icon className={`h-3.5 w-3.5 ${
+                isCritical ? 'text-destructive' : isHigh ? 'text-accent' : 'text-primary'
+              }`} />
+              <span className="text-[10px] font-mono text-muted-foreground tracking-wider">{g.label}</span>
+            </div>
+            <p className={`text-sm font-bold font-mono mb-1 transition-colors ${
+              isCritical ? 'text-destructive' : isHigh ? 'text-accent' : 'text-foreground'
+            }`}>{g.value}</p>
+            {g.percent !== null && (
+              <Progress
+                value={g.percent}
+                className="h-1.5"
+              />
+            )}
           </div>
-          <p className="text-sm font-bold font-mono text-foreground mb-1">{g.value}</p>
-          {g.percent !== null && (
-            <Progress
-              value={g.percent}
-              className="h-1.5"
-            />
-          )}
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
