@@ -55,16 +55,38 @@
       "type": "string",
       "description": "Email of assigned player"
     },
+    "accepted_at": {
+      "type": "string",
+      "description": "ISO date when the mission was accepted"
+    },
+    "completed_at": {
+      "type": "string",
+      "description": "ISO date when the mission was completed or failed"
+    },
     "reward_reputation": {
       "type": "number",
       "default": 0
     },
+    "reward_credits": {
+      "type": "number",
+      "default": 0,
+      "description": "Credit payout on completion"
+    },
     "reward_description": {
       "type": "string"
+    },
+    "completion_notes": {
+      "type": "string",
+      "description": "AI-generated or admin notes on mission outcome"
     },
     "expires_at": {
       "type": "string",
       "description": "ISO date when mission expires"
+    },
+    "max_slots": {
+      "type": "number",
+      "default": 1,
+      "description": "Max players that can accept this mission"
     }
   },
   "required": [
