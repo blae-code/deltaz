@@ -286,7 +286,7 @@ export default function Admin() {
           <Card className="bg-card border-border">
             <CardHeader>
               <CardTitle className="text-xs font-mono text-muted-foreground tracking-widest flex items-center gap-2">
-                <Coins className="h-3.5 w-3.5" /> RESOURCE ECONOMY
+                <Coins className="h-3.5 w-3.5" /> RESOURCE ECONOMY CONTROL
               </CardTitle>
             </CardHeader>
             <CardContent><ResourceDashboard /></CardContent>
