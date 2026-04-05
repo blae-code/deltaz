@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import DataCard from "../components/terminal/DataCard";
 import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
+import { Search, Sparkles } from "lucide-react";
 import ScavengeDeployPanel from "../components/scavenge/ScavengeDeployPanel";
 import ScavengeHistory from "../components/scavenge/ScavengeHistory";
 import MissionStats from "../components/missions/MissionStats";
 import MissionFilters from "../components/missions/MissionFilters";
 import MyMissionsPanel from "../components/missions/MyMissionsPanel";
 import MissionCard from "../components/missions/MissionCard";
+import MissionGenerator from "../components/missions/MissionGenerator";
 
 export default function Jobs() {
   const [jobs, setJobs] = useState([]);
@@ -20,6 +21,7 @@ export default function Jobs() {
   const [factionFilter, setFactionFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [showScavenge, setShowScavenge] = useState(false);
+  const [showGenerator, setShowGenerator] = useState(false);
   const [scavengeKey, setScavengeKey] = useState(0);
 
   const loadData = async () => {
@@ -77,15 +79,32 @@ export default function Jobs() {
           </h2>
           <p className="text-xs text-muted-foreground mt-1">Accept missions, earn reputation, serve your clan</p>
         </div>
-        <Button
-          variant={showScavenge ? "default" : "outline"}
-          size="sm"
-          className="text-[10px] uppercase tracking-wider h-7"
-          onClick={() => setShowScavenge(!showScavenge)}
-        >
-          <Search className="h-3 w-3 mr-1" /> SCAVENGE
-        </Button>
+        <div className="flex gap-1.5">
+          <Button
+            variant={showGenerator ? "default" : "outline"}
+            size="sm"
+            className="text-[10px] uppercase tracking-wider h-7"
+            onClick={() => setShowGenerator(!showGenerator)}
+          >
+            <Sparkles className="h-3 w-3 mr-1" /> GENERATE
+          </Button>
+          <Button
+            variant={showScavenge ? "default" : "outline"}
+            size="sm"
+            className="text-[10px] uppercase tracking-wider h-7"
+            onClick={() => setShowScavenge(!showScavenge)}
+          >
+            <Search className="h-3 w-3 mr-1" /> SCAVENGE
+          </Button>
+        </div>
       </div>
+
+      {/* Mission Generator */}
+      {showGenerator && (
+        <DataCard title="Mission Generator">
+          <MissionGenerator onGenerated={loadData} />
+        </DataCard>
+      )}
 
       {/* Scavenge Panel */}
       {showScavenge && (
