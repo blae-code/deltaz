@@ -1,0 +1,84 @@
+{
+  "name": "CraftingProject",
+  "type": "object",
+  "properties": {
+    "owner_email": {
+      "type": "string",
+      "description": "Email of the player who owns this project"
+    },
+    "title": {
+      "type": "string",
+      "description": "Project name e.g. 'Build AK-47' or 'Base Wall Upgrade'"
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional notes about the project"
+    },
+    "recipe_id": {
+      "type": "string",
+      "description": "Linked recipe ID if based on a recipe"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "weapon",
+        "armor",
+        "tool",
+        "consumable",
+        "upgrade",
+        "trade_good",
+        "building",
+        "custom"
+      ],
+      "default": "custom"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "gathering",
+        "ready",
+        "completed",
+        "abandoned"
+      ],
+      "default": "gathering"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "normal",
+        "high",
+        "urgent"
+      ],
+      "default": "normal"
+    },
+    "materials": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "resource": {
+            "type": "string"
+          },
+          "needed": {
+            "type": "number"
+          },
+          "have": {
+            "type": "number",
+            "default": 0
+          }
+        }
+      },
+      "description": "List of materials needed with current progress"
+    },
+    "completed_at": {
+      "type": "string",
+      "description": "ISO date when the project was completed"
+    }
+  },
+  "required": [
+    "owner_email",
+    "title",
+    "materials"
+  ]
+}
