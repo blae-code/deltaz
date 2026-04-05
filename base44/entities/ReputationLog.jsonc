@@ -1,0 +1,31 @@
+{
+  "name": "ReputationLog",
+  "type": "object",
+  "properties": {
+    "operative": {
+      "type": "string",
+      "title": "Operative Email"
+    },
+    "faction": {
+      "type": "string",
+      "title": "Faction"
+    },
+    "change": {
+      "type": "number",
+      "title": "Rep Change"
+    },
+    "reason": {
+      "type": "string",
+      "title": "Reason"
+    },
+    "job_id": {
+      "type": "string",
+      "title": "Related Job"
+    }
+  },
+  "required": [
+    "operative",
+    "faction",
+    "change"
+  ]
+}

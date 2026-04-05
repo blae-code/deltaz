@@ -1,0 +1,73 @@
+{
+  "name": "Job",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "title": "Job Title"
+    },
+    "description": {
+      "type": "string",
+      "title": "Briefing"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "recon",
+        "extraction",
+        "sabotage",
+        "delivery",
+        "defense",
+        "bounty"
+      ],
+      "title": "Job Type"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "available",
+        "accepted",
+        "in_progress",
+        "completed",
+        "failed",
+        "expired"
+      ],
+      "default": "available"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ],
+      "default": "medium"
+    },
+    "reward": {
+      "type": "string",
+      "title": "Reward"
+    },
+    "territory": {
+      "type": "string",
+      "title": "Territory"
+    },
+    "faction": {
+      "type": "string",
+      "title": "Issuing Faction"
+    },
+    "assigned_to": {
+      "type": "string",
+      "title": "Assigned Operative"
+    },
+    "deadline": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Deadline"
+    }
+  },
+  "required": [
+    "title",
+    "type"
+  ]
+}

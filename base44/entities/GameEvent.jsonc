@@ -1,0 +1,53 @@
+{
+  "name": "GameEvent",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "title": "Event Title"
+    },
+    "description": {
+      "type": "string",
+      "title": "Description"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "combat",
+        "discovery",
+        "faction_war",
+        "trade",
+        "anomaly",
+        "broadcast",
+        "system"
+      ],
+      "title": "Event Type"
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "info",
+        "warning",
+        "alert",
+        "critical"
+      ],
+      "default": "info"
+    },
+    "territory": {
+      "type": "string",
+      "title": "Related Territory"
+    },
+    "faction": {
+      "type": "string",
+      "title": "Related Faction"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "title",
+    "event_type"
+  ]
+}

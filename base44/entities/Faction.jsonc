@@ -1,0 +1,47 @@
+{
+  "name": "Faction",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Faction Name"
+    },
+    "code": {
+      "type": "string",
+      "title": "Short Code",
+      "description": "3-5 letter identifier"
+    },
+    "description": {
+      "type": "string",
+      "title": "Description"
+    },
+    "color": {
+      "type": "string",
+      "title": "Theme Color",
+      "default": "#22c55e"
+    },
+    "territory_count": {
+      "type": "number",
+      "title": "Territories Held",
+      "default": 0
+    },
+    "member_count": {
+      "type": "number",
+      "title": "Member Count",
+      "default": 0
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "disbanded",
+        "dormant"
+      ],
+      "default": "active"
+    }
+  },
+  "required": [
+    "name",
+    "code"
+  ]
+}

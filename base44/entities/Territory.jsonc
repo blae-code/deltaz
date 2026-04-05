@@ -1,0 +1,56 @@
+{
+  "name": "Territory",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Territory Name"
+    },
+    "sector": {
+      "type": "string",
+      "title": "Sector Code"
+    },
+    "controlling_faction": {
+      "type": "string",
+      "title": "Controlling Faction"
+    },
+    "threat_level": {
+      "type": "string",
+      "enum": [
+        "green",
+        "yellow",
+        "orange",
+        "red",
+        "black"
+      ],
+      "default": "green",
+      "title": "Threat Level"
+    },
+    "coordinates": {
+      "type": "string",
+      "title": "Grid Coordinates"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "stable",
+        "contested",
+        "lost",
+        "quarantined"
+      ],
+      "default": "stable"
+    },
+    "resources": {
+      "type": "string",
+      "title": "Resources Available"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Intel Notes"
+    }
+  },
+  "required": [
+    "name",
+    "sector"
+  ]
+}

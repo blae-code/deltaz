@@ -5,7 +5,13 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-// Add page imports here
+import AppShell from './components/layout/AppShell';
+import Dashboard from './pages/Dashboard';
+import Jobs from './pages/Jobs';
+import WorldMap from './pages/WorldMap';
+import Events from './pages/Events';
+import Factions from './pages/Factions';
+import Admin from './pages/Admin';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -33,8 +39,15 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
-      {/* Add your page Route elements here */}
-      <Route path="*" element={<PageNotFound />} />
+      <Route element={<AppShell />}>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/jobs" element={<Jobs />} />
+        <Route path="/map" element={<WorldMap />} />
+        <Route path="/events" element={<Events />} />
+        <Route path="/factions" element={<Factions />} />
+        <Route path="/admin" element={<Admin />} />
+        <Route path="*" element={<PageNotFound />} />
+      </Route>
     </Routes>
   );
 };
