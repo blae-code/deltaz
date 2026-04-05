@@ -15,6 +15,7 @@ import Profile from './pages/Profile';
 import Admin from './pages/Admin';
 import Intel from './pages/Intel';
 import Market from './pages/Market';
+import Colony from './pages/Colony';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -51,6 +52,7 @@ const AuthenticatedApp = () => {
         <Route path="/profile" element={<Profile />} />
         <Route path="/intel" element={<Intel />} />
         <Route path="/market" element={<Market />} />
+        <Route path="/colony" element={<Colony />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>

@@ -1,0 +1,54 @@
+{
+  "name": "PlayerBase",
+  "type": "object",
+  "properties": {
+    "owner_email": {
+      "type": "string",
+      "description": "Email of the player who owns this base"
+    },
+    "name": {
+      "type": "string",
+      "description": "Base name given by the player"
+    },
+    "territory_id": {
+      "type": "string",
+      "description": "Linked territory ID (optional)"
+    },
+    "grid_x": {
+      "type": "number",
+      "description": "X coordinate on the map (0-100)"
+    },
+    "grid_y": {
+      "type": "number",
+      "description": "Y coordinate on the map (0-100)"
+    },
+    "sector": {
+      "type": "string",
+      "description": "Grid sector code e.g. B-4"
+    },
+    "defense_level": {
+      "type": "number",
+      "default": 1,
+      "description": "Base defense rating 1-10"
+    },
+    "capacity": {
+      "type": "number",
+      "default": 5,
+      "description": "Max number of survivors this base can house"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "abandoned",
+        "destroyed",
+        "under_siege"
+      ],
+      "default": "active"
+    }
+  },
+  "required": [
+    "owner_email",
+    "name"
+  ]
+}

@@ -1,0 +1,118 @@
+{
+  "name": "Survivor",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Survivor's name"
+    },
+    "nickname": {
+      "type": "string",
+      "description": "Survivor's nickname or title"
+    },
+    "backstory": {
+      "type": "string",
+      "description": "Short backstory for narrative flavor"
+    },
+    "personality": {
+      "type": "string",
+      "description": "Personality trait or quirk"
+    },
+    "skill": {
+      "type": "string",
+      "enum": [
+        "scavenger",
+        "medic",
+        "mechanic",
+        "farmer",
+        "guard",
+        "trader",
+        "engineer",
+        "cook"
+      ],
+      "description": "Primary skill that provides a mechanical bonus"
+    },
+    "skill_level": {
+      "type": "number",
+      "default": 1,
+      "description": "Skill proficiency 1-5"
+    },
+    "morale": {
+      "type": "string",
+      "enum": [
+        "desperate",
+        "anxious",
+        "neutral",
+        "content",
+        "thriving"
+      ],
+      "default": "neutral"
+    },
+    "health": {
+      "type": "string",
+      "enum": [
+        "critical",
+        "injured",
+        "sick",
+        "healthy",
+        "peak"
+      ],
+      "default": "healthy"
+    },
+    "base_id": {
+      "type": "string",
+      "description": "PlayerBase they currently reside at"
+    },
+    "origin": {
+      "type": "string",
+      "enum": [
+        "wanderer",
+        "refugee",
+        "recruited",
+        "rescued",
+        "trader",
+        "assigned"
+      ],
+      "default": "wanderer",
+      "description": "How they arrived at the base"
+    },
+    "arrival_reason": {
+      "type": "string",
+      "description": "Narrative reason for arrival"
+    },
+    "bonus_type": {
+      "type": "string",
+      "enum": [
+        "food_production",
+        "defense",
+        "scrap_yield",
+        "healing",
+        "trade_discount",
+        "repair",
+        "crafting",
+        "morale_boost"
+      ],
+      "description": "Mechanical bonus this survivor provides"
+    },
+    "bonus_value": {
+      "type": "number",
+      "default": 5,
+      "description": "Percentage bonus provided"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "injured",
+        "missing",
+        "dead",
+        "departed"
+      ],
+      "default": "active"
+    }
+  },
+  "required": [
+    "name",
+    "skill"
+  ]
+}

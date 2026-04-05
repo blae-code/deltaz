@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, Plus, Trash2, Send, Zap, Flag, Coins, Crosshair, ArrowLeftRight } from "lucide-react";
+import { Shield, Plus, Trash2, Send, Zap, Flag, Coins, Crosshair, ArrowLeftRight, Users } from "lucide-react";
 import DispatchPanel from "../components/admin/DispatchPanel";
 import AutoAssignPanel from "../components/admin/AutoAssignPanel";
 import TerritoryOpsPanel from "../components/admin/TerritoryOpsPanel";
@@ -15,6 +15,7 @@ import ResourceDashboard from "../components/admin/ResourceDashboard";
 import MissionForgePanel from "../components/admin/MissionForgePanel";
 import TradePanel from "../components/admin/TradePanel";
 import DiplomacyPanel from "../components/admin/DiplomacyPanel";
+import SurvivorAdminPanel from "../components/admin/SurvivorAdminPanel";
 import { useToast } from "@/components/ui/use-toast";
 
 function CreateFactionForm({ onCreated }) {
@@ -225,6 +226,7 @@ export default function Admin() {
           <TabsTrigger value="diplomacy" className="text-xs font-mono">DIPLOMACY</TabsTrigger>
           <TabsTrigger value="trade" className="text-xs font-mono">TRADE</TabsTrigger>
           <TabsTrigger value="economy" className="text-xs font-mono">ECONOMY</TabsTrigger>
+          <TabsTrigger value="survivors" className="text-xs font-mono">SURVIVORS</TabsTrigger>
         </TabsList>
 
         <TabsContent value="dispatch">
@@ -329,6 +331,17 @@ export default function Admin() {
               </CardTitle>
             </CardHeader>
             <CardContent><ResourceDashboard /></CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="survivors">
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <CardTitle className="text-xs font-mono text-muted-foreground tracking-widest flex items-center gap-2">
+                <Users className="h-3.5 w-3.5" /> SURVIVOR COLONY MANAGEMENT
+              </CardTitle>
+            </CardHeader>
+            <CardContent><SurvivorAdminPanel /></CardContent>
           </Card>
         </TabsContent>
       </Tabs>

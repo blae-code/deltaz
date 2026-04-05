@@ -1,0 +1,116 @@
+import { Badge } from "@/components/ui/badge";
+import { User, Heart, Smile, Wrench, Shield, Wheat, Search, ShoppingBag, Cpu, ChefHat } from "lucide-react";
+
+const skillIcons = {
+  scavenger: Search,
+  medic: Heart,
+  mechanic: Wrench,
+  farmer: Wheat,
+  guard: Shield,
+  trader: ShoppingBag,
+  engineer: Cpu,
+  cook: ChefHat,
+};
+
+const moraleStyle = {
+  desperate: "text-status-danger bg-status-danger/10",
+  anxious: "text-status-warn bg-status-warn/10",
+  neutral: "text-muted-foreground bg-secondary",
+  content: "text-primary bg-primary/10",
+  thriving: "text-status-ok bg-status-ok/10",
+};
+
+const healthStyle = {
+  critical: "text-status-danger",
+  injured: "text-status-warn",
+  sick: "text-status-warn",
+  healthy: "text-status-ok",
+  peak: "text-primary",
+};
+
+const originStyle = {
+  wanderer: "bg-muted text-muted-foreground",
+  refugee: "bg-status-warn/10 text-status-warn border-status-warn/20",
+  recruited: "bg-primary/10 text-primary border-primary/20",
+  rescued: "bg-chart-4/10 text-chart-4 border-chart-4/20",
+  trader: "bg-accent/10 text-accent border-accent/20",
+  assigned: "bg-primary/10 text-primary border-primary/20",
+};
+
+export default function SurvivorCard({ survivor, compact }) {
+  const SkillIcon = skillIcons[survivor.skill] || User;
+  const skillDots = Array.from({ length: 5 }, (_, i) => i < (survivor.skill_level || 1));
+
+  if (compact) {
+    return (
+      <div className="flex items-center gap-2 px-3 py-2 border border-border/50 rounded-sm bg-secondary/20 hover:bg-secondary/30 transition-colors">
+        <SkillIcon className="h-3.5 w-3.5 text-primary shrink-0" />
+        <div className="flex-1 min-w-0">
+          <span className="text-xs font-semibold text-foreground truncate block">{survivor.name}</span>
+          <span className="text-[9px] text-muted-foreground">{survivor.skill} · {survivor.nickname}</span>
+        </div>
+        <Badge variant="outline" className={`text-[8px] ${moraleStyle[survivor.morale] || ""}`}>
+          {survivor.morale}
+        </Badge>
+      </div>
+    );
+  }
+
+  return (
+    <div className="border border-border bg-card rounded-sm overflow-hidden hover:border-primary/30 transition-colors">
+      <div className="px-3 py-2 bg-secondary/30 border-b border-border/50 flex items-center gap-2">
+        <SkillIcon className="h-4 w-4 text-primary" />
+        <div className="flex-1 min-w-0">
+          <div className="text-xs font-semibold text-foreground truncate">{survivor.name}</div>
+          {survivor.nickname && (
+            <div className="text-[9px] text-accent italic">"{survivor.nickname}"</div>
+          )}
+        </div>
+        <Badge variant="outline" className={`text-[8px] ${originStyle[survivor.origin] || ""}`}>
+          {survivor.origin}
+        </Badge>
+      </div>
+
+      <div className="p-3 space-y-2">
+        {/* Skill + Level */}
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{survivor.skill}</span>
+          <div className="flex gap-0.5">
+            {skillDots.map((filled, i) => (
+              <span key={i} className={`h-1.5 w-1.5 rounded-full ${filled ? "bg-primary" : "bg-border"}`} />
+            ))}
+          </div>
+        </div>
+
+        {/* Health + Morale */}
+        <div className="flex gap-2">
+          <Badge variant="outline" className={`text-[8px] ${healthStyle[survivor.health] || ""}`}>
+            ♥ {survivor.health}
+          </Badge>
+          <Badge variant="outline" className={`text-[8px] ${moraleStyle[survivor.morale] || ""}`}>
+            ☺ {survivor.morale}
+          </Badge>
+        </div>
+
+        {/* Bonus */}
+        {survivor.bonus_type && (
+          <div className="text-[9px] text-primary font-mono">
+            +{survivor.bonus_value}% {survivor.bonus_type.replace(/_/g, " ")}
+          </div>
+        )}
+
+        {/* Backstory */}
+        {survivor.backstory && (
+          <p className="text-[9px] text-muted-foreground italic line-clamp-2">{survivor.backstory}</p>
+        )}
+
+        {/* Personality */}
+        {survivor.personality && (
+          <div className="text-[9px] text-muted-foreground">
+            <span className="text-foreground/80">Trait:</span> {survivor.personality}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
