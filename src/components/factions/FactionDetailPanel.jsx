@@ -1,8 +1,10 @@
+import { Link } from "react-router-dom";
 import DataCard from "../terminal/DataCard";
 import FactionMemberList from "./FactionMemberList";
 import ModifierBreakdown from "../market/ModifierBreakdown";
 import { Badge } from "@/components/ui/badge";
-import { Shield, MapPin, Coins, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Shield, MapPin, Coins, TrendingUp, TrendingDown, Minus, FileSignature } from "lucide-react";
 
 const resourceIcons = { fuel: "⛽", metals: "⚙", tech: "💾", food: "🌾", munitions: "🔫" };
 
@@ -99,6 +101,15 @@ export default function FactionDetailPanel({ faction, economy, territories, memb
             </div>
           </div>
         )}
+      </div>
+
+      {/* Treaty Link */}
+      <div className="flex">
+        <Button variant="outline" size="sm" className="text-[10px] uppercase tracking-wider h-7" asChild>
+          <Link to="/treaties">
+            <FileSignature className="h-3 w-3 mr-1" /> VIEW TREATIES
+          </Link>
+        </Button>
       </div>
 
       {/* Diplomatic Relations */}

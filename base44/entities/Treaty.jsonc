@@ -1,0 +1,108 @@
+{
+  "name": "Treaty",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Treaty title"
+    },
+    "treaty_type": {
+      "type": "string",
+      "enum": [
+        "non_aggression",
+        "trade_pact",
+        "alliance"
+      ],
+      "description": "Type of treaty"
+    },
+    "proposer_faction_id": {
+      "type": "string",
+      "description": "Faction that proposed the treaty"
+    },
+    "target_faction_id": {
+      "type": "string",
+      "description": "Faction that must accept or reject"
+    },
+    "proposer_email": {
+      "type": "string",
+      "description": "Player who submitted the proposal"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "proposed",
+        "negotiating",
+        "accepted",
+        "rejected",
+        "expired",
+        "revoked"
+      ],
+      "default": "proposed"
+    },
+    "terms": {
+      "type": "string",
+      "description": "Detailed treaty terms"
+    },
+    "counter_terms": {
+      "type": "string",
+      "description": "Counter-proposal terms from target faction"
+    },
+    "duration_days": {
+      "type": "number",
+      "default": 7,
+      "description": "Treaty duration in real-world days"
+    },
+    "expires_at": {
+      "type": "string",
+      "description": "ISO date when this treaty expires"
+    },
+    "signed_at": {
+      "type": "string",
+      "description": "ISO date when both parties signed"
+    },
+    "signed_by_proposer": {
+      "type": "string",
+      "description": "Email of the proposer signatory"
+    },
+    "signed_by_target": {
+      "type": "string",
+      "description": "Email of the target signatory"
+    },
+    "commodity_effects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "resource": {
+            "type": "string"
+          },
+          "modifier": {
+            "type": "number"
+          }
+        }
+      },
+      "description": "Calculated commodity price effects"
+    },
+    "territory_effects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "territory_id": {
+            "type": "string"
+          },
+          "security_change": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Calculated territory security effects"
+    }
+  },
+  "required": [
+    "treaty_type",
+    "proposer_faction_id",
+    "target_faction_id",
+    "proposer_email"
+  ]
+}

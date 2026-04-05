@@ -15,6 +15,7 @@ import {
   X,
   TrendingUp,
   Home,
+  FileSignature,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
@@ -30,6 +31,7 @@ const playerNav = [
   { path: "/colony", label: "COLONY", icon: Home },
   { path: "/market", label: "MARKET", icon: TrendingUp },
   { path: "/intel", label: "INTEL", icon: Eye },
+  { path: "/treaties", label: "TREATIES", icon: FileSignature },
   { path: "/profile", label: "DOSSIER", icon: User },
 ];
 
