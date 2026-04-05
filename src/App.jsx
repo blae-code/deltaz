@@ -18,6 +18,7 @@ import Market from './pages/Market';
 import Colony from './pages/Colony';
 import Treaties from './pages/Treaties';
 import Inventory from './pages/Inventory';
+import Records from './pages/Records';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -57,6 +58,7 @@ const AuthenticatedApp = () => {
         <Route path="/colony" element={<Colony />} />
         <Route path="/treaties" element={<Treaties />} />
         <Route path="/inventory" element={<Inventory />} />
+        <Route path="/records" element={<Records />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>

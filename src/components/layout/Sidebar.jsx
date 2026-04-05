@@ -17,6 +17,7 @@ import {
   Home,
   FileSignature,
   Package,
+  Trophy,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
@@ -34,6 +35,7 @@ const playerNav = [
   { path: "/inventory", label: "INVENTORY", icon: Package },
   { path: "/intel", label: "INTEL", icon: Eye },
   { path: "/treaties", label: "TREATIES", icon: FileSignature },
+  { path: "/records", label: "RECORDS", icon: Trophy },
   { path: "/profile", label: "DOSSIER", icon: User },
 ];
 
