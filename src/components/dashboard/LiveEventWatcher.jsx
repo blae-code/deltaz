@@ -67,6 +67,25 @@ export default function LiveEventWatcher({ userEmail }) {
       });
     });
 
+    // Watch critical/emergency world events
+    const unsubEvent = base44.entities.Event.subscribe((event) => {
+      if (event.type !== "create") return;
+      const e = event.data;
+      if (!e) return;
+      if (e.severity !== "critical" && e.severity !== "emergency") return;
+      const key = `event-${event.id}`;
+      if (seenRef.current.has(key)) return;
+      seenRef.current.add(key);
+      setTimeout(() => seenRef.current.delete(key), 5000);
+
+      toast({
+        title: `🚨 ${e.severity === "emergency" ? "EMERGENCY" : "CRITICAL"}: ${e.title || "Unknown Threat"}`,
+        description: e.content?.substring(0, 120) || "All operatives report to SITREP.",
+        variant: "destructive",
+        duration: 12000,
+      });
+    });
+
     // Watch broadcast notifications for this user
     const unsubNotify = base44.entities.Notification.subscribe((event) => {
       if (event.type !== "create") return;
@@ -78,16 +97,19 @@ export default function LiveEventWatcher({ userEmail }) {
       seenRef.current.add(key);
       setTimeout(() => seenRef.current.delete(key), 5000);
 
+      const isUrgent = n.priority === "high" || n.priority === "critical";
       toast({
         title: n.title,
         description: n.message || "",
-        duration: 6000,
+        variant: isUrgent ? "destructive" : "default",
+        duration: isUrgent ? 10000 : 6000,
       });
     });
 
     return () => {
       unsubTerritory();
       unsubJob();
+      unsubEvent();
       unsubNotify();
     };
   }, [userEmail]);
