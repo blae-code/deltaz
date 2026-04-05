@@ -1,90 +1,104 @@
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Map as MapIcon } from "lucide-react";
-import ThreatBadge from "../components/ThreatBadge";
+import DataCard from "../components/terminal/DataCard";
+import StatusIndicator from "../components/terminal/StatusIndicator";
 import { Badge } from "@/components/ui/badge";
+import { MapPin } from "lucide-react";
 
-const STATUS_STYLES = {
-  stable: "border-primary/20",
-  contested: "border-destructive/40 bg-destructive/5",
-  lost: "border-muted-foreground/20 opacity-60",
-  quarantined: "border-threat-yellow/40 bg-threat-yellow/5",
+const threatColors = {
+  minimal: "text-primary",
+  low: "text-chart-4",
+  moderate: "text-accent",
+  high: "text-destructive",
+  critical: "text-destructive",
+};
+
+const statusColors = {
+  secured: "online",
+  contested: "warning",
+  hostile: "critical",
+  uncharted: "offline",
 };
 
 export default function WorldMap() {
   const [territories, setTerritories] = useState([]);
+  const [factions, setFactions] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    base44.entities.Territory.list("-created_date", 100).then(data => {
-      setTerritories(data);
-      setLoading(false);
-    });
+    Promise.all([
+      base44.entities.Territory.list("-created_date", 50),
+      base44.entities.Faction.list("-created_date", 50),
+    ])
+      .then(([t, f]) => {
+        setTerritories(t);
+        setFactions(f);
+      })
+      .finally(() => setLoading(false));
   }, []);
+
+  const getFactionName = (id) => factions.find((f) => f.id === id)?.name || "UNCLAIMED";
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="font-mono text-primary animate-pulse-glow text-sm">MAPPING SECTORS...</div>
+        <div className="text-primary text-xs tracking-widest animate-pulse">SCANNING SECTORS...</div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-lg font-mono font-bold text-primary terminal-glow tracking-widest">SECTOR MAP</h1>
-        <p className="text-xs font-mono text-muted-foreground mt-1">{territories.length} TERRITORIES TRACKED</p>
+        <h2 className="text-lg font-bold font-display tracking-wider text-primary uppercase">
+          Area of Operations
+        </h2>
+        <p className="text-xs text-muted-foreground mt-1">Territory control and threat assessment</p>
       </div>
 
-      {territories.length === 0 ? (
-        <Card className="bg-card border-border">
-          <CardContent className="p-8 text-center">
-            <MapIcon className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-            <p className="font-mono text-xs text-muted-foreground">NO TERRITORIES MAPPED</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {territories.map(t => (
-            <Card key={t.id} className={`bg-card border ${STATUS_STYLES[t.status] || "border-border"} hover:border-primary/30 transition-colors`}>
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <div className="text-sm font-mono font-bold text-foreground">{t.name}</div>
-                    <div className="text-[10px] font-mono text-muted-foreground tracking-widest">SECTOR {t.sector}</div>
-                  </div>
-                  <ThreatBadge level={t.threat_level} />
+      {/* Territory Grid */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+        {territories.length === 0 ? (
+          <DataCard title="No Territories">
+            <p className="text-xs text-muted-foreground">No territories discovered yet.</p>
+          </DataCard>
+        ) : (
+          territories.map((t) => (
+            <div key={t.id} className="border border-border bg-card rounded-sm p-4 hover:border-primary/30 transition-colors">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-3.5 w-3.5 text-primary" />
+                  <span className="text-sm font-semibold text-foreground">{t.name}</span>
                 </div>
-                <div className="space-y-1 mb-2">
-                  <div className="flex items-center justify-between text-[10px] font-mono">
-                    <span className="text-muted-foreground">STATUS</span>
-                    <Badge variant="outline" className={`font-mono text-[10px] uppercase ${t.status === "contested" ? "text-destructive border-destructive/30" : ""}`}>
-                      {t.status}
-                    </Badge>
-                  </div>
-                  {t.controlling_faction && (
-                    <div className="flex items-center justify-between text-[10px] font-mono">
-                      <span className="text-muted-foreground">CONTROL</span>
-                      <span className="text-foreground">{t.controlling_faction}</span>
-                    </div>
-                  )}
-                  {t.coordinates && (
-                    <div className="flex items-center justify-between text-[10px] font-mono">
-                      <span className="text-muted-foreground">GRID</span>
-                      <span className="text-foreground">{t.coordinates}</span>
-                    </div>
-                  )}
+                <Badge variant="outline" className="text-[10px]">{t.sector}</Badge>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-muted-foreground tracking-wider">STATUS</span>
+                  <StatusIndicator status={statusColors[t.status] || "offline"} label={t.status} />
                 </div>
-                {t.notes && (
-                  <p className="text-[10px] font-mono text-muted-foreground border-t border-border pt-2 mt-2 line-clamp-2">{t.notes}</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-muted-foreground tracking-wider">THREAT</span>
+                  <span className={`text-[10px] font-semibold uppercase ${threatColors[t.threat_level] || "text-muted-foreground"}`}>
+                    {t.threat_level}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-muted-foreground tracking-wider">CONTROL</span>
+                  <span className="text-[10px] text-foreground">{getFactionName(t.controlling_faction_id)}</span>
+                </div>
+                {t.resources?.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {t.resources.map((r) => (
+                      <Badge key={r} variant="secondary" className="text-[9px]">{r}</Badge>
+                    ))}
+                  </div>
                 )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 }

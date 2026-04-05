@@ -1,0 +1,44 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "role": {
+      "type": "string",
+      "enum": [
+        "player",
+        "game_master",
+        "admin"
+      ],
+      "default": "player",
+      "description": "User role in the Dead Signal world"
+    },
+    "callsign": {
+      "type": "string",
+      "description": "Player's tactical callsign"
+    },
+    "faction_id": {
+      "type": "string",
+      "description": "ID of the faction the player belongs to"
+    },
+    "reputation_score": {
+      "type": "number",
+      "default": 0,
+      "description": "Overall reputation score"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "mia",
+        "kia",
+        "extracted"
+      ],
+      "default": "active"
+    },
+    "avatar_url": {
+      "type": "string",
+      "description": "Profile image URL"
+    }
+  },
+  "required": []
+}

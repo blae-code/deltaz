@@ -1,63 +1,86 @@
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { Card, CardContent } from "@/components/ui/card";
+import DataCard from "../components/terminal/DataCard";
+import StatusIndicator from "../components/terminal/StatusIndicator";
 import { Badge } from "@/components/ui/badge";
-import { Users, Map, Shield } from "lucide-react";
+import { Shield, Users, MapPin } from "lucide-react";
+
+const factionStatusMap = {
+  active: "online",
+  disbanded: "offline",
+  hostile: "critical",
+  allied: "online",
+};
 
 export default function Factions() {
   const [factions, setFactions] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    base44.entities.Faction.list("-created_date", 50).then(data => {
-      setFactions(data);
-      setLoading(false);
-    });
+    base44.entities.Faction.list("-created_date", 50)
+      .then(setFactions)
+      .finally(() => setLoading(false));
   }, []);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="font-mono text-primary animate-pulse-glow text-sm">LOADING FACTION INTEL...</div>
+        <div className="text-primary text-xs tracking-widest animate-pulse">DECRYPTING FACTION DATA...</div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-lg font-mono font-bold text-primary terminal-glow tracking-widest">FACTION REGISTRY</h1>
-        <p className="text-xs font-mono text-muted-foreground mt-1">{factions.length} FACTIONS TRACKED</p>
+        <h2 className="text-lg font-bold font-display tracking-wider text-primary uppercase">
+          Faction Registry
+        </h2>
+        <p className="text-xs text-muted-foreground mt-1">Known organizations and their status</p>
       </div>
 
       {factions.length === 0 ? (
-        <Card className="bg-card border-border">
-          <CardContent className="p-8 text-center">
-            <Users className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-            <p className="font-mono text-xs text-muted-foreground">NO FACTIONS IN DATABASE</p>
-          </CardContent>
-        </Card>
+        <DataCard title="No Factions">
+          <p className="text-xs text-muted-foreground">No factions registered in the system.</p>
+        </DataCard>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {factions.map(f => (
-            <Card key={f.id} className="bg-card border-border hover:border-primary/30 transition-colors" style={{ borderLeftColor: f.color, borderLeftWidth: 3 }}>
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <div className="text-sm font-mono font-bold text-foreground">{f.name}</div>
-                    <div className="text-[10px] font-mono text-muted-foreground tracking-widest">[{f.code}]</div>
+        <div className="grid md:grid-cols-2 gap-4">
+          {factions.map((faction) => (
+            <div key={faction.id} className="border border-border bg-card rounded-sm overflow-hidden hover:border-primary/30 transition-colors">
+              <div className="flex items-center gap-3 border-b border-border px-4 py-3 bg-secondary/30">
+                <div
+                  className="h-8 w-8 rounded-sm border flex items-center justify-center"
+                  style={{
+                    borderColor: faction.color || "hsl(var(--border))",
+                    backgroundColor: (faction.color || "transparent") + "20",
+                  }}
+                >
+                  <Shield className="h-4 w-4" style={{ color: faction.color || "hsl(var(--primary))" }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-bold font-display text-foreground">{faction.name}</h3>
+                    <Badge variant="outline" className="text-[10px]">{faction.tag}</Badge>
                   </div>
-                  <Badge variant="outline" className={`font-mono text-[10px] uppercase ${f.status === "active" ? "text-primary border-primary/30" : "text-muted-foreground"}`}>
-                    {f.status}
-                  </Badge>
                 </div>
-                <p className="text-xs font-mono text-muted-foreground mb-3 line-clamp-2">{f.description}</p>
-                <div className="flex items-center gap-4 text-[10px] font-mono text-muted-foreground">
-                  <span className="flex items-center gap-1"><Users className="w-3 h-3" />{f.member_count || 0}</span>
-                  <span className="flex items-center gap-1"><Map className="w-3 h-3" />{f.territory_count || 0} zones</span>
+                <StatusIndicator status={factionStatusMap[faction.status] || "offline"} label={faction.status} />
+              </div>
+              <div className="p-4 space-y-2">
+                {faction.description && (
+                  <p className="text-xs text-muted-foreground">{faction.description}</p>
+                )}
+                <div className="flex items-center gap-4 mt-2">
+                  <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                    <Users className="h-3 w-3" />
+                    <span>{faction.member_count || 0} MEMBERS</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                    <MapPin className="h-3 w-3" />
+                    <span>{faction.territory_count || 0} TERRITORIES</span>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
         </div>
       )}

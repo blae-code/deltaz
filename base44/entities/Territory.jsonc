@@ -4,49 +4,54 @@
   "properties": {
     "name": {
       "type": "string",
-      "title": "Territory Name"
+      "description": "Territory designation"
     },
     "sector": {
       "type": "string",
-      "title": "Sector Code"
+      "description": "Grid sector code e.g. A-7"
     },
-    "controlling_faction": {
+    "controlling_faction_id": {
       "type": "string",
-      "title": "Controlling Faction"
+      "description": "Faction ID that controls this territory"
     },
     "threat_level": {
       "type": "string",
       "enum": [
-        "green",
-        "yellow",
-        "orange",
-        "red",
-        "black"
+        "minimal",
+        "low",
+        "moderate",
+        "high",
+        "critical"
       ],
-      "default": "green",
-      "title": "Threat Level"
+      "default": "moderate"
+    },
+    "resources": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Available resources in territory"
     },
     "coordinates": {
-      "type": "string",
-      "title": "Grid Coordinates"
+      "type": "object",
+      "properties": {
+        "lat": {
+          "type": "number"
+        },
+        "lng": {
+          "type": "number"
+        }
+      }
     },
     "status": {
       "type": "string",
       "enum": [
-        "stable",
+        "secured",
         "contested",
-        "lost",
-        "quarantined"
+        "hostile",
+        "uncharted"
       ],
-      "default": "stable"
-    },
-    "resources": {
-      "type": "string",
-      "title": "Resources Available"
-    },
-    "notes": {
-      "type": "string",
-      "title": "Intel Notes"
+      "default": "uncharted"
     }
   },
   "required": [

@@ -1,0 +1,49 @@
+{
+  "name": "Event",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Event headline"
+    },
+    "content": {
+      "type": "string",
+      "description": "Full event description / narrative"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "world_event",
+        "faction_conflict",
+        "anomaly",
+        "broadcast",
+        "system_alert"
+      ],
+      "default": "broadcast"
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "info",
+        "warning",
+        "critical",
+        "emergency"
+      ],
+      "default": "info"
+    },
+    "territory_id": {
+      "type": "string"
+    },
+    "faction_id": {
+      "type": "string"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "title",
+    "type"
+  ]
+}

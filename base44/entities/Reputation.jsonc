@@ -1,0 +1,36 @@
+{
+  "name": "Reputation",
+  "type": "object",
+  "properties": {
+    "player_email": {
+      "type": "string",
+      "description": "Player's email"
+    },
+    "faction_id": {
+      "type": "string",
+      "description": "Faction this reputation is with"
+    },
+    "score": {
+      "type": "number",
+      "default": 0,
+      "description": "Reputation points with this faction"
+    },
+    "rank": {
+      "type": "string",
+      "enum": [
+        "unknown",
+        "neutral",
+        "trusted",
+        "allied",
+        "revered",
+        "hostile",
+        "enemy"
+      ],
+      "default": "unknown"
+    }
+  },
+  "required": [
+    "player_email",
+    "faction_id"
+  ]
+}

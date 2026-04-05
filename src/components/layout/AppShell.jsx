@@ -1,25 +1,19 @@
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
-import StatusBar from "./StatusBar";
-import { useEffect, useState } from "react";
-import { base44 } from "@/api/base44Client";
+import TopBar from "./TopBar";
+import ScanlineOverlay from "../terminal/ScanlineOverlay";
 
 export default function AppShell() {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
-  }, []);
-
   return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden scanline-overlay">
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar userRole={user?.role} />
-        <main className="flex-1 overflow-auto bg-background">
+    <div className="flex h-screen overflow-hidden terminal-flicker">
+      <ScanlineOverlay />
+      <Sidebar />
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <TopBar />
+        <main className="flex-1 overflow-auto p-4 md:p-6">
           <Outlet />
         </main>
       </div>
-      <StatusBar user={user} />
     </div>
   );
 }

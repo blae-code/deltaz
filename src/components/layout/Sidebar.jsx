@@ -1,67 +1,86 @@
 import { Link, useLocation } from "react-router-dom";
-import { 
-  LayoutDashboard, Crosshair, Map, Radio, Users, Shield,
-  ChevronLeft, ChevronRight
+import { cn } from "@/lib/utils";
+import {
+  LayoutDashboard,
+  Crosshair,
+  Map,
+  Radio,
+  Shield,
+  User,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { useState } from "react";
 
-const NAV_ITEMS = [
+const navItems = [
   { path: "/", label: "SITREP", icon: LayoutDashboard },
-  { path: "/jobs", label: "JOBS", icon: Crosshair },
-  { path: "/map", label: "MAP", icon: Map },
-  { path: "/events", label: "SIGNALS", icon: Radio },
-  { path: "/factions", label: "FACTIONS", icon: Users },
+  { path: "/jobs", label: "MISSIONS", icon: Crosshair },
+  { path: "/map", label: "AO MAP", icon: Map },
+  { path: "/events", label: "COMMS", icon: Radio },
+  { path: "/factions", label: "FACTIONS", icon: Shield },
+  { path: "/profile", label: "DOSSIER", icon: User },
 ];
 
-const ADMIN_ITEMS = [
-  { path: "/admin", label: "COMMAND", icon: Shield },
-];
-
-export default function Sidebar({ userRole }) {
+export default function Sidebar() {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
-  const items = userRole === "admin" ? [...NAV_ITEMS, ...ADMIN_ITEMS] : NAV_ITEMS;
 
   return (
-    <aside className={`${collapsed ? "w-16" : "w-52"} h-full bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-200`}>
-      {/* Header */}
-      <div className="p-3 border-b border-sidebar-border flex items-center gap-2">
-        <Radio className="w-5 h-5 text-primary animate-pulse-glow flex-shrink-0" />
+    <aside
+      className={cn(
+        "flex flex-col border-r border-border bg-sidebar h-full transition-all duration-200",
+        collapsed ? "w-16" : "w-56"
+      )}
+    >
+      {/* Logo */}
+      <div className="flex items-center gap-3 border-b border-border px-4 py-4">
+        <div className="h-8 w-8 rounded-sm bg-primary/20 border border-primary/40 flex items-center justify-center">
+          <Radio className="h-4 w-4 text-primary" />
+        </div>
         {!collapsed && (
-          <div className="overflow-hidden">
-            <div className="text-xs font-mono font-bold text-primary terminal-glow tracking-widest">DEAD SIGNAL</div>
-            <div className="text-[10px] font-mono text-muted-foreground">FIELD TERMINAL v2.1</div>
+          <div>
+            <h1 className="text-sm font-bold font-display tracking-wider text-primary">
+              DEAD SIGNAL
+            </h1>
+            <p className="text-[10px] text-muted-foreground tracking-widest">
+              FIELD TERMINAL v2.1
+            </p>
           </div>
         )}
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 p-2 space-y-1">
-        {items.map(item => {
-          const active = location.pathname === item.path;
+      <nav className="flex-1 py-4 space-y-1 px-2">
+        {navItems.map((item) => {
+          const isActive = location.pathname === item.path;
           return (
             <Link
               key={item.path}
               to={item.path}
-              className={`flex items-center gap-3 px-3 py-2 rounded-sm text-xs font-mono tracking-wider transition-colors
-                ${active 
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground border-l-2 border-primary" 
-                  : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground border-l-2 border-transparent"
-                }`}
+              className={cn(
+                "flex items-center gap-3 rounded-sm px-3 py-2.5 text-xs font-medium tracking-wider transition-colors",
+                isActive
+                  ? "bg-primary/10 text-primary border border-primary/30"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/50 border border-transparent"
+              )}
             >
-              <item.icon className="w-4 h-4 flex-shrink-0" />
+              <item.icon className="h-4 w-4 shrink-0" />
               {!collapsed && <span>{item.label}</span>}
             </Link>
           );
         })}
       </nav>
 
-      {/* Collapse toggle */}
+      {/* Collapse Toggle */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="p-3 border-t border-sidebar-border text-muted-foreground hover:text-foreground transition-colors"
+        className="border-t border-border p-3 text-muted-foreground hover:text-foreground transition-colors"
       >
-        {collapsed ? <ChevronRight className="w-4 h-4 mx-auto" /> : <ChevronLeft className="w-4 h-4 mx-auto" />}
+        {collapsed ? (
+          <ChevronRight className="h-4 w-4 mx-auto" />
+        ) : (
+          <ChevronLeft className="h-4 w-4" />
+        )}
       </button>
     </aside>
   );

@@ -4,30 +4,26 @@
   "properties": {
     "name": {
       "type": "string",
-      "title": "Faction Name"
+      "description": "Faction name"
     },
-    "code": {
+    "tag": {
       "type": "string",
-      "title": "Short Code",
-      "description": "3-5 letter identifier"
+      "description": "Short faction tag e.g. [SRN]"
     },
     "description": {
       "type": "string",
-      "title": "Description"
+      "description": "Faction lore and goals"
     },
     "color": {
       "type": "string",
-      "title": "Theme Color",
-      "default": "#22c55e"
+      "description": "Hex color for UI representation"
     },
     "territory_count": {
       "type": "number",
-      "title": "Territories Held",
       "default": 0
     },
     "member_count": {
       "type": "number",
-      "title": "Member Count",
       "default": 0
     },
     "status": {
@@ -35,13 +31,14 @@
       "enum": [
         "active",
         "disbanded",
-        "dormant"
+        "hostile",
+        "allied"
       ],
       "default": "active"
     }
   },
   "required": [
     "name",
-    "code"
+    "tag"
   ]
 }

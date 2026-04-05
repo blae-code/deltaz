@@ -4,11 +4,11 @@
   "properties": {
     "title": {
       "type": "string",
-      "title": "Job Title"
+      "description": "Mission title"
     },
     "description": {
       "type": "string",
-      "title": "Briefing"
+      "description": "Mission briefing"
     },
     "type": {
       "type": "string",
@@ -16,17 +16,16 @@
         "recon",
         "extraction",
         "sabotage",
-        "delivery",
-        "defense",
-        "bounty"
+        "escort",
+        "scavenge",
+        "elimination"
       ],
-      "title": "Job Type"
+      "default": "recon"
     },
     "status": {
       "type": "string",
       "enum": [
         "available",
-        "accepted",
         "in_progress",
         "completed",
         "failed",
@@ -34,36 +33,38 @@
       ],
       "default": "available"
     },
-    "priority": {
+    "difficulty": {
       "type": "string",
       "enum": [
-        "low",
-        "medium",
-        "high",
-        "critical"
+        "routine",
+        "hazardous",
+        "critical",
+        "suicide"
       ],
-      "default": "medium"
+      "default": "routine"
     },
-    "reward": {
+    "territory_id": {
       "type": "string",
-      "title": "Reward"
+      "description": "Territory where the job takes place"
     },
-    "territory": {
+    "faction_id": {
       "type": "string",
-      "title": "Territory"
-    },
-    "faction": {
-      "type": "string",
-      "title": "Issuing Faction"
+      "description": "Faction issuing the job"
     },
     "assigned_to": {
       "type": "string",
-      "title": "Assigned Operative"
+      "description": "Email of assigned player"
     },
-    "deadline": {
+    "reward_reputation": {
+      "type": "number",
+      "default": 0
+    },
+    "reward_description": {
+      "type": "string"
+    },
+    "expires_at": {
       "type": "string",
-      "format": "date-time",
-      "title": "Deadline"
+      "description": "ISO date when mission expires"
     }
   },
   "required": [
