@@ -19,6 +19,7 @@ import {
   Package,
   Trophy,
   FileText,
+  LogOut,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
@@ -136,17 +137,34 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Collapse Toggle */}
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        className="border-t border-border p-3 text-muted-foreground hover:text-foreground transition-colors"
-      >
-        {collapsed ? (
-          <ChevronRight className="h-4 w-4 mx-auto" />
-        ) : (
-          <ChevronLeft className="h-4 w-4" />
-        )}
-      </button>
+      {/* Logout + Collapse */}
+      <div className="border-t border-border">
+        <NavTooltip path="#logout" collapsed={collapsed}>
+          <button
+            onClick={() => {
+              setMobileOpen(false);
+              base44.auth.logout();
+            }}
+            className={cn(
+              "flex items-center gap-3 w-full px-5 py-2.5 text-xs font-medium tracking-wider text-destructive/70 hover:text-destructive hover:bg-destructive/5 transition-colors",
+              collapsed && "justify-center px-0"
+            )}
+          >
+            <LogOut className="h-4 w-4 shrink-0" />
+            {!collapsed && <span>DISCONNECT</span>}
+          </button>
+        </NavTooltip>
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="w-full p-3 text-muted-foreground hover:text-foreground transition-colors hidden md:block"
+        >
+          {collapsed ? (
+            <ChevronRight className="h-4 w-4 mx-auto" />
+          ) : (
+            <ChevronLeft className="h-4 w-4" />
+          )}
+        </button>
+      </div>
     </aside>
     </>
   );

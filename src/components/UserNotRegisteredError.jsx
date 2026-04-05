@@ -1,27 +1,64 @@
-import React from 'react';
+import { Radio, ShieldAlert, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { base44 } from "@/api/base44Client";
 
 const UserNotRegisteredError = () => {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-white to-slate-50">
-      <div className="max-w-md w-full p-8 bg-white rounded-lg shadow-lg border border-slate-100">
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 mb-6 rounded-full bg-orange-100">
-            <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
+    <div className="fixed inset-0 bg-background flex flex-col items-center justify-center p-6">
+      <div className="w-full max-w-sm space-y-8">
+        {/* Logo */}
+        <div className="text-center space-y-3">
+          <div className="h-16 w-16 rounded-sm bg-destructive/10 border border-destructive/30 flex items-center justify-center mx-auto">
+            <ShieldAlert className="h-8 w-8 text-destructive" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-4">Access Restricted</h1>
-          <p className="text-slate-600 mb-8">
-            You are not registered to use this application. Please contact the app administrator to request access.
+          <h1 className="text-xl font-bold font-display tracking-[0.2em] text-destructive uppercase">
+            Access Denied
+          </h1>
+          <p className="text-[10px] text-muted-foreground tracking-widest font-mono">
+            OPERATIVE NOT REGISTERED IN DEAD SIGNAL DATABASE
           </p>
-          <div className="p-4 bg-slate-50 rounded-md text-sm text-slate-600">
-            <p>If you believe this is an error, you can:</p>
-            <ul className="list-disc list-inside mt-2 space-y-1">
-              <li>Verify you are logged in with the correct account</li>
-              <li>Contact the app administrator for access</li>
-              <li>Try logging out and back in again</li>
+        </div>
+
+        {/* Info card */}
+        <div className="border border-border bg-card rounded-sm p-5 space-y-4">
+          <p className="text-xs text-foreground leading-relaxed font-mono">
+            Your credentials are valid, but you are not cleared for access to this terminal. Contact your commanding officer or server admin to request registration.
+          </p>
+
+          <div className="border border-border bg-secondary/50 rounded-sm p-3 space-y-2">
+            <p className="text-[10px] text-muted-foreground font-mono tracking-wider uppercase font-semibold">
+              Troubleshooting
+            </p>
+            <ul className="space-y-1.5 text-[10px] text-muted-foreground font-mono">
+              <li className="flex items-start gap-2">
+                <span className="text-primary">&gt;</span>
+                Verify you're using the correct account
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary">&gt;</span>
+                Ask a server admin to add you to the roster
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary">&gt;</span>
+                Try disconnecting and re-authenticating
+              </li>
             </ul>
           </div>
+
+          <Button
+            variant="outline"
+            className="w-full text-xs font-mono uppercase tracking-wider text-destructive border-destructive/30 hover:bg-destructive/10"
+            onClick={() => base44.auth.logout()}
+          >
+            <LogOut className="h-3.5 w-3.5 mr-2" />
+            Disconnect Terminal
+          </Button>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-center gap-2 text-[9px] text-muted-foreground/40">
+          <Radio className="h-3 w-3" />
+          <span className="tracking-widest">DEAD SIGNAL FIELD TERMINAL v2.1</span>
         </div>
       </div>
     </div>
