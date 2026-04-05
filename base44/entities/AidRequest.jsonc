@@ -1,0 +1,69 @@
+{
+  "name": "AidRequest",
+  "type": "object",
+  "properties": {
+    "requester_email": {
+      "type": "string",
+      "description": "Player who submitted the request"
+    },
+    "requester_faction_id": {
+      "type": "string",
+      "description": "Faction requesting aid"
+    },
+    "target_faction_id": {
+      "type": "string",
+      "description": "Faction being asked for aid"
+    },
+    "aid_type": {
+      "type": "string",
+      "enum": [
+        "military",
+        "supplies",
+        "medical",
+        "intelligence",
+        "engineering"
+      ],
+      "default": "supplies"
+    },
+    "urgency": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ],
+      "default": "medium"
+    },
+    "message": {
+      "type": "string",
+      "description": "Description of what's needed and why"
+    },
+    "response_message": {
+      "type": "string",
+      "description": "Reply from the target faction"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "denied",
+        "fulfilled",
+        "expired"
+      ],
+      "default": "pending"
+    },
+    "responded_by": {
+      "type": "string",
+      "description": "Email of the responder"
+    }
+  },
+  "required": [
+    "requester_email",
+    "requester_faction_id",
+    "target_faction_id",
+    "aid_type",
+    "message"
+  ]
+}
