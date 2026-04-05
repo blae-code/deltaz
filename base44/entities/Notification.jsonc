@@ -4,7 +4,7 @@
   "properties": {
     "player_email": {
       "type": "string",
-      "description": "Email of the player to notify"
+      "description": "Email of the player to notify (use 'broadcast' for all players)"
     },
     "title": {
       "type": "string",
@@ -20,7 +20,8 @@
         "mission_assigned",
         "mission_update",
         "reputation_change",
-        "system_alert"
+        "system_alert",
+        "colony_alert"
       ],
       "default": "system_alert"
     },
