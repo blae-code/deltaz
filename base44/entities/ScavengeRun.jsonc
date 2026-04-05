@@ -1,0 +1,75 @@
+{
+  "name": "ScavengeRun",
+  "type": "object",
+  "properties": {
+    "player_email": {
+      "type": "string",
+      "description": "Player who deployed the scout"
+    },
+    "territory_id": {
+      "type": "string",
+      "description": "Territory being scavenged"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "deploying",
+        "in_progress",
+        "completed",
+        "failed"
+      ],
+      "default": "deploying"
+    },
+    "threat_level": {
+      "type": "string",
+      "description": "Territory threat at time of deployment"
+    },
+    "controlling_faction": {
+      "type": "string",
+      "description": "Faction name controlling the territory"
+    },
+    "loot_summary": {
+      "type": "string",
+      "description": "AI-generated narrative of what was found"
+    },
+    "loot_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "rarity": {
+            "type": "string"
+          },
+          "value": {
+            "type": "number"
+          }
+        }
+      },
+      "description": "List of items recovered"
+    },
+    "total_value": {
+      "type": "number",
+      "default": 0,
+      "description": "Total credit value of loot recovered"
+    },
+    "risk_event": {
+      "type": "string",
+      "description": "Optional complication narrative"
+    },
+    "duration_minutes": {
+      "type": "number",
+      "default": 30,
+      "description": "How long the scavenge run took"
+    }
+  },
+  "required": [
+    "player_email",
+    "territory_id"
+  ]
+}

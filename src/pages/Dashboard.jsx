@@ -7,6 +7,7 @@ import ActivityFeed from "../components/dashboard/ActivityFeed";
 import IntelHighlights from "../components/dashboard/IntelHighlights";
 import TacticalAdvisor from "../components/dashboard/TacticalAdvisor";
 import WorldPulseStatus from "../components/dashboard/WorldPulseStatus";
+import ScavengeLog from "../components/dashboard/ScavengeLog";
 
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Crosshair, Shield, Map } from "lucide-react";
@@ -118,6 +119,9 @@ export default function Dashboard() {
 
       {/* Intel Highlights */}
       <IntelHighlights />
+
+      {/* Scavenge Log */}
+      <ScavengeLog />
 
       <div className="grid md:grid-cols-2 gap-4">
         {/* Recent Missions */}
