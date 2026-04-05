@@ -11,6 +11,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Eye,
+  Menu,
+  X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
@@ -32,6 +34,7 @@ const adminNav = [
 export default function Sidebar() {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -42,27 +45,57 @@ export default function Sidebar() {
   const navItems = isAdmin ? [...playerNav, ...adminNav] : playerNav;
 
   return (
-    <aside
-      className={cn(
-        "flex flex-col border-r border-border bg-sidebar h-full transition-all duration-200",
-        collapsed ? "w-16" : "w-56"
+    <>
+      {/* Mobile hamburger button */}
+      <button
+        onClick={() => setMobileOpen(true)}
+        className="fixed top-3 left-3 z-50 md:hidden p-2 rounded-sm bg-card border border-border text-muted-foreground hover:text-foreground"
+      >
+        <Menu className="h-5 w-5" />
+      </button>
+
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 md:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
       )}
-    >
+
+      <aside
+        className={cn(
+          "flex flex-col border-r border-border bg-sidebar h-full transition-all duration-200",
+          // Desktop: normal sidebar
+          "hidden md:flex",
+          collapsed ? "w-16" : "w-56",
+          // Mobile: slide-over
+          mobileOpen && "!flex fixed inset-y-0 left-0 z-50 w-56"
+        )}
+      >
       {/* Logo */}
-      <div className="flex items-center gap-3 border-b border-border px-4 py-4">
+      <div className="flex items-center justify-between border-b border-border px-4 py-4">
+        <div className="flex items-center gap-3">
         <div className="h-8 w-8 rounded-sm bg-primary/20 border border-primary/40 flex items-center justify-center">
           <Radio className="h-4 w-4 text-primary" />
         </div>
-        {!collapsed && (
-          <div>
-            <h1 className="text-sm font-bold font-display tracking-wider text-primary">
-              DEAD SIGNAL
-            </h1>
-            <p className="text-[10px] text-muted-foreground tracking-widest">
-              FIELD TERMINAL v2.1
-            </p>
-          </div>
-        )}
+          {!collapsed && (
+            <div>
+              <h1 className="text-sm font-bold font-display tracking-wider text-primary">
+                DEAD SIGNAL
+              </h1>
+              <p className="text-[10px] text-muted-foreground tracking-widest">
+                FIELD TERMINAL v2.1
+              </p>
+            </div>
+          )}
+        </div>
+        {/* Mobile close button */}
+        <button
+          onClick={() => setMobileOpen(false)}
+          className="md:hidden text-muted-foreground hover:text-foreground"
+        >
+          <X className="h-4 w-4" />
+        </button>
       </div>
 
       {/* Nav */}
@@ -73,6 +106,7 @@ export default function Sidebar() {
             <Link
               key={item.path}
               to={item.path}
+              onClick={() => setMobileOpen(false)}
               className={cn(
                 "flex items-center gap-3 rounded-sm px-3 py-2.5 text-xs font-medium tracking-wider transition-colors",
                 isActive
@@ -99,5 +133,6 @@ export default function Sidebar() {
         )}
       </button>
     </aside>
+    </>
   );
 }

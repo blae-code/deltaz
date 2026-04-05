@@ -3,10 +3,10 @@ import { base44 } from "@/api/base44Client";
 import DataCard from "../components/terminal/DataCard";
 import StatusIndicator from "../components/terminal/StatusIndicator";
 import NotificationBanner from "../components/dashboard/NotificationBanner";
-import LiveStream from "../components/dashboard/LiveStream";
+import ActivityFeed from "../components/dashboard/ActivityFeed";
 import IntelHighlights from "../components/dashboard/IntelHighlights";
 import TacticalAdvisor from "../components/dashboard/TacticalAdvisor";
-import CombatLog from "../components/dashboard/CombatLog";
+
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Crosshair, Shield, Map } from "lucide-react";
 
@@ -86,14 +86,11 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Live Stream */}
-      <LiveStream />
+      {/* Activity Feed (Live + Combat Log) */}
+      <ActivityFeed />
 
       {/* Intel Highlights */}
       <IntelHighlights />
-
-      {/* Combat Log */}
-      <CombatLog />
 
       <div className="grid md:grid-cols-2 gap-4">
         {/* Recent Missions */}
