@@ -3,12 +3,15 @@ import { base44 } from "@/api/base44Client";
 import DataCard from "../components/terminal/DataCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Package, ArrowLeftRight, Plus } from "lucide-react";
+import { Package, ArrowLeftRight, Plus, Handshake, ScrollText } from "lucide-react";
 import InventoryGrid from "../components/inventory/InventoryGrid";
 import InventoryStats from "../components/inventory/InventoryStats";
 import AddItemForm from "../components/inventory/AddItemForm";
 import SectorTradeBoard from "../components/inventory/SectorTradeBoard";
 import CreateTradeForm from "../components/inventory/CreateTradeForm";
+import CreateTradeRequest from "../components/trading/CreateTradeRequest";
+import TradeRequestList from "../components/trading/TradeRequestList";
+import TradeLedger from "../components/trading/TradeLedger";
 
 export default function Inventory() {
   const [user, setUser] = useState(null);
@@ -17,6 +20,7 @@ export default function Inventory() {
   const [tab, setTab] = useState("inventory");
   const [showAddItem, setShowAddItem] = useState(false);
   const [showCreateTrade, setShowCreateTrade] = useState(false);
+  const [showCreateDeal, setShowCreateDeal] = useState(false);
 
   const loadData = async () => {
     const u = await base44.auth.me();
@@ -50,31 +54,33 @@ export default function Inventory() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between flex-wrap gap-2">
         <div>
           <h2 className="text-lg font-bold font-display tracking-wider text-primary uppercase">
-            {tab === "inventory" ? "Inventory" : "Trade Post"}
+            {tab === "inventory" && "Inventory"}
+            {tab === "trade" && "Trade Post"}
+            {tab === "deals" && "P2P Deals"}
+            {tab === "ledger" && "Trade Ledger"}
           </h2>
           <p className="text-xs text-muted-foreground mt-1">
-            {tab === "inventory" ? "Manage your gear, weapons, and supplies" : "Trade resources with nearby operatives"}
+            {tab === "inventory" && "Manage your gear, weapons, and supplies"}
+            {tab === "trade" && "Trade resources with nearby operatives"}
+            {tab === "deals" && "Send and review direct trade proposals"}
+            {tab === "ledger" && "Complete history of all your trades"}
           </p>
         </div>
-        <div className="flex gap-1.5">
-          <Button
-            variant={tab === "inventory" ? "default" : "outline"}
-            size="sm"
-            className="text-[10px] uppercase tracking-wider h-7"
-            onClick={() => setTab("inventory")}
-          >
+        <div className="flex gap-1.5 flex-wrap">
+          <Button variant={tab === "inventory" ? "default" : "outline"} size="sm" className="text-[10px] uppercase tracking-wider h-7" onClick={() => setTab("inventory")}>
             <Package className="h-3 w-3 mr-1" /> GEAR
           </Button>
-          <Button
-            variant={tab === "trade" ? "default" : "outline"}
-            size="sm"
-            className="text-[10px] uppercase tracking-wider h-7"
-            onClick={() => setTab("trade")}
-          >
+          <Button variant={tab === "trade" ? "default" : "outline"} size="sm" className="text-[10px] uppercase tracking-wider h-7" onClick={() => setTab("trade")}>
             <ArrowLeftRight className="h-3 w-3 mr-1" /> TRADE
+          </Button>
+          <Button variant={tab === "deals" ? "default" : "outline"} size="sm" className="text-[10px] uppercase tracking-wider h-7" onClick={() => setTab("deals")}>
+            <Handshake className="h-3 w-3 mr-1" /> P2P DEALS
+          </Button>
+          <Button variant={tab === "ledger" ? "default" : "outline"} size="sm" className="text-[10px] uppercase tracking-wider h-7" onClick={() => setTab("ledger")}>
+            <ScrollText className="h-3 w-3 mr-1" /> LEDGER
           </Button>
         </div>
       </div>
@@ -133,6 +139,37 @@ export default function Inventory() {
 
           <SectorTradeBoard userEmail={user?.email} />
         </>
+      )}
+
+      {tab === "deals" && (
+        <>
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-[10px] uppercase tracking-wider h-7"
+              onClick={() => setShowCreateDeal(!showCreateDeal)}
+            >
+              <Plus className="h-3 w-3 mr-1" /> NEW PROPOSAL
+            </Button>
+          </div>
+
+          {showCreateDeal && (
+            <DataCard title="Create Trade Proposal">
+              <CreateTradeRequest
+                userEmail={user?.email}
+                userCallsign={user?.callsign || user?.full_name}
+                onCreated={() => setShowCreateDeal(false)}
+              />
+            </DataCard>
+          )}
+
+          <TradeRequestList userEmail={user?.email} />
+        </>
+      )}
+
+      {tab === "ledger" && (
+        <TradeLedger userEmail={user?.email} />
       )}
     </div>
   );

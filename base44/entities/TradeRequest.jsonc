@@ -1,0 +1,72 @@
+{
+  "name": "TradeRequest",
+  "type": "object",
+  "properties": {
+    "sender_email": {
+      "type": "string",
+      "description": "Email of the player proposing the trade"
+    },
+    "sender_callsign": {
+      "type": "string",
+      "description": "Callsign of the proposer"
+    },
+    "receiver_email": {
+      "type": "string",
+      "description": "Email of the target player"
+    },
+    "receiver_callsign": {
+      "type": "string",
+      "description": "Callsign of the target player"
+    },
+    "offer_items": {
+      "type": "string",
+      "description": "Description of items/resources being offered"
+    },
+    "offer_credits": {
+      "type": "number",
+      "default": 0,
+      "description": "Credits being offered"
+    },
+    "request_items": {
+      "type": "string",
+      "description": "Description of items/resources being requested"
+    },
+    "request_credits": {
+      "type": "number",
+      "default": 0,
+      "description": "Credits being requested"
+    },
+    "message": {
+      "type": "string",
+      "description": "Optional message from sender to receiver"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "rejected",
+        "cancelled",
+        "expired"
+      ],
+      "default": "pending"
+    },
+    "response_message": {
+      "type": "string",
+      "description": "Optional reply from receiver"
+    },
+    "resolved_at": {
+      "type": "string",
+      "description": "ISO date when the trade was resolved"
+    },
+    "expires_at": {
+      "type": "string",
+      "description": "ISO date when the trade request expires"
+    }
+  },
+  "required": [
+    "sender_email",
+    "receiver_email",
+    "status"
+  ]
+}
