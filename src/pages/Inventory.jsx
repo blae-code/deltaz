@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import DataCard from "../components/terminal/DataCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Package, ArrowLeftRight, Plus, Handshake, ScrollText } from "lucide-react";
+import { Package, ArrowLeftRight, Plus, Handshake, ScrollText, Camera, List } from "lucide-react";
 import InventoryGrid from "../components/inventory/InventoryGrid";
 import InventoryStats from "../components/inventory/InventoryStats";
 import AddItemForm from "../components/inventory/AddItemForm";
@@ -12,6 +12,8 @@ import CreateTradeForm from "../components/inventory/CreateTradeForm";
 import CreateTradeRequest from "../components/trading/CreateTradeRequest";
 import TradeRequestList from "../components/trading/TradeRequestList";
 import TradeLedger from "../components/trading/TradeLedger";
+import ScreenshotIngestion from "../components/inventory/ScreenshotIngestion";
+import BulkAddForm from "../components/inventory/BulkAddForm";
 
 export default function Inventory() {
   const [user, setUser] = useState(null);
@@ -19,6 +21,8 @@ export default function Inventory() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("inventory");
   const [showAddItem, setShowAddItem] = useState(false);
+  const [showScreenshotScan, setShowScreenshotScan] = useState(false);
+  const [showBulkAdd, setShowBulkAdd] = useState(false);
   const [showCreateTrade, setShowCreateTrade] = useState(false);
   const [showCreateDeal, setShowCreateDeal] = useState(false);
 
@@ -89,19 +93,49 @@ export default function Inventory() {
         <>
           <InventoryStats items={items} />
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <span className="text-[9px] text-muted-foreground tracking-widest uppercase">
               {items.length} ITEMS
             </span>
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-[10px] uppercase tracking-wider h-7"
-              onClick={() => setShowAddItem(!showAddItem)}
-            >
-              <Plus className="h-3 w-3 mr-1" /> ADD ITEM
-            </Button>
+            <div className="flex gap-1.5">
+              <Button
+                variant={showScreenshotScan ? "default" : "outline"}
+                size="sm"
+                className="text-[10px] uppercase tracking-wider h-7"
+                onClick={() => { setShowScreenshotScan(!showScreenshotScan); setShowBulkAdd(false); setShowAddItem(false); }}
+              >
+                <Camera className="h-3 w-3 mr-1" /> SCAN
+              </Button>
+              <Button
+                variant={showBulkAdd ? "default" : "outline"}
+                size="sm"
+                className="text-[10px] uppercase tracking-wider h-7"
+                onClick={() => { setShowBulkAdd(!showBulkAdd); setShowScreenshotScan(false); setShowAddItem(false); }}
+              >
+                <List className="h-3 w-3 mr-1" /> BULK ADD
+              </Button>
+              <Button
+                variant={showAddItem ? "default" : "outline"}
+                size="sm"
+                className="text-[10px] uppercase tracking-wider h-7"
+                onClick={() => { setShowAddItem(!showAddItem); setShowScreenshotScan(false); setShowBulkAdd(false); }}
+              >
+                <Plus className="h-3 w-3 mr-1" /> ADD ITEM
+              </Button>
+            </div>
           </div>
+
+          {showScreenshotScan && (
+            <DataCard title="Screenshot Inventory Scan">
+              <ScreenshotIngestion userEmail={user?.email} onComplete={() => { loadData(); setShowScreenshotScan(false); }} />
+            </DataCard>
+          )}
+
+          {showBulkAdd && (
+            <DataCard title="Bulk Add Items">
+              <BulkAddForm userEmail={user?.email} onComplete={() => { loadData(); setShowBulkAdd(false); }} />
+            </DataCard>
+          )}
 
           {showAddItem && (
             <DataCard title="Log New Item">
