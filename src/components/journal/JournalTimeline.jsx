@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { GitBranch, Radio, AlertTriangle, Map } from "lucide-react";
 import moment from "moment";
 
 export default function JournalTimeline({ entries }) {
@@ -43,6 +44,20 @@ export default function JournalTimeline({ entries }) {
 
             {entry.outcome && (
               <p className="text-[9px] text-muted-foreground italic line-clamp-2">{entry.outcome}</p>
+            )}
+            {entry.world_effects?.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1">
+                {entry.world_effects.map((we, wi) => (
+                  <Badge key={wi} variant="outline" className="text-[7px] text-accent border-accent/30">
+                    {we.type === 'intel_created' ? '📡' : we.type === 'event_created' ? '📢' : '⚡'} {we.description}
+                  </Badge>
+                ))}
+              </div>
+            )}
+            {entry.chain_depth > 0 && (
+              <Badge variant="outline" className="text-[7px] text-chart-4 border-chart-4/30 mt-1">
+                <GitBranch className="h-2.5 w-2.5 mr-0.5" /> Chain depth {entry.chain_depth}
+              </Badge>
             )}
           </div>
         </div>

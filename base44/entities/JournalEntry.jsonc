@@ -80,6 +80,40 @@
     },
     "related_faction_id": {
       "type": "string"
+    },
+    "parent_entry_id": {
+      "type": "string",
+      "description": "ID of the journal entry that spawned this as a consequence"
+    },
+    "chain_depth": {
+      "type": "number",
+      "default": 0,
+      "description": "How many events deep in a consequence chain (0 = root)"
+    },
+    "world_effects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "entity_id": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "List of world-state changes triggered by this choice"
+    },
+    "consequence_tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags describing long-term consequences (e.g. 'betrayed_iron_order', 'discovered_bunker')"
     }
   },
   "required": [

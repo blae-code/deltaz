@@ -3,8 +3,10 @@ import { base44 } from "@/api/base44Client";
 import DataCard from "../components/terminal/DataCard";
 import JournalEventCard from "../components/journal/JournalEventCard";
 import JournalTimeline from "../components/journal/JournalTimeline";
+import ConsequenceChain from "../components/journal/ConsequenceChain";
+import ConsequenceTagCloud from "../components/journal/ConsequenceTagCloud";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Clock, Loader2 } from "lucide-react";
+import { BookOpen, Loader2, GitBranch, Tag } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function Journal() {
@@ -46,7 +48,13 @@ export default function Journal() {
 
   const handleChoice = async (entryId, choiceId) => {
     try {
-      await base44.functions.invoke("resolveJournalChoice", { entry_id: entryId, choice_id: choiceId });
+      const res = await base44.functions.invoke("resolveJournalChoice", { entry_id: entryId, choice_id: choiceId });
+      const data = res.data;
+      const parts = [];
+      if (data.reputation_effect) parts.push(`Rep ${data.reputation_effect.delta > 0 ? '+' : ''}${data.reputation_effect.delta}`);
+      if (data.world_effects?.length) parts.push(`${data.world_effects.length} world effect(s)`);
+      if (data.followup_entry_id) parts.push('Follow-up event spawned!');
+      toast({ title: 'Choice resolved', description: parts.join(' · ') || 'The consequences unfold...' });
       loadData();
     } catch (err) {
       toast({ title: "Choice failed", description: err.message, variant: "destructive" });
@@ -85,21 +93,23 @@ export default function Journal() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1.5 border-b border-border pb-2">
+      <div className="flex gap-1.5 border-b border-border pb-2 flex-wrap">
         {[
-          { key: "active", label: `Pending (${pending.length})` },
+          { key: "active", label: `Pending (${pending.length})`, icon: BookOpen },
           { key: "resolved", label: `Resolved (${resolved.length})` },
+          { key: "chains", label: "Branches", icon: GitBranch },
           { key: "timeline", label: "Timeline" },
         ].map(t => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`text-[9px] uppercase tracking-wider font-mono px-2.5 py-1 rounded-sm transition-colors ${
+            className={`flex items-center gap-1 text-[9px] uppercase tracking-wider font-mono px-2.5 py-1 rounded-sm transition-colors ${
               tab === t.key
                 ? "bg-primary/10 text-primary border border-primary/30"
                 : "text-muted-foreground hover:text-foreground border border-transparent"
             }`}
           >
+            {t.icon && <t.icon className="h-3 w-3" />}
             {t.label}
           </button>
         ))}
@@ -136,7 +146,12 @@ export default function Journal() {
         </div>
       )}
 
+      {tab === "chains" && <ConsequenceChain entries={entries} />}
+
       {tab === "timeline" && <JournalTimeline entries={resolved} />}
+
+      {/* Story Threads — visible on all tabs */}
+      <ConsequenceTagCloud entries={entries} />
     </div>
   );
 }

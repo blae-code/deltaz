@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Zap, AlertTriangle, Eye, Sparkles, Loader2 } from "lucide-react";
+import { BookOpen, Zap, AlertTriangle, Eye, Sparkles, Loader2, GitBranch } from "lucide-react";
+import WorldEffectsBanner from "./WorldEffectsBanner";
 
 const catIcons = {
   encounter: BookOpen,
@@ -48,6 +49,11 @@ export default function JournalEventCard({ entry, onChoice, resolved }) {
             )}
           </div>
         </div>
+        {entry.chain_depth > 0 && (
+          <Badge className="text-[7px] bg-chart-4/10 text-chart-4 border-0 shrink-0">
+            <GitBranch className="h-2.5 w-2.5 mr-0.5" /> SEQUEL
+          </Badge>
+        )}
         <span className="text-[8px] text-muted-foreground font-mono shrink-0">
           {new Date(entry.created_date).toLocaleDateString()}
         </span>
@@ -87,15 +93,28 @@ export default function JournalEventCard({ entry, onChoice, resolved }) {
       )}
 
       {resolved && entry.outcome && (
-        <div className="px-4 pb-3 border-t border-border/50 pt-3">
+        <div className="px-4 pb-3 border-t border-border/50 pt-3 space-y-2">
           <div className="text-[9px] text-primary tracking-widest uppercase mb-1">OUTCOME</div>
           <p className="text-[10px] text-muted-foreground leading-relaxed italic">{entry.outcome}</p>
-          {entry.reputation_effect?.delta && (
-            <div className="mt-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            {entry.reputation_effect?.delta && (
               <Badge variant="outline" className={`text-[8px] ${entry.reputation_effect.delta > 0 ? "text-status-ok border-status-ok/30" : "text-status-danger border-status-danger/30"}`}>
                 REP: {entry.reputation_effect.delta > 0 ? "+" : ""}{entry.reputation_effect.delta}
               </Badge>
-            </div>
+            )}
+            {entry.chain_depth > 0 && (
+              <Badge variant="outline" className="text-[8px] text-chart-4 border-chart-4/30">
+                <GitBranch className="h-2.5 w-2.5 mr-1" /> CHAIN DEPTH {entry.chain_depth}
+              </Badge>
+            )}
+            {entry.consequence_tags?.length > 0 && entry.consequence_tags.map(tag => (
+              <Badge key={tag} variant="outline" className="text-[7px] font-mono bg-secondary/30">
+                {tag.replace(/_/g, ' ')}
+              </Badge>
+            ))}
+          </div>
+          {entry.world_effects?.length > 0 && (
+            <WorldEffectsBanner effects={entry.world_effects} />
           )}
         </div>
       )}

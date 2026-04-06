@@ -26,6 +26,7 @@ Deno.serve(async (req) => {
   }
 
   const recentTitles = recentJournal.map(j => j.title);
+  const pastConsequences = (user.journal_consequence_tags || []).slice(-20);
   const playerReps = reputations.map(r => {
     const f = factions.find(fc => fc.id === r.faction_id);
     return `${f?.name || 'Unknown'}: ${r.score} (${r.rank})`;
@@ -34,7 +35,6 @@ Deno.serve(async (req) => {
   const activeMissions = jobs.filter(j => j.assigned_to === user.email && j.status === 'in_progress');
   const contestedTerritories = territories.filter(t => t.status === 'contested' || t.status === 'hostile');
 
-  const originData = user.origin_compiled || {};
   const originChoices = user.origin_choices || [];
 
   const charContext = charProfile ? `
@@ -57,22 +57,25 @@ OPERATIVE: ${user.callsign || 'Unknown'} (${user.email})
 Reputation standings: ${playerReps.join(', ') || 'None'}
 Active missions: ${activeMissions.map(m => m.title).join(', ') || 'None'}
 Contested territories: ${contestedTerritories.map(t => t.name).join(', ') || 'None'}
-Available factions: ${factions.map(f => `${f.name} [${f.tag}]`).join(', ')}
+Available factions: ${factions.map(f => `${f.name} [${f.tag}] (id: ${f.id})`).join(', ')}
+Available territories: ${territories.slice(0, 10).map(t => `${t.name} [${t.sector}] threat:${t.threat_level} (id: ${t.id})`).join(', ')}
+
+PREVIOUS CONSEQUENCE THREADS (build on these!): ${pastConsequences.join(', ') || 'None — this is a fresh start'}
 
 DO NOT repeat these recent event titles: ${recentTitles.join(', ') || 'None'}
 
 Generate a narrative event with EXACTLY 3 choices. The event should:
 - Be deeply personal, tied to the operative's backstory, skills, and weaknesses
-- Reference real factions and territories
-- Present a genuine moral dilemma or tactical decision
-- Have choices that lead to different outcomes (reputation gains/losses, narrative consequences)
-- Feel like a moment in a novel — atmospheric, immersive, and emotionally resonant
-- Each choice should have a clear label and a brief effect description hint
+- Reference real factions and territories by name
+- If there are previous consequence threads, reference and build on at least one of them
+- Present a genuine moral dilemma or tactical decision with MEANINGFUL faction-standing implications
+- Each choice should clearly favor different factions or world outcomes
+- Have choices with varied reputation_delta values (positive or negative, ranging from -15 to +20)
+- Feel like a pivotal moment in a novel — atmospheric, immersive, and emotionally resonant
 
 Category must be one of: encounter, discovery, dilemma, crisis, opportunity
 
-Pick a random faction from the list that would be relevant. Include its ID.
-Pick a random territory from the list. Include its ID.`;
+Include the actual faction ID and territory ID from the lists above.`;
 
   const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
     prompt,
@@ -82,6 +85,8 @@ Pick a random territory from the list. Include its ID.`;
         title: { type: "string" },
         narrative: { type: "string" },
         category: { type: "string" },
+        related_faction_id: { type: "string" },
+        related_territory_id: { type: "string" },
         choices: {
           type: "array",
           items: {
@@ -94,18 +99,17 @@ Pick a random territory from the list. Include its ID.`;
               outcome_narrative: { type: "string" }
             }
           }
-        },
-        related_faction_name: { type: "string" },
-        related_territory_name: { type: "string" }
+        }
       }
     }
   });
 
-  const relFaction = factions.find(f => f.name === result.related_faction_name);
-  const relTerritory = territories.find(t => t.name === result.related_territory_name);
-
   const validCategories = ['encounter', 'discovery', 'dilemma', 'crisis', 'opportunity'];
   const category = validCategories.includes(result.category) ? result.category : 'encounter';
+
+  // Validate faction and territory IDs
+  const relFaction = factions.find(f => f.id === result.related_faction_id);
+  const relTerritory = territories.find(t => t.id === result.related_territory_id);
 
   const entry = await base44.entities.JournalEntry.create({
     player_email: user.email,
@@ -120,9 +124,11 @@ Pick a random territory from the list. Include its ID.`;
     })),
     related_faction_id: relFaction?.id || '',
     related_territory_id: relTerritory?.id || '',
+    chain_depth: 0,
+    consequence_tags: [],
   });
 
-  // Store the full choice data in a temp structure for resolution
+  // Store the full choice data for resolution
   await base44.auth.updateMe({
     pending_journal_choices: {
       ...(user.pending_journal_choices || {}),
