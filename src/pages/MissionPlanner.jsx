@@ -30,27 +30,68 @@ export default function MissionPlanner() {
   const { toast } = useToast();
 
   useEffect(() => {
-    Promise.all([
-      base44.auth.me(),
-      base44.entities.Survivor.filter({}, "-created_date", 200),
-      base44.entities.Territory.list("-created_date", 100),
-      base44.entities.Faction.list("-created_date", 50),
-    ]).then(([u, s, t, f]) => {
-      setUser(u);
-      // Filter survivors to player's base
-      const mySurvivors = s.filter(sv => sv.status === "active");
-      setSurvivors(mySurvivors);
-      setTerritories(t);
-      setFactions(f);
-      if (u?.email) {
-        base44.entities.MissionPlan.filter({ planned_by: u.email }, "-created_date", 10)
-          .then(setRecentPlans);
-      }
-    }).finally(() => setLoading(false));
-  }, []);
+    let cancelled = false;
 
-  const allAssignedIds = Object.values(assignments).flat().map(s => s.id);
+    const loadData = async () => {
+      try {
+        const userRecord = await base44.auth.me();
+        const [territoryRows, factionRows, recentPlanRows, baseRows] = await Promise.all([
+          base44.entities.Territory.list("-created_date", 100),
+          base44.entities.Faction.list("-created_date", 50),
+          userRecord?.email
+            ? base44.entities.MissionPlan.filter({ planned_by: userRecord.email }, "-created_date", 10)
+            : Promise.resolve([]),
+          userRecord?.role === "admin"
+            ? Promise.resolve([])
+            : userRecord?.email
+              ? base44.entities.PlayerBase.filter({ owner_email: userRecord.email })
+              : Promise.resolve([]),
+        ]);
+
+        const survivorRows = userRecord?.role === "admin"
+          ? await base44.entities.Survivor.filter({}, "-created_date", 200)
+          : (await Promise.all(
+              baseRows.map((baseRow) => base44.entities.Survivor.filter({ base_id: baseRow.id }, "-created_date", 100)),
+            )).flat();
+
+        if (cancelled) {
+          return;
+        }
+
+        const uniqueSurvivors = Array.from(
+          new Map(
+            survivorRows
+              .filter((survivor) => survivor.status === "active")
+              .map((survivor) => [survivor.id, survivor]),
+          ).values(),
+        );
+
+        setUser(userRecord);
+        setSurvivors(uniqueSurvivors);
+        setTerritories(territoryRows);
+        setFactions(factionRows);
+        setRecentPlans(recentPlanRows);
+      } catch (err) {
+        if (!cancelled) {
+          toast({ title: "Planner load failed", description: err.message, variant: "destructive" });
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [toast]);
+
+  const allAssignedIds = Object.values(assignments).flat().map((survivor) => survivor.id);
   const currentAssigned = selectedTerritory ? (assignments[selectedTerritory.id] || []) : [];
+  const currentAssignedSignature = currentAssigned.map((survivor) => survivor.id).sort().join("|");
 
   // Auto-calculate risk when assignments or territory change
   const calculateRisk = useCallback(async () => {
@@ -62,16 +103,19 @@ export default function MissionPlanner() {
     try {
       const res = await base44.functions.invoke("riskAssessment", {
         territory_id: selectedTerritory.id,
-        survivor_ids: currentAssigned.map(s => s.id),
+        survivor_ids: currentAssigned.map((survivor) => survivor.id),
         operation_type: operationType,
       });
+      if (res.data?.error) {
+        throw new Error(res.data.error);
+      }
       setAssessment(res.data);
     } catch (err) {
       toast({ title: "Risk calculation failed", description: err.message, variant: "destructive" });
     } finally {
       setAssessLoading(false);
     }
-  }, [selectedTerritory?.id, currentAssigned.length, operationType, toast]);
+  }, [selectedTerritory?.id, currentAssignedSignature, operationType, toast]);
 
   useEffect(() => {
     const timer = setTimeout(calculateRisk, 400); // Debounce
@@ -82,31 +126,23 @@ export default function MissionPlanner() {
     const { source, destination, draggableId } = result;
     if (!destination) return;
 
-    const survivor = survivors.find(s => s.id === draggableId);
+    const survivor = survivors.find((candidate) => candidate.id === draggableId);
     if (!survivor) return;
 
-    // Remove from source
     const newAssignments = { ...assignments };
 
-    if (source.droppableId === "squad-pool") {
-      // Moving from pool to territory
-    } else {
-      // Moving from a territory slot
-      const srcTerrId = source.droppableId.replace("territory-", "");
-      newAssignments[srcTerrId] = (newAssignments[srcTerrId] || []).filter(s => s.id !== draggableId);
+    if (source.droppableId !== "squad-pool") {
+      const srcTerritoryId = source.droppableId.replace("territory-", "");
+      newAssignments[srcTerritoryId] = (newAssignments[srcTerritoryId] || []).filter((candidate) => candidate.id !== draggableId);
     }
 
-    if (destination.droppableId === "squad-pool") {
-      // Dropping back to pool — just remove from assignments (done above)
-    } else {
-      // Dropping into a territory
-      const destTerrId = destination.droppableId.replace("territory-", "");
-      if (!newAssignments[destTerrId]) newAssignments[destTerrId] = [];
-      // Prevent duplicates
-      if (!newAssignments[destTerrId].find(s => s.id === draggableId)) {
-        const arr = [...newAssignments[destTerrId]];
-        arr.splice(destination.index, 0, survivor);
-        newAssignments[destTerrId] = arr;
+    if (destination.droppableId !== "squad-pool") {
+      const destTerritoryId = destination.droppableId.replace("territory-", "");
+      if (!newAssignments[destTerritoryId]) newAssignments[destTerritoryId] = [];
+      if (!newAssignments[destTerritoryId].find((candidate) => candidate.id === draggableId)) {
+        const nextAssignments = [...newAssignments[destTerritoryId]];
+        nextAssignments.splice(destination.index, 0, survivor);
+        newAssignments[destTerritoryId] = nextAssignments;
       }
     }
 
@@ -115,14 +151,14 @@ export default function MissionPlanner() {
 
   const handleRemoveSurvivor = (survivorId) => {
     if (!selectedTerritory) return;
-    setAssignments(prev => ({
+    setAssignments((prev) => ({
       ...prev,
-      [selectedTerritory.id]: (prev[selectedTerritory.id] || []).filter(s => s.id !== survivorId),
+      [selectedTerritory.id]: (prev[selectedTerritory.id] || []).filter((survivor) => survivor.id !== survivorId),
     }));
   };
 
-  const handleSelectTerritory = (terr) => {
-    setSelectedTerritory(terr);
+  const handleSelectTerritory = (territory) => {
+    setSelectedTerritory(territory);
     setAssessment(null);
   };
 
@@ -130,30 +166,29 @@ export default function MissionPlanner() {
     if (!selectedTerritory || currentAssigned.length === 0 || !title) return;
     setDeploying(true);
     try {
-      await base44.entities.MissionPlan.create({
+      const res = await base44.functions.invoke("deployMissionPlan", {
         title,
         territory_id: selectedTerritory.id,
-        territory_name: selectedTerritory.name,
         operation_type: operationType,
-        assigned_survivors: currentAssigned.map(s => ({
-          survivor_id: s.id, name: s.name, skill: s.skill, combat_rating: s.combat_rating || 1
-        })),
-        risk_score: assessment?.risk_score || 50,
-        success_probability: assessment?.success_probability || 50,
-        risk_factors: assessment?.risk_factors || [],
-        status: "deployed",
-        planned_by: user.email,
-        deployed_at: new Date().toISOString(),
+        survivor_ids: currentAssigned.map((survivor) => survivor.id),
       });
+      if (res.data?.error) {
+        throw new Error(res.data.error);
+      }
+      const createdPlan = res.data?.plan;
+
       toast({ title: "Operation Deployed", description: `${title} — ${currentAssigned.length} operatives en route to ${selectedTerritory.name}` });
 
-      // Reset
       setTitle("");
-      setAssignments(prev => ({ ...prev, [selectedTerritory.id]: [] }));
+      setAssignments((prev) => ({ ...prev, [selectedTerritory.id]: [] }));
       setAssessment(null);
-      // Refresh recent plans
-      base44.entities.MissionPlan.filter({ planned_by: user.email }, "-created_date", 10)
-        .then(setRecentPlans);
+
+      if (createdPlan) {
+        setRecentPlans((prev) => [createdPlan, ...prev.filter((plan) => plan.id !== createdPlan.id)].slice(0, 10));
+      } else if (user?.email) {
+        base44.entities.MissionPlan.filter({ planned_by: user.email }, "-created_date", 10)
+          .then(setRecentPlans);
+      }
     } catch (err) {
       toast({ title: "Deployment failed", description: err.message, variant: "destructive" });
     } finally {
@@ -172,7 +207,6 @@ export default function MissionPlanner() {
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
       <div className="space-y-4">
-        {/* Header */}
         <div>
           <h2 className="text-lg font-bold font-display tracking-wider text-primary uppercase">
             Mission Planner
@@ -182,14 +216,11 @@ export default function MissionPlanner() {
           </p>
         </div>
 
-        {/* Main 3-column layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          {/* LEFT: Squad Pool */}
           <div className="lg:col-span-3">
             <SquadPool survivors={survivors} assignedIds={allAssignedIds} />
           </div>
 
-          {/* CENTER: Territory & Drop Zone */}
           <div className="lg:col-span-5 space-y-3">
             <TerritorySelector
               territories={territories}
@@ -201,14 +232,13 @@ export default function MissionPlanner() {
             {selectedTerritory && (
               <TerritorySlot
                 territory={selectedTerritory}
-                faction={factions.find(f => f.id === selectedTerritory.controlling_faction_id)}
+                faction={factions.find((faction) => faction.id === selectedTerritory.controlling_faction_id)}
                 assignedSurvivors={currentAssigned}
                 onRemoveSurvivor={handleRemoveSurvivor}
               />
             )}
           </div>
 
-          {/* RIGHT: Risk + Deploy */}
           <div className="lg:col-span-4 space-y-3">
             <PlanSummary
               title={title} setTitle={setTitle}
@@ -223,7 +253,6 @@ export default function MissionPlanner() {
           </div>
         </div>
 
-        {/* Recent plans */}
         {recentPlans.length > 0 && (
           <div className="border border-border bg-card rounded-sm overflow-hidden">
             <div className="border-b border-border px-3 py-2 bg-secondary/50 flex items-center gap-2">
@@ -233,27 +262,27 @@ export default function MissionPlanner() {
               </h3>
             </div>
             <div className="p-2 space-y-1">
-              {recentPlans.map(p => (
-                <div key={p.id} className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-sm bg-secondary/20 border border-border/50">
+              {recentPlans.map((plan) => (
+                <div key={plan.id} className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-sm bg-secondary/20 border border-border/50">
                   <div className="flex items-center gap-2 min-w-0">
                     <Crosshair className="h-3 w-3 text-muted-foreground shrink-0" />
                     <div className="min-w-0">
-                      <p className="text-[10px] font-mono font-semibold text-foreground truncate">{p.title}</p>
+                      <p className="text-[10px] font-mono font-semibold text-foreground truncate">{plan.title}</p>
                       <p className="text-[8px] text-muted-foreground">
-                        {p.territory_name} · {p.operation_type} · {p.assigned_survivors?.length || 0} ops
+                        {plan.territory_name} · {plan.operation_type} · {plan.assigned_survivors?.length || 0} ops
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
-                    <span className="text-[9px] font-mono text-muted-foreground">{p.success_probability}%</span>
-                    {p.status === "completed" ? (
+                    <span className="text-[9px] font-mono text-muted-foreground">{plan.success_probability}%</span>
+                    {plan.status === "completed" ? (
                       <CheckCircle className="h-3 w-3 text-status-ok" />
-                    ) : p.status === "failed" ? (
+                    ) : plan.status === "failed" ? (
                       <XCircle className="h-3 w-3 text-status-danger" />
                     ) : (
-                      <Badge variant="outline" className="text-[7px] uppercase">{p.status}</Badge>
+                      <Badge variant="outline" className="text-[7px] uppercase">{plan.status}</Badge>
                     )}
-                    <span className="text-[8px] text-muted-foreground">{moment(p.deployed_at || p.created_date).fromNow()}</span>
+                    <span className="text-[8px] text-muted-foreground">{moment(plan.deployed_at || plan.created_date).fromNow()}</span>
                   </div>
                 </div>
               ))}

@@ -7,6 +7,7 @@ export const allowedFiles = new Set([
   'README.md',
   'package-lock.json',
   'package.json',
+  'src/pages/MissionPlanner.jsx',
 ]);
 
 export const runGit = (args, { allowFailure = false } = {}) => {
