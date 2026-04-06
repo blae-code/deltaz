@@ -5,6 +5,7 @@ import NewsFeedItem from "../components/newsfeed/NewsFeedItem";
 import NewsFeedFilters from "../components/newsfeed/NewsFeedFilters";
 import useNewsFeed from "../components/newsfeed/useNewsFeed";
 import { Radio, Wifi } from "lucide-react";
+import WorldSimulationStatus from "../components/events/WorldSimulationStatus";
 
 export default function Events() {
   const { items, loading } = useNewsFeed();
@@ -82,6 +83,9 @@ export default function Events() {
         setMyFactionOnly={setMyFactionOnly}
         userFactionIds={userFactionIds}
       />
+
+      {/* World Simulation Status */}
+      <WorldSimulationStatus />
 
       {/* Feed */}
       {filtered.length === 0 ? (
