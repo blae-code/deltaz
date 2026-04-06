@@ -11,6 +11,7 @@ import TodayColony from "../components/today/TodayColony";
 import TodayActions from "../components/today/TodayActions";
 import LiveEventWatcher from "../components/dashboard/LiveEventWatcher";
 import NotificationBanner from "../components/dashboard/NotificationBanner";
+import OperativeIdCard from "../components/today/OperativeIdCard";
 import { getDisplayName } from "../lib/displayName";
 
 export default function Today() {
@@ -71,6 +72,20 @@ export default function Today() {
   );
   const { data: colony } = colonyQuery;
 
+  const factionsQuery = useEntityQuery(
+    "today-factions",
+    () => base44.entities.Faction.list("-created_date", 50),
+    { subscribeEntities: ["Faction"] }
+  );
+  const { data: factions = [] } = factionsQuery;
+
+  const reputationsQuery = useEntityQuery(
+    ["today-reputations", user?.email],
+    () => user ? base44.entities.Reputation.filter({ player_email: user.email }) : Promise.resolve([]),
+    { subscribeEntities: ["Reputation"], queryOpts: { enabled: !!user?.email } }
+  );
+  const { data: reputations = [] } = reputationsQuery;
+
   // Register primary sync
   useRegisterSync("today", jobsQuery);
 
@@ -94,6 +109,14 @@ export default function Today() {
       {/* Notifications */}
       {user?.email && <NotificationBanner userEmail={user.email} />}
       {user?.email && <LiveEventWatcher userEmail={user.email} />}
+
+      {/* Operative Identity Card */}
+      <OperativeIdCard
+        user={user}
+        factions={factions}
+        reputations={reputations}
+        jobs={jobs}
+      />
 
       {/* Quick Actions */}
       <TodayActions />
