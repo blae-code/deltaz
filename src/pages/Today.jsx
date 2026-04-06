@@ -16,6 +16,7 @@ import TodayPriorityBriefing from "../components/today/TodayPriorityBriefing";
 import LiveEventWatcher from "../components/dashboard/LiveEventWatcher";
 import OperativeIdCard from "../components/today/OperativeIdCard";
 import TodayWorldConditions from "../components/today/TodayWorldConditions";
+import TodayEmergencyBanner from "../components/today/TodayEmergencyBanner";
 import { getDisplayName } from "../lib/displayName";
 
 export default function Today() {
@@ -136,6 +137,9 @@ export default function Today() {
     >
       {/* Live event watcher (critical alerts only) */}
       {user?.email && <LiveEventWatcher userEmail={user.email} />}
+
+      {/* Emergency Banner — appears when colony threat is high/critical */}
+      <TodayEmergencyBanner colony={colony} />
 
       {/* World Conditions — immersive environment display */}
       <TodayWorldConditions conditions={worldConditions} />
