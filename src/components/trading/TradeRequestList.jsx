@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import DataCard from "../terminal/DataCard";
 import TradeRequestCard from "./TradeRequestCard";
+import EmptyState from "../terminal/EmptyState";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Inbox, Send } from "lucide-react";
+import { Inbox, Send, Handshake } from "lucide-react";
 
 export default function TradeRequestList({ userEmail }) {
   const [requests, setRequests] = useState([]);
@@ -92,11 +93,21 @@ export default function TradeRequestList({ userEmail }) {
       )}
 
       {displayed.length === 0 && (
-        <DataCard>
-          <p className="text-[10px] text-muted-foreground text-center py-4">
-            No {view} trade requests yet.
-          </p>
-        </DataCard>
+        view === "incoming" ? (
+          <EmptyState
+            icon={Inbox}
+            title="No Incoming Proposals"
+            why="No one has sent you a trade request yet. When another operative proposes a deal, it will appear here for you to accept or decline."
+            action="Make sure other players know your callsign — or post on the Trade Board so they can find you."
+          />
+        ) : (
+          <EmptyState
+            icon={Send}
+            title="No Outgoing Proposals"
+            why="You haven't sent any trade proposals yet. P2P deals let you offer items or credits directly to a specific operative."
+            action='Hit NEW PROPOSAL above to send a private trade offer to another player.'
+          />
+        )
       )}
     </div>
   );

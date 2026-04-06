@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import DataCard from "../terminal/DataCard";
 import TradeOfferCard from "./TradeOfferCard";
+import EmptyState from "../terminal/EmptyState";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ArrowLeftRight } from "lucide-react";
 
 export default function SectorTradeBoard({ userEmail }) {
   const [trades, setTrades] = useState([]);
@@ -68,9 +70,21 @@ export default function SectorTradeBoard({ userEmail }) {
       {/* Other offers */}
       <DataCard title={`Available Trades (${otherOffers.length})`}>
         {otherOffers.length === 0 ? (
-          <p className="text-[10px] text-muted-foreground py-4 text-center">
-            No trade offers in {sectorFilter || "any sector"}. Post your own to start trading!
-          </p>
+          trades.length === 0 ? (
+            <EmptyState
+              icon={ArrowLeftRight}
+              title="Trade Board Empty"
+              why="No one has posted trade offers yet. The trade post lets operatives sell or barter surplus gear and resources."
+              action='Hit POST TRADE above to list something from your inventory — other operatives will see it here.'
+            />
+          ) : (
+            <EmptyState
+              icon={ArrowLeftRight}
+              title={sectorFilter ? `No Trades in Sector ${sectorFilter}` : "No Offers From Others"}
+              why="Other operatives haven't posted any matching offers. Your own listings appear in the section above."
+              action={sectorFilter ? "Try clearing the sector filter to see all available trades." : "Check back later or spread the word to your faction."}
+            />
+          )
         ) : (
           <div className="grid md:grid-cols-2 gap-2">
             {otherOffers.map(t => (

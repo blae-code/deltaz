@@ -1,15 +1,16 @@
 import ProjectCard from "./ProjectCard";
+import EmptyState from "../terminal/EmptyState";
+import { Hammer } from "lucide-react";
 
 export default function ProjectList({ projects, inventory, userEmail, userCallsign }) {
   if (projects.length === 0) {
     return (
-      <div className="border border-border border-dashed rounded-sm p-8 text-center space-y-2">
-        <p className="text-xs text-muted-foreground font-mono">No projects here yet.</p>
-        <p className="text-[10px] text-muted-foreground/60 leading-relaxed max-w-sm mx-auto">
-          Crafting projects let you track the materials needed to build something.
-          Pick a recipe or create a custom project, then check off materials as you gather them.
-        </p>
-      </div>
+      <EmptyState
+        icon={Hammer}
+        title="No Crafting Projects"
+        why="You haven't started tracking any builds yet. Projects let you plan what to craft and check off materials as you scavenge them."
+        action='Open the RECIPES browser above to pick a blueprint, or hit NEW PROJECT to define a custom build from scratch.'
+      />
     );
   }
 

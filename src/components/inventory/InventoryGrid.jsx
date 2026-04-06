@@ -1,8 +1,9 @@
 import { useState } from "react";
 import InventoryItemCard from "./InventoryItemCard";
 import InventorySorter, { sortItems } from "./InventorySorter";
+import EmptyState from "../terminal/EmptyState";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, Package } from "lucide-react";
 
 const CATEGORIES = ["all", "weapon", "armor", "tool", "consumable", "material", "ammo", "misc"];
 
@@ -69,7 +70,21 @@ export default function InventoryGrid({ items, onUpdate, userEmail }) {
           <div className="text-[9px] text-muted-foreground tracking-widest uppercase mb-2">STASH ({unequipped.length})</div>
         )}
         {filtered.length === 0 ? (
-          <p className="text-[10px] text-muted-foreground py-4 text-center">No items in this category.</p>
+          items.length === 0 ? (
+            <EmptyState
+              icon={Package}
+              title="Inventory Empty"
+              why="You haven't logged any gear yet. Your weapons, armor, materials, and supplies will be tracked here."
+              action='Use the ADD ITEM button to log a single item, BULK ADD for a list, or SCAN to upload a screenshot of your in-game inventory.'
+            />
+          ) : (
+            <EmptyState
+              icon={Search}
+              title="No Items Match"
+              why={`None of your ${items.length} items match the current category or search filter.`}
+              action="Try selecting a different category tab or clearing your search."
+            />
+          )
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-2">
             {unequipped.map(item => (

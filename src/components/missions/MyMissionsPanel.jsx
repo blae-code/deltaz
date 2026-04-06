@@ -1,13 +1,18 @@
 import MissionCard from "./MissionCard";
+import EmptyState from "../terminal/EmptyState";
+import { Crosshair } from "lucide-react";
 
 export default function MyMissionsPanel({ jobs, factions, territories, userEmail, isAdmin }) {
   const myJobs = jobs.filter(j => j.assigned_to === userEmail && j.status === "in_progress");
 
   if (myJobs.length === 0) {
     return (
-      <div className="text-xs text-muted-foreground text-center py-4 border border-border rounded-sm bg-card">
-        No active missions. Browse the board below to accept one.
-      </div>
+      <EmptyState
+        icon={Crosshair}
+        title="No Active Missions"
+        why="You haven't accepted any missions yet. Active missions you're assigned to will appear here for quick access."
+        action="Scroll down to the mission board and accept a posting that matches your skills."
+      />
     );
   }
 

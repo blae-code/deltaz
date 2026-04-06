@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import DataCard from "../terminal/DataCard";
+import EmptyState from "../terminal/EmptyState";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Coins, Package, Check, X } from "lucide-react";
+import { ArrowRight, Coins, Package, Check, X, ScrollText } from "lucide-react";
 import moment from "moment";
 
 const statusIcon = {
@@ -69,9 +70,12 @@ export default function TradeLedger({ userEmail }) {
       {/* Ledger */}
       <DataCard title={`Trade Ledger (${records.length})`}>
         {records.length === 0 ? (
-          <p className="text-[10px] text-muted-foreground text-center py-4">
-            No completed trades yet. Start by sending a trade proposal!
-          </p>
+          <EmptyState
+            icon={ScrollText}
+            title="Ledger Empty"
+            why="You have no resolved trades. Every completed, rejected, or expired deal will be permanently recorded here."
+            action="Head to the Trade Post or P2P Deals tab to initiate your first transaction."
+          />
         ) : (
           <div className="space-y-1.5">
             {records.map(r => {

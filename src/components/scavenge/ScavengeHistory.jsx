@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import LootResultCard from "./LootResultCard";
+import EmptyState from "../terminal/EmptyState";
+import { Compass } from "lucide-react";
 
 export default function ScavengeHistory({ userEmail }) {
   const [runs, setRuns] = useState([]);
@@ -28,10 +30,12 @@ export default function ScavengeHistory({ userEmail }) {
 
   if (runs.length === 0) {
     return (
-      <div className="border border-border border-dashed rounded-sm p-6 text-center">
-        <p className="text-[10px] text-muted-foreground">No scavenge runs on record yet.</p>
-        <p className="text-[9px] text-muted-foreground/60 mt-1">Deploy a scout from the panel to the left — your results will appear here.</p>
-      </div>
+      <EmptyState
+        icon={Compass}
+        title="No Scavenge Runs Yet"
+        why="You haven't deployed any scouts. Each scavenge run sends a team into a territory to search for loot, intel, and resources."
+        action="Select a territory in the Deploy Scout panel and hit DEPLOY — results will appear here in seconds."
+      />
     );
   }
 
