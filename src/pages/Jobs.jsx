@@ -13,6 +13,8 @@ import EmptyState from "../components/terminal/EmptyState";
 import { Filter, Sparkles, Package, ArrowLeftRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import NextStepBanner from "../components/terminal/NextStepBanner";
+import StatusStripSkeleton from "../components/layout/StatusStripSkeleton";
+import AuthLoadingState from "../components/terminal/AuthLoadingState";
 
 export default function Jobs() {
   const [user, setUser] = useState(null);
@@ -60,6 +62,7 @@ export default function Jobs() {
   if (loading) {
     return (
       <PageShell title="Mission Board" subtitle="Accept missions, earn reputation, serve your clan">
+        <StatusStripSkeleton count={4} />
         <SkeletonGrid count={5} variant="mission" />
       </PageShell>
     );
@@ -77,6 +80,7 @@ export default function Jobs() {
       title="Mission Board"
       subtitle="Accept a mission to earn reputation and credits for your clan"
       syncMeta={jobsSyncMeta}
+      onRetry={() => jobsQuery.refetch()}
       statusStrip={<StatusStrip items={statusItems} />}
     >
       {/* 1. Your active missions — always visible if you have any */}

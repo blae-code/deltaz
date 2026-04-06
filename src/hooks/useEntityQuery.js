@@ -49,6 +49,8 @@ export default function useEntityQuery(key, fetcher, opts = {}) {
       isStale: query.isStale,
       isError: query.isError,
       error: query.error,
+      // True only on the very first load (no cached data yet)
+      isInitialLoading: query.isLoading && !query.data,
     },
   };
 }

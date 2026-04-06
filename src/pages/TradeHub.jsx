@@ -16,6 +16,7 @@ import GuidanceBox from "../components/terminal/GuidanceBox";
 import PageShell from "../components/layout/PageShell";
 import ActionRail from "../components/layout/ActionRail";
 import SkeletonGrid from "../components/terminal/SkeletonGrid";
+import AuthLoadingState from "../components/terminal/AuthLoadingState";
 
 export default function TradeHub() {
   const [user, setUser] = useState(null);
@@ -35,7 +36,7 @@ export default function TradeHub() {
   if (!user) {
     return (
       <PageShell title="Trade Hub" subtitle="Trade resources with other operatives">
-        <SkeletonGrid count={4} />
+        <AuthLoadingState message="CONNECTING TO TRADE NETWORK..." />
       </PageShell>
     );
   }

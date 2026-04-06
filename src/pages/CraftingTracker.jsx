@@ -14,6 +14,8 @@ import ProjectList from "../components/crafting/ProjectList";
 import CreateProjectForm from "../components/crafting/CreateProjectForm";
 import RecipeBrowser from "../components/crafting/RecipeBrowser";
 import SkeletonGrid from "../components/terminal/SkeletonGrid";
+import StatusStripSkeleton from "../components/layout/StatusStripSkeleton";
+import AuthLoadingState from "../components/terminal/AuthLoadingState";
 
 export default function CraftingTracker() {
   const [user, setUser] = useState(null);
@@ -49,6 +51,15 @@ export default function CraftingTracker() {
   if (loading) {
     return (
       <PageShell title="Workbench" subtitle="Track materials, plan builds, and source what you need">
+        <AuthLoadingState message="LOADING WORKBENCH..." />
+      </PageShell>
+    );
+  }
+
+  if (projectsQuery.isLoading && !projectsQuery.data) {
+    return (
+      <PageShell title="Workbench" subtitle="Track materials, plan builds, and source what you need">
+        <StatusStripSkeleton count={4} />
         <SkeletonGrid count={4} variant="project" />
       </PageShell>
     );
@@ -81,6 +92,7 @@ export default function CraftingTracker() {
       title="Workbench"
       subtitle="Plan builds, track gathered materials, and know when you're ready to craft"
       syncMeta={craftingSyncMeta}
+      onRetry={() => projectsQuery.refetch()}
       actions={
         <>
           <Button variant={showRecipes ? "default" : "outline"} size="sm" className="text-[10px] uppercase tracking-wider h-7" onClick={() => { setShowRecipes(!showRecipes); setShowCreate(false); }}>

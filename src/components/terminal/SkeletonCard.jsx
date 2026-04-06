@@ -59,6 +59,13 @@ export default function SkeletonCard({ variant = "default", className }) {
         </div>
       )}
 
+      {variant === "stat" && (
+        <div className="p-3 space-y-2">
+          <div className="h-2 w-16 rounded-sm bg-secondary/60" />
+          <div className="h-5 w-10 rounded-sm bg-secondary/80" />
+        </div>
+      )}
+
       {variant === "default" && (
         <div className="p-4 space-y-2">
           <div className="h-3 w-3/4 rounded-sm bg-secondary" />

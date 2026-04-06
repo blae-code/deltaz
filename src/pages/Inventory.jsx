@@ -10,6 +10,8 @@ import StatusStrip from "../components/layout/StatusStrip";
 import SkeletonGrid from "../components/terminal/SkeletonGrid";
 import InventoryGrid from "../components/inventory/InventoryGrid";
 import AddGearDrawer from "../components/inventory/AddGearDrawer";
+import StatusStripSkeleton from "../components/layout/StatusStripSkeleton";
+import AuthLoadingState from "../components/terminal/AuthLoadingState";
 
 export default function Inventory() {
   const [user, setUser] = useState(null);
@@ -40,9 +42,18 @@ export default function Inventory() {
     { label: "VALUE", value: `${totalValue}c`, color: "text-foreground" },
   ];
 
+  if (!user && !inventoryQuery.data) {
+    return (
+      <PageShell title="Gear Locker" subtitle="Your weapons, armor, and supplies — add gear to start tracking">
+        <AuthLoadingState message="LOADING GEAR LOCKER..." />
+      </PageShell>
+    );
+  }
+
   if (loading) {
     return (
       <PageShell title="Gear Locker" subtitle="Your weapons, armor, and supplies — add gear to start tracking">
+        <StatusStripSkeleton count={4} />
         <SkeletonGrid count={6} variant="inventory" />
       </PageShell>
     );
@@ -53,6 +64,7 @@ export default function Inventory() {
       title="Gear Locker"
       subtitle="Your weapons, armor, and supplies — add gear to start tracking"
       syncMeta={inventorySyncMeta}
+      onRetry={() => inventoryQuery.refetch()}
       statusStrip={<StatusStrip items={statusItems} />}
       actions={
         <Button

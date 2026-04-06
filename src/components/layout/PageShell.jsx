@@ -1,13 +1,15 @@
 import LiveSyncBadge from "../terminal/LiveSyncBadge";
+import QueryErrorBanner from "../terminal/QueryErrorBanner";
 
 /**
  * PageShell — Standardized page anatomy:
  *  1. Header (title + subtitle + live sync indicator)
- *  2. Status strip (optional summary stats)
- *  3. Action rail (tabs, filters, primary actions)
- *  4. Main workspace (children)
+ *  2. Error banner (if syncMeta reports error)
+ *  3. Status strip (optional summary stats)
+ *  4. Action rail (tabs, filters, primary actions)
+ *  5. Main workspace (children)
  */
-export default function PageShell({ title, subtitle, actions, statusStrip, actionRail, syncMeta, children }) {
+export default function PageShell({ title, subtitle, actions, statusStrip, actionRail, syncMeta, onRetry, children }) {
   return (
     <div className="space-y-4">
       {/* 1. Header */}
@@ -33,13 +35,21 @@ export default function PageShell({ title, subtitle, actions, statusStrip, actio
         {actions && <div className="flex gap-1.5 flex-wrap">{actions}</div>}
       </div>
 
-      {/* 2. Status strip */}
+      {/* 2. Error banner — only if syncMeta reports error */}
+      {syncMeta?.isError && (
+        <QueryErrorBanner
+          message={syncMeta.error?.message}
+          onRetry={onRetry}
+        />
+      )}
+
+      {/* 3. Status strip */}
       {statusStrip && <div>{statusStrip}</div>}
 
-      {/* 3. Action rail */}
+      {/* 4. Action rail */}
       {actionRail && <div>{actionRail}</div>}
 
-      {/* 4. Main workspace */}
+      {/* 5. Main workspace */}
       <div>{children}</div>
     </div>
   );

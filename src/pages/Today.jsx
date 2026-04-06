@@ -4,6 +4,9 @@ import useEntityQuery from "../hooks/useEntityQuery";
 import { useRegisterSync } from "../hooks/useSyncRegistry";
 import PageShell from "../components/layout/PageShell";
 import DataCard from "../components/terminal/DataCard";
+import StatusStripSkeleton from "../components/layout/StatusStripSkeleton";
+import SkeletonGrid from "../components/terminal/SkeletonGrid";
+import AuthLoadingState from "../components/terminal/AuthLoadingState";
 import TodayMissions from "../components/today/TodayMissions";
 import TodayAlerts from "../components/today/TodayAlerts";
 import TodayInventory from "../components/today/TodayInventory";
@@ -16,10 +19,10 @@ import { getDisplayName } from "../lib/displayName";
 
 export default function Today() {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
-    base44.auth.me().then(u => { setUser(u); setLoading(false); }).catch(() => setLoading(false));
+    base44.auth.me().then(u => { setUser(u); setAuthLoading(false); }).catch(() => setAuthLoading(false));
   }, []);
 
   // Core data queries
@@ -89,11 +92,26 @@ export default function Today() {
   // Register primary sync
   useRegisterSync("today", jobsQuery);
 
-  if (loading) {
+  // Auth loading state — prevents empty flash
+  if (authLoading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-primary text-xs tracking-widest animate-pulse">LOADING COMMAND SURFACE...</div>
-      </div>
+      <PageShell title="Today" subtitle="Loading your command surface...">
+        <AuthLoadingState />
+      </PageShell>
+    );
+  }
+
+  // Initial data loading — show skeleton layout matching final shape
+  const isInitialLoad = jobsQuery.isLoading && !jobsQuery.data;
+  if (isInitialLoad) {
+    return (
+      <PageShell title="Today" subtitle="Retrieving operational data...">
+        <StatusStripSkeleton count={4} />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <SkeletonGrid count={2} variant="mission" />
+          <SkeletonGrid count={2} variant="default" />
+        </div>
+      </PageShell>
     );
   }
 
@@ -105,6 +123,7 @@ export default function Today() {
       title="Today"
       subtitle={`${greeting}, ${displayName} — here's what matters right now`}
       syncMeta={jobsQuery.syncMeta}
+      onRetry={() => jobsQuery.refetch()}
     >
       {/* Live event watcher (critical alerts only) */}
       {user?.email && <LiveEventWatcher userEmail={user.email} />}
@@ -131,7 +150,7 @@ export default function Today() {
 
       {/* Main two-column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Left column — missions & alerts */}
+        {/* Left column — missions & gear */}
         <div className="space-y-4">
           <DataCard title="Active Ops" headerRight={<span className="text-[9px] text-muted-foreground font-mono">Your missions & available contracts</span>}>
             <TodayMissions jobs={jobs} userEmail={user?.email} />

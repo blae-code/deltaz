@@ -20,6 +20,8 @@ import MissionDetailPopup from "../components/map/MissionDetailPopup";
 import MissionPlanOverlay from "../components/map/MissionPlanOverlay";
 import PlanRouteLines from "../components/map/PlanRouteLines";
 import ThreatPredictionPanel from "../components/map/ThreatPredictionPanel";
+import StatusStripSkeleton from "../components/layout/StatusStripSkeleton";
+import SkeletonGrid from "../components/terminal/SkeletonGrid";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
 export default function WorldMap() {
@@ -167,11 +169,28 @@ export default function WorldMap() {
     { label: "CONTESTED", value: counts.contested, color: counts.contested > 0 ? "text-destructive" : "text-foreground" },
   ];
 
+  // Initial loading state — show skeleton matching map layout
+  const isInitialLoad = territoriesQuery.isLoading && !territoriesQuery.data;
+  if (isInitialLoad) {
+    return (
+      <PageShell title="Area of Operations" subtitle="Loading tactical map...">
+        <StatusStripSkeleton count={4} />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+          <div className="lg:col-span-2">
+            <div className="aspect-square bg-card border border-border rounded-sm animate-pulse" />
+          </div>
+          <SkeletonGrid count={2} variant="default" />
+        </div>
+      </PageShell>
+    );
+  }
+
   return (
     <PageShell
       title="Area of Operations"
       subtitle="Tactical map — territories, markers, missions, and threat data"
       syncMeta={mapSyncMeta}
+      onRetry={() => territoriesQuery.refetch()}
       statusStrip={<StatusStrip items={statusItems} />}
     >
       {/* Faction filter */}

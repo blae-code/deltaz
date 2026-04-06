@@ -51,6 +51,11 @@ export default function LiveSyncBadge({ dataUpdatedAt, isFetching, isStale, isEr
             <span className="text-[10px] font-mono tracking-widest uppercase">
               {statusLabel}
             </span>
+            {age !== null && !isFetching && status === "synced" && (
+              <span className="text-[9px] font-mono text-muted-foreground/50 tracking-wider">
+                {formatAge(age)}
+              </span>
+            )}
             {label && (
               <span className="text-[10px] font-mono text-muted-foreground/60 tracking-wider">
                 · {label}
