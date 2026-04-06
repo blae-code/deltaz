@@ -1,0 +1,108 @@
+{
+  "name": "MissionPlan",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Operation name"
+    },
+    "territory_id": {
+      "type": "string",
+      "description": "Target territory for this operation"
+    },
+    "territory_name": {
+      "type": "string",
+      "description": "Snapshot of territory name"
+    },
+    "operation_type": {
+      "type": "string",
+      "enum": [
+        "assault",
+        "recon",
+        "defense",
+        "sabotage",
+        "scavenge",
+        "escort"
+      ],
+      "default": "recon"
+    },
+    "assigned_survivors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "survivor_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "skill": {
+            "type": "string"
+          },
+          "combat_rating": {
+            "type": "number"
+          }
+        }
+      },
+      "description": "Survivors assigned to this operation"
+    },
+    "risk_score": {
+      "type": "number",
+      "default": 0,
+      "description": "Calculated risk percentage (0-100, higher = more dangerous)"
+    },
+    "success_probability": {
+      "type": "number",
+      "default": 50,
+      "description": "Calculated success probability percentage"
+    },
+    "risk_factors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "factor": {
+            "type": "string"
+          },
+          "impact": {
+            "type": "number"
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Breakdown of risk factors"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "planning",
+        "deployed",
+        "completed",
+        "failed",
+        "aborted"
+      ],
+      "default": "planning"
+    },
+    "planned_by": {
+      "type": "string",
+      "description": "Email of the planner"
+    },
+    "deployed_at": {
+      "type": "string",
+      "description": "ISO date when operation was deployed"
+    },
+    "outcome": {
+      "type": "string",
+      "description": "Result narrative"
+    }
+  },
+  "required": [
+    "title",
+    "territory_id",
+    "operation_type",
+    "planned_by"
+  ]
+}
