@@ -131,6 +131,9 @@ export default function MarkerPanel({
           </button>
         </div>
         <div className="p-3 space-y-2">
+          <p className="text-[9px] text-muted-foreground/60 leading-relaxed">
+            Place a marker at this location. Shared markers are visible to all operatives; private ones are for your eyes only.
+          </p>
           <div>
             <Label className="text-[10px] font-mono">LABEL</Label>
             <Input
@@ -200,9 +203,12 @@ export default function MarkerPanel({
       </div>
       <div className="max-h-64 overflow-y-auto">
         {markers.length === 0 ? (
-          <div className="p-3 text-center">
-            <MapPin className="h-4 w-4 text-muted-foreground mx-auto mb-1" />
-            <p className="text-[10px] text-muted-foreground">Click on the map to drop a marker</p>
+          <div className="p-4 text-center space-y-1.5">
+            <MapPin className="h-5 w-5 text-muted-foreground/50 mx-auto" />
+            <p className="text-[10px] text-foreground font-semibold">No markers placed yet</p>
+            <p className="text-[9px] text-muted-foreground/60 leading-relaxed max-w-[200px] mx-auto">
+              Click any grid cell on the map to drop a marker — tag loot spots, danger zones, or mission waypoints for your squad.
+            </p>
           </div>
         ) : (
           markers.map((m) => (

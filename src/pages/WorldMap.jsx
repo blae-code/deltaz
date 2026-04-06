@@ -18,7 +18,7 @@ import PlanRouteLines from "../components/map/PlanRouteLines";
 import SectorDetailPanel from "../components/map/SectorDetailPanel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Flame, Layers, MapPin, PanelRightOpen, PanelRightClose } from "lucide-react";
+import { Flame, Layers, MapPin, PanelRightOpen, PanelRightClose, Info } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function WorldMap() {

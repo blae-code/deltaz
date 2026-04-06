@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Search, Loader2, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
+import GuidanceBox from "../terminal/GuidanceBox";
 
 const threatColor = {
   minimal: "text-status-ok",
@@ -38,6 +39,10 @@ export default function ScavengeDeployPanel({ territories, factions, onDeployed 
 
   return (
     <div className="space-y-3">
+      <GuidanceBox icon={Search} title="How Scavenging Works">
+        Pick a territory to send a scout into. They'll search for loot, materials, and intel.
+        Higher-threat zones yield better rewards but risk complications. Results are instant.
+      </GuidanceBox>
       <div>
         <Label className="text-[9px] uppercase tracking-wider text-muted-foreground font-mono">Select Territory</Label>
         <Select value={selectedTerritory} onValueChange={setSelectedTerritory}>

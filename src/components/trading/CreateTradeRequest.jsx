@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Send, ArrowRight } from "lucide-react";
+import { Send, ArrowRight, Handshake } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import GuidanceBox from "../terminal/GuidanceBox";
 
 export default function CreateTradeRequest({ userEmail, userCallsign, onCreated }) {
   const [players, setPlayers] = useState([]);
@@ -64,6 +65,10 @@ export default function CreateTradeRequest({ userEmail, userCallsign, onCreated 
 
   return (
     <form onSubmit={submit} className="space-y-3">
+      <GuidanceBox icon={Handshake} title="Direct Trade Proposal">
+        Send a private offer to another operative. Specify what you're offering and what you want in return.
+        They'll have 48 hours to accept, counter, or decline.
+      </GuidanceBox>
       <div>
         <Label className="text-[9px] uppercase tracking-wider text-muted-foreground font-mono">Send To</Label>
         <Select value={receiverId} onValueChange={setReceiverId}>

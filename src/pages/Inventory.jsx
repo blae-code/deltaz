@@ -14,6 +14,7 @@ import TradeRequestList from "../components/trading/TradeRequestList";
 import TradeLedger from "../components/trading/TradeLedger";
 import ScreenshotIngestion from "../components/inventory/ScreenshotIngestion";
 import BulkAddForm from "../components/inventory/BulkAddForm";
+import GuidanceBox from "../components/terminal/GuidanceBox";
 
 export default function Inventory() {
   const [user, setUser] = useState(null);
@@ -157,6 +158,10 @@ export default function Inventory() {
 
       {tab === "trade" && (
         <>
+          <GuidanceBox icon={ArrowLeftRight} title="Trade Post" color="muted">
+            Post items or resources for other operatives to buy. Set your asking price and wait for takers.
+            Browse existing offers below to find what you need.
+          </GuidanceBox>
           <div className="flex justify-end">
             <Button
               variant="outline"
@@ -185,6 +190,10 @@ export default function Inventory() {
 
       {tab === "deals" && (
         <>
+          <GuidanceBox icon={Handshake} title="P2P Deals" color="muted">
+            Send private trade proposals directly to another operative. You define what you offer
+            and what you want — they have 48 hours to respond.
+          </GuidanceBox>
           <div className="flex justify-end">
             <Button
               variant="outline"

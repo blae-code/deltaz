@@ -27,7 +27,12 @@ export default function ScavengeHistory({ userEmail }) {
   }
 
   if (runs.length === 0) {
-    return <p className="text-[10px] text-muted-foreground">No scavenge runs on record.</p>;
+    return (
+      <div className="border border-border border-dashed rounded-sm p-6 text-center">
+        <p className="text-[10px] text-muted-foreground">No scavenge runs on record yet.</p>
+        <p className="text-[9px] text-muted-foreground/60 mt-1">Deploy a scout from the panel to the left — your results will appear here.</p>
+      </div>
+    );
   }
 
   return (
