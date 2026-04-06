@@ -1,0 +1,139 @@
+{
+  "name": "OpsLog",
+  "type": "object",
+  "properties": {
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "combat_kill",
+        "combat_death",
+        "combat_raid",
+        "base_breach",
+        "territory_capture",
+        "territory_lost",
+        "mission_accepted",
+        "mission_completed",
+        "mission_failed",
+        "mission_abandoned",
+        "trade_completed",
+        "diplomacy_change",
+        "player_join",
+        "player_leave",
+        "airdrop",
+        "explosion",
+        "vehicle_destroyed",
+        "custom"
+      ],
+      "description": "Category of the operational event"
+    },
+    "title": {
+      "type": "string",
+      "description": "Short headline"
+    },
+    "detail": {
+      "type": "string",
+      "description": "Full narrative or raw log data"
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "routine",
+        "notable",
+        "critical",
+        "emergency"
+      ],
+      "default": "routine"
+    },
+    "faction_id": {
+      "type": "string",
+      "description": "Primary faction involved"
+    },
+    "faction_name": {
+      "type": "string",
+      "description": "Snapshot of faction name"
+    },
+    "secondary_faction_id": {
+      "type": "string",
+      "description": "Opposing faction if applicable"
+    },
+    "secondary_faction_name": {
+      "type": "string",
+      "description": "Snapshot of opposing faction name"
+    },
+    "sector": {
+      "type": "string",
+      "description": "Grid sector code e.g. B-3"
+    },
+    "territory_id": {
+      "type": "string",
+      "description": "Related territory"
+    },
+    "mission_id": {
+      "type": "string",
+      "description": "Related mission/job"
+    },
+    "mission_title": {
+      "type": "string",
+      "description": "Snapshot of mission title"
+    },
+    "player_email": {
+      "type": "string",
+      "description": "Primary player involved"
+    },
+    "player_callsign": {
+      "type": "string",
+      "description": "Snapshot of callsign"
+    },
+    "target_player_email": {
+      "type": "string",
+      "description": "Secondary player (victim, trade partner, etc.)"
+    },
+    "target_callsign": {
+      "type": "string",
+      "description": "Snapshot of target callsign"
+    },
+    "weapon": {
+      "type": "string",
+      "description": "Weapon or tool used"
+    },
+    "distance": {
+      "type": "number",
+      "description": "Distance in meters if applicable"
+    },
+    "coordinates": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        }
+      },
+      "description": "World position"
+    },
+    "metadata": {
+      "type": "string",
+      "description": "JSON string with additional context"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "rcon",
+        "manual",
+        "automation",
+        "webhook",
+        "system"
+      ],
+      "default": "system",
+      "description": "How this log was generated"
+    }
+  },
+  "required": [
+    "event_type",
+    "title"
+  ]
+}

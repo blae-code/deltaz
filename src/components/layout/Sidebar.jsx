@@ -53,6 +53,7 @@ const planningNav = [
   { path: "/planner", label: "PLANNER", icon: Target },
   { path: "/intel", label: "INTEL", icon: Eye },
   { path: "/treaties", label: "TREATIES", icon: FileSignature },
+  { path: "/ops-log", label: "OPS LOG", icon: ScrollText, gmOnly: true },
   { path: "/heatmap", label: "HEATMAP", icon: Flame, gmOnly: true },
   { path: "/logistics", label: "LOGISTICS", icon: Truck, gmOnly: true },
   { path: "/ledger", label: "LEDGER", icon: BarChart3, gmOnly: true },

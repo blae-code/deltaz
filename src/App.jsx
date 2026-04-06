@@ -32,6 +32,7 @@ import SectorHeatmap from './pages/SectorHeatmap';
 import ResourceLedger from './pages/ResourceLedger';
 import ConflictTimeline from './pages/ConflictTimeline';
 import Today from './pages/Today';
+import OpsLog from './pages/OpsLog';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -77,6 +78,7 @@ const AuthenticatedApp = () => {
         <Route path="/heatmap" element={<SectorHeatmap />} />
         <Route path="/ledger" element={<ResourceLedger />} />
         <Route path="/conflicts" element={<ConflictTimeline />} />
+        <Route path="/ops-log" element={<OpsLog />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>
