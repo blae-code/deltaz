@@ -1,6 +1,8 @@
 import { useEffect, useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import DataCard from "../components/terminal/DataCard";
+import PageShell from "../components/layout/PageShell";
+import StatusStrip from "../components/layout/StatusStrip";
 import LogFilters from "../components/missionlog/LogFilters";
 import LogDateGroup from "../components/missionlog/LogDateGroup";
 import { ScrollText, RefreshCw } from "lucide-react";
@@ -70,46 +72,24 @@ export default function MissionLog() {
     };
   }, [logs]);
 
+  const statusItems = [
+    { label: "Total Entries", value: stats.total, color: "text-primary" },
+    { label: "Today", value: stats.today, color: "text-foreground" },
+    { label: "Errors Today", value: stats.errors, color: "text-status-danger" },
+  ];
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-start justify-between flex-wrap gap-2">
-        <div>
-          <h2 className="text-lg font-bold font-display tracking-wider text-primary uppercase">
-            Mission Log
-          </h2>
-          <p className="text-xs text-muted-foreground mt-1">
-            Persistent history of server activity, RCON events, and operator actions
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-7 text-[9px] tracking-wider"
-          onClick={loadLogs}
-          disabled={loading}
-        >
-          <RefreshCw className={`h-3 w-3 mr-1 ${loading ? "animate-spin" : ""}`} />
-          REFRESH
+    <PageShell
+      title="Mission Log"
+      subtitle="Persistent history of server activity, RCON events, and operator actions"
+      actions={
+        <Button variant="outline" size="sm" className="h-7 text-[9px] tracking-wider" onClick={loadLogs} disabled={loading}>
+          <RefreshCw className={`h-3 w-3 mr-1 ${loading ? "animate-spin" : ""}`} /> REFRESH
         </Button>
-      </div>
-
-      {/* Quick stats */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="border border-border rounded-sm p-3 bg-card text-center">
-          <p className="text-lg font-bold font-display text-primary">{stats.total}</p>
-          <p className="text-[8px] text-muted-foreground tracking-wider">TOTAL ENTRIES</p>
-        </div>
-        <div className="border border-border rounded-sm p-3 bg-card text-center">
-          <p className="text-lg font-bold font-display text-foreground">{stats.today}</p>
-          <p className="text-[8px] text-muted-foreground tracking-wider">TODAY</p>
-        </div>
-        <div className="border border-border rounded-sm p-3 bg-card text-center">
-          <p className="text-lg font-bold font-display text-status-danger">{stats.errors}</p>
-          <p className="text-[8px] text-muted-foreground tracking-wider">ERRORS TODAY</p>
-        </div>
-      </div>
-
-      {/* Filters */}
+      }
+      statusStrip={<StatusStrip items={statusItems} />}
+    >
+      {/* Filters */
       <LogFilters
         category={category}
         onCategoryChange={setCategory}
@@ -136,6 +116,6 @@ export default function MissionLog() {
           </div>
         )}
       </div>
-    </div>
+    </PageShell>
   );
 }

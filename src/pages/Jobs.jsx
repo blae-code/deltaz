@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import DataCard from "../components/terminal/DataCard";
+import PageShell from "../components/layout/PageShell";
+import StatusStrip from "../components/layout/StatusStrip";
 import { Button } from "@/components/ui/button";
 import { Search, Sparkles } from "lucide-react";
 import ScavengeDeployPanel from "../components/scavenge/ScavengeDeployPanel";
@@ -72,35 +74,29 @@ export default function Jobs() {
     );
   }
 
+  const statusItems = [
+    { label: "AVAILABLE", value: jobs.filter(j => j.status === "available").length, color: "text-primary" },
+    { label: "IN PROGRESS", value: jobs.filter(j => j.status === "in_progress").length, color: "text-accent" },
+    { label: "MY ACTIVE", value: jobs.filter(j => j.assigned_to === user?.email && j.status === "in_progress").length, color: "text-status-ok" },
+    { label: "COMPLETED", value: jobs.filter(j => j.status === "completed").length, color: "text-foreground" },
+  ];
+
   return (
-    <div className="space-y-5">
-      <div className="flex items-start justify-between">
-        <div>
-          <h2 className="text-lg font-bold font-display tracking-wider text-primary uppercase">
-            Mission Board
-          </h2>
-          <p className="text-xs text-muted-foreground mt-1">Accept missions, earn reputation, serve your clan</p>
-        </div>
-        <div className="flex gap-1.5">
-          <Button
-            variant={showGenerator ? "default" : "outline"}
-            size="sm"
-            className="text-[10px] uppercase tracking-wider h-7"
-            onClick={() => setShowGenerator(!showGenerator)}
-          >
+    <PageShell
+      title="Mission Board"
+      subtitle="Accept missions, earn reputation, serve your clan"
+      actions={
+        <>
+          <Button variant={showGenerator ? "default" : "outline"} size="sm" className="text-[10px] uppercase tracking-wider h-7" onClick={() => setShowGenerator(!showGenerator)}>
             <Sparkles className="h-3 w-3 mr-1" /> GENERATE
           </Button>
-          <Button
-            variant={showScavenge ? "default" : "outline"}
-            size="sm"
-            className="text-[10px] uppercase tracking-wider h-7"
-            onClick={() => setShowScavenge(!showScavenge)}
-          >
+          <Button variant={showScavenge ? "default" : "outline"} size="sm" className="text-[10px] uppercase tracking-wider h-7" onClick={() => setShowScavenge(!showScavenge)}>
             <Search className="h-3 w-3 mr-1" /> SCAVENGE
           </Button>
-        </div>
-      </div>
-
+        </>
+      }
+      statusStrip={<StatusStrip items={statusItems} />}
+    >
       {/* Mission Generator */}
       {showGenerator && (
         <DataCard title="Mission Generator">
@@ -181,6 +177,6 @@ export default function Jobs() {
           ))}
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import DataCard from "../components/terminal/DataCard";
+import PageShell from "../components/layout/PageShell";
+import StatusStrip from "../components/layout/StatusStrip";
+import ActionRail from "../components/layout/ActionRail";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Hammer, BookOpen, Archive } from "lucide-react";
+import { Plus, Hammer, BookOpen, Archive, CheckCircle, Clock, Package } from "lucide-react";
 import ProjectList from "../components/crafting/ProjectList";
 import CreateProjectForm from "../components/crafting/CreateProjectForm";
 import RecipeBrowser from "../components/crafting/RecipeBrowser";
@@ -59,58 +62,36 @@ export default function CraftingTracker() {
     return sum + (p.materials || []).filter(m => (m.have || 0) >= (m.needed || 1)).length;
   }, 0);
 
+  const statusItems = [
+    { label: "Active Projects", value: activeProjects.length, color: "text-primary" },
+    { label: "Materials Sourced", value: `${totalGathered}/${totalMaterialsNeeded}`, color: "text-accent" },
+    { label: "Ready to Build", value: projects.filter(p => p.status === "ready").length, color: "text-status-ok" },
+    { label: "Completed", value: completedProjects.filter(p => p.status === "completed").length, color: "text-foreground" },
+  ];
+
+  const filterTabs = [
+    { key: "active", label: "Active", icon: Clock, count: activeProjects.length },
+    { key: "completed", label: "Completed", icon: CheckCircle, count: completedProjects.length },
+    { key: "all", label: "All", icon: Package, count: projects.length },
+  ];
+
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="flex items-start justify-between flex-wrap gap-2">
-        <div>
-          <h2 className="text-lg font-bold font-display tracking-wider text-primary uppercase">
-            Workbench
-          </h2>
-          <p className="text-xs text-muted-foreground mt-1">
-            Track materials, plan builds, and source what you need
-          </p>
-        </div>
-        <div className="flex gap-1.5">
-          <Button
-            variant={showRecipes ? "default" : "outline"}
-            size="sm"
-            className="text-[10px] uppercase tracking-wider h-7"
-            onClick={() => { setShowRecipes(!showRecipes); setShowCreate(false); }}
-          >
+    <PageShell
+      title="Workbench"
+      subtitle="Track materials, plan builds, and source what you need"
+      actions={
+        <>
+          <Button variant={showRecipes ? "default" : "outline"} size="sm" className="text-[10px] uppercase tracking-wider h-7" onClick={() => { setShowRecipes(!showRecipes); setShowCreate(false); }}>
             <BookOpen className="h-3 w-3 mr-1" /> RECIPES
           </Button>
-          <Button
-            variant={showCreate ? "default" : "outline"}
-            size="sm"
-            className="text-[10px] uppercase tracking-wider h-7"
-            onClick={() => { setShowCreate(!showCreate); setShowRecipes(false); }}
-          >
+          <Button variant={showCreate ? "default" : "outline"} size="sm" className="text-[10px] uppercase tracking-wider h-7" onClick={() => { setShowCreate(!showCreate); setShowRecipes(false); }}>
             <Plus className="h-3 w-3 mr-1" /> NEW PROJECT
           </Button>
-        </div>
-      </div>
-
-      {/* Quick stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="border border-border bg-card rounded-sm p-3">
-          <div className="text-[9px] text-muted-foreground tracking-widest uppercase">Active Projects</div>
-          <div className="text-lg font-bold font-display text-primary">{activeProjects.length}</div>
-        </div>
-        <div className="border border-border bg-card rounded-sm p-3">
-          <div className="text-[9px] text-muted-foreground tracking-widest uppercase">Materials Sourced</div>
-          <div className="text-lg font-bold font-display text-accent">{totalGathered}/{totalMaterialsNeeded}</div>
-        </div>
-        <div className="border border-border bg-card rounded-sm p-3">
-          <div className="text-[9px] text-muted-foreground tracking-widest uppercase">Ready to Build</div>
-          <div className="text-lg font-bold font-display text-status-ok">{projects.filter(p => p.status === "ready").length}</div>
-        </div>
-        <div className="border border-border bg-card rounded-sm p-3">
-          <div className="text-[9px] text-muted-foreground tracking-widest uppercase">Completed</div>
-          <div className="text-lg font-bold font-display text-foreground">{completedProjects.filter(p => p.status === "completed").length}</div>
-        </div>
-      </div>
-
+        </>
+      }
+      statusStrip={<StatusStrip items={statusItems} />}
+      actionRail={<ActionRail tabs={filterTabs} active={filter} onChange={setFilter} />}
+    >
       {/* Recipe browser */}
       {showRecipes && (
         <RecipeBrowser
@@ -132,28 +113,7 @@ export default function CraftingTracker() {
         </DataCard>
       )}
 
-      {/* Filter tabs */}
-      <div className="flex items-center gap-1.5 border-b border-border pb-2">
-        {[
-          { key: "active", label: "Active", count: activeProjects.length },
-          { key: "completed", label: "Completed", count: completedProjects.length },
-          { key: "all", label: "All", count: projects.length },
-        ].map(t => (
-          <button
-            key={t.key}
-            onClick={() => setFilter(t.key)}
-            className={`text-[9px] uppercase tracking-wider font-mono px-2.5 py-1 rounded-sm transition-colors ${
-              filter === t.key
-                ? "bg-primary/10 text-primary border border-primary/30"
-                : "text-muted-foreground hover:text-foreground border border-transparent"
-            }`}
-          >
-            {t.label} ({t.count})
-          </button>
-        ))}
-      </div>
-
-      {/* Project list */}
+      {/* Project list */
       <ProjectList
         projects={filteredProjects}
         inventory={inventory}
@@ -161,6 +121,6 @@ export default function CraftingTracker() {
         userCallsign={user?.callsign || user?.full_name}
         onUpdate={loadData}
       />
-    </div>
+    </PageShell>
   );
 }

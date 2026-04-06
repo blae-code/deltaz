@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Trophy, Crosshair, Coins, Star, TrendingUp } from "lucide-react";
+import PageShell from "../components/layout/PageShell";
 import LeaderboardTable from "../components/records/LeaderboardTable";
 import PlayerRankCard from "../components/records/PlayerRankCard";
 import RecordStatCards from "../components/records/RecordStatCards";
@@ -117,19 +118,11 @@ export default function Records() {
   const myStats = leaderboard.find(p => p.email === user?.email);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-bold font-display tracking-wider text-primary uppercase">
-          Global Records
-        </h2>
-        <p className="text-xs text-muted-foreground mt-1">
-          Top-performing operatives across all sectors
-        </p>
-      </div>
-
-      {/* Your rank */}
-      {myStats && <PlayerRankCard stats={myStats} rank={myRank} totalPlayers={sorted.length} category={activeCat} />}
-
+    <PageShell
+      title="Global Records"
+      subtitle="Top-performing operatives across all sectors"
+      statusStrip={myStats ? <PlayerRankCard stats={myStats} rank={myRank} totalPlayers={sorted.length} category={activeCat} /> : null}
+    >
       {/* Community stats */}
       <RecordStatCards leaderboard={leaderboard} />
 
@@ -142,6 +135,6 @@ export default function Records() {
         activeCat={activeCat}
         currentUserEmail={user?.email}
       />
-    </div>
+    </PageShell>
   );
 }

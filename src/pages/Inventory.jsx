@@ -15,6 +15,8 @@ import TradeLedger from "../components/trading/TradeLedger";
 import ScreenshotIngestion from "../components/inventory/ScreenshotIngestion";
 import BulkAddForm from "../components/inventory/BulkAddForm";
 import GuidanceBox from "../components/terminal/GuidanceBox";
+import PageShell from "../components/layout/PageShell";
+import ActionRail from "../components/layout/ActionRail";
 
 export default function Inventory() {
   const [user, setUser] = useState(null);
@@ -58,39 +60,22 @@ export default function Inventory() {
     );
   }
 
-  return (
-    <div className="space-y-5">
-      <div className="flex items-start justify-between flex-wrap gap-2">
-        <div>
-          <h2 className="text-lg font-bold font-display tracking-wider text-primary uppercase">
-            {tab === "inventory" && "Inventory"}
-            {tab === "trade" && "Trade Post"}
-            {tab === "deals" && "P2P Deals"}
-            {tab === "ledger" && "Trade Ledger"}
-          </h2>
-          <p className="text-xs text-muted-foreground mt-1">
-            {tab === "inventory" && "Manage your gear, weapons, and supplies"}
-            {tab === "trade" && "Trade resources with nearby operatives"}
-            {tab === "deals" && "Send and review direct trade proposals"}
-            {tab === "ledger" && "Complete history of all your trades"}
-          </p>
-        </div>
-        <div className="flex gap-1.5 flex-wrap">
-          <Button variant={tab === "inventory" ? "default" : "outline"} size="sm" className="text-[10px] uppercase tracking-wider h-7" onClick={() => setTab("inventory")}>
-            <Package className="h-3 w-3 mr-1" /> GEAR
-          </Button>
-          <Button variant={tab === "trade" ? "default" : "outline"} size="sm" className="text-[10px] uppercase tracking-wider h-7" onClick={() => setTab("trade")}>
-            <ArrowLeftRight className="h-3 w-3 mr-1" /> TRADE
-          </Button>
-          <Button variant={tab === "deals" ? "default" : "outline"} size="sm" className="text-[10px] uppercase tracking-wider h-7" onClick={() => setTab("deals")}>
-            <Handshake className="h-3 w-3 mr-1" /> P2P DEALS
-          </Button>
-          <Button variant={tab === "ledger" ? "default" : "outline"} size="sm" className="text-[10px] uppercase tracking-wider h-7" onClick={() => setTab("ledger")}>
-            <ScrollText className="h-3 w-3 mr-1" /> LEDGER
-          </Button>
-        </div>
-      </div>
+  const tabTitles = { inventory: "Inventory", trade: "Trade Post", deals: "P2P Deals", ledger: "Trade Ledger" };
+  const tabSubtitles = { inventory: "Manage your gear, weapons, and supplies", trade: "Trade resources with nearby operatives", deals: "Send and review direct trade proposals", ledger: "Complete history of all your trades" };
 
+  const railTabs = [
+    { key: "inventory", label: "Gear", icon: Package },
+    { key: "trade", label: "Trade", icon: ArrowLeftRight },
+    { key: "deals", label: "P2P Deals", icon: Handshake },
+    { key: "ledger", label: "Ledger", icon: ScrollText },
+  ];
+
+  return (
+    <PageShell
+      title={tabTitles[tab]}
+      subtitle={tabSubtitles[tab]}
+      actionRail={<ActionRail tabs={railTabs} active={tab} onChange={setTab} />}
+    >
       {tab === "inventory" && (
         <>
           {/* Stats — collapsible */}
@@ -222,6 +207,6 @@ export default function Inventory() {
       {tab === "ledger" && (
         <TradeLedger userEmail={user?.email} />
       )}
-    </div>
+    </PageShell>
   );
 }
