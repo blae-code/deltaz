@@ -4,16 +4,20 @@ import GridMap from "../components/map/GridMap";
 import MapMarkerPin from "../components/map/MapPin";
 import TerritoryOverlay from "../components/map/TerritoryOverlay";
 import HeatmapOverlay from "../components/map/HeatmapOverlay";
-import HeatmapLegend from "../components/map/HeatmapLegend";
+import ResourceDensityOverlay from "../components/map/ResourceDensityOverlay";
+import ContestedOverlay from "../components/map/ContestedOverlay";
+import MissionMarkers from "../components/map/MissionMarkers";
 import ThreatPredictionPanel from "../components/map/ThreatPredictionPanel";
 import MarkerPanel from "../components/map/MarkerPanel";
 import FactionFilter from "../components/map/FactionFilter";
+import MapFilterBar from "../components/map/MapFilterBar";
+import MapLegend from "../components/map/MapLegend";
+import MissionDetailPopup from "../components/map/MissionDetailPopup";
 import MissionPlanOverlay from "../components/map/MissionPlanOverlay";
 import PlanRouteLines from "../components/map/PlanRouteLines";
 import SectorDetailPanel from "../components/map/SectorDetailPanel";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { MapPin, Layers, Flame, Loader2, Route } from "lucide-react";
+import { Flame, Layers, MapPin } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function WorldMap() {
@@ -24,28 +28,41 @@ export default function WorldMap() {
   const [loading, setLoading] = useState(true);
   const [selectedFaction, setSelectedFaction] = useState(null);
   const [selectedMarker, setSelectedMarker] = useState(null);
+  const [selectedMission, setSelectedMission] = useState(null);
   const [pendingPosition, setPendingPosition] = useState(null);
+  const [hoveredSector, setHoveredSector] = useState(null);
+
+  // Layer toggles
   const [showTerritories, setShowTerritories] = useState(true);
   const [showMarkers, setShowMarkers] = useState(true);
   const [showHeatmap, setShowHeatmap] = useState(false);
+  const [showMissions, setShowMissions] = useState(true);
+  const [showResourceDensity, setShowResourceDensity] = useState(false);
+  const [showContested, setShowContested] = useState(false);
+
+  // Heatmap
   const [heatmapData, setHeatmapData] = useState(null);
   const [heatmapLoading, setHeatmapLoading] = useState(false);
-  const [hoveredSector, setHoveredSector] = useState(null);
+
+  // Planner
   const [showPlanner, setShowPlanner] = useState(false);
   const [planAnchor, setPlanAnchor] = useState(null);
   const [planJobs, setPlanJobs] = useState([]);
+
+  // Data
   const [availableJobs, setAvailableJobs] = useState([]);
   const [events, setEvents] = useState([]);
+
   const { toast } = useToast();
 
   useEffect(() => {
     Promise.all([
-      base44.entities.Territory.list("-created_date", 50),
+      base44.entities.Territory.list("-created_date", 100),
       base44.entities.Faction.list("-created_date", 50),
-      base44.entities.MapMarker.list("-created_date", 100),
+      base44.entities.MapMarker.list("-created_date", 200),
       base44.auth.me(),
       base44.entities.Job.filter({ status: "available" }, "-created_date", 100),
-      base44.entities.Event.filter({ is_active: true }, "-created_date", 20),
+      base44.entities.Event.filter({ is_active: true }, "-created_date", 30),
     ])
       .then(([t, f, m, u, j, e]) => {
         setTerritories(t);
@@ -58,33 +75,52 @@ export default function WorldMap() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Real-time marker updates
+  // Real-time subscriptions
   useEffect(() => {
-    const unsub = base44.entities.MapMarker.subscribe((ev) => {
-      if (ev.type === "create") {
-        setMarkers((prev) => [ev.data, ...prev]);
-      } else if (ev.type === "delete") {
-        setMarkers((prev) => prev.filter((m) => m.id !== ev.id));
-      } else if (ev.type === "update") {
-        setMarkers((prev) => prev.map((m) => (m.id === ev.id ? ev.data : m)));
-      }
-    });
-    return unsub;
+    const unsubs = [
+      base44.entities.MapMarker.subscribe((ev) => {
+        if (ev.type === "create") setMarkers(prev => [ev.data, ...prev]);
+        else if (ev.type === "delete") setMarkers(prev => prev.filter(m => m.id !== ev.id));
+        else if (ev.type === "update") setMarkers(prev => prev.map(m => m.id === ev.id ? ev.data : m));
+      }),
+      base44.entities.Territory.subscribe((ev) => {
+        if (ev.type === "create") setTerritories(prev => [ev.data, ...prev]);
+        else if (ev.type === "update") setTerritories(prev => prev.map(t => t.id === ev.id ? ev.data : t));
+        else if (ev.type === "delete") setTerritories(prev => prev.filter(t => t.id !== ev.id));
+      }),
+      base44.entities.Job.subscribe((ev) => {
+        if (ev.type === "create" && ev.data.status === "available") setAvailableJobs(prev => [ev.data, ...prev]);
+        else if (ev.type === "update") setAvailableJobs(prev => prev.map(j => j.id === ev.id ? ev.data : j).filter(j => j.status === "available"));
+        else if (ev.type === "delete") setAvailableJobs(prev => prev.filter(j => j.id !== ev.id));
+      }),
+    ];
+    return () => unsubs.forEach(u => u());
   }, []);
 
-  const getFaction = (id) => factions.find((f) => f.id === id);
+  const getFaction = (id) => factions.find(f => f.id === id);
 
   const filteredTerritories = selectedFaction
-    ? territories.filter((t) => t.controlling_faction_id === selectedFaction)
+    ? territories.filter(t => t.controlling_faction_id === selectedFaction)
     : territories;
 
-  const visibleMarkers = markers.filter((m) => {
+  const visibleMarkers = markers.filter(m => {
     if (!m.is_shared && m.created_by !== user?.email) return false;
     return true;
   });
 
+  const contestedTerritories = territories.filter(t => t.status === "contested" || t.status === "hostile");
+
+  // Counts for filter bar badges
+  const counts = {
+    territories: filteredTerritories.length,
+    markers: visibleMarkers.length,
+    missions: availableJobs.length,
+    contested: contestedTerritories.length,
+  };
+
   const handleGridClick = ({ x, y, sector }) => {
     setSelectedMarker(null);
+    setSelectedMission(null);
     setPendingPosition({ x, y, sector });
   };
 
@@ -102,7 +138,14 @@ export default function WorldMap() {
 
   const handleSelectMarker = (marker) => {
     setPendingPosition(null);
+    setSelectedMission(null);
     setSelectedMarker(marker);
+  };
+
+  const handleSelectMission = (mission) => {
+    setSelectedMarker(null);
+    setPendingPosition(null);
+    setSelectedMission(mission);
   };
 
   const handleStartPlan = (marker) => {
@@ -110,10 +153,6 @@ export default function WorldMap() {
     setPlanJobs([]);
     setShowPlanner(true);
     setSelectedMarker(null);
-  };
-
-  const handleTogglePlanJob = (jobId) => {
-    setPlanJobs(prev => prev.includes(jobId) ? prev.filter(id => id !== jobId) : [...prev, jobId]);
   };
 
   const loadHeatmap = useCallback(async () => {
@@ -133,17 +172,19 @@ export default function WorldMap() {
     setShowHeatmap(!showHeatmap);
   };
 
-  const handleHeatmapSectorClick = (sector) => {
-    setHoveredSector(sector);
+  const onTogglePlanner = () => {
+    if (showPlanner) {
+      setShowPlanner(false); setPlanAnchor(null); setPlanJobs([]);
+    } else if (selectedMarker) {
+      handleStartPlan(selectedMarker);
+    } else {
+      setShowPlanner(true);
+    }
   };
 
-  // Count territories per sector for the info display
-  const sectorTerritories = hoveredSector
-    ? territories.filter((t) => t.sector === hoveredSector)
-    : [];
-  const sectorMarkers = hoveredSector
-    ? visibleMarkers.filter((m) => m.sector === hoveredSector)
-    : [];
+  // Sector detail data
+  const sectorTerritories = hoveredSector ? territories.filter(t => t.sector === hoveredSector) : [];
+  const sectorMarkers = hoveredSector ? visibleMarkers.filter(m => m.sector === hoveredSector) : [];
 
   if (loading) {
     return (
@@ -154,67 +195,31 @@ export default function WorldMap() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-bold font-display tracking-wider text-primary uppercase">
-            Tactical Grid
-          </h2>
-          <p className="text-xs text-muted-foreground mt-1">
-            5×5 sector map — click to drop markers, share intel
-          </p>
-        </div>
-        <div className="flex gap-1.5">
-          <Button
-            variant={showTerritories ? "default" : "outline"}
-            size="sm"
-            className="h-7 text-[9px] tracking-wider"
-            onClick={() => setShowTerritories(!showTerritories)}
-          >
-            <Layers className="h-3 w-3 mr-1" />
-            ZONES
-          </Button>
-          <Button
-            variant={showMarkers ? "default" : "outline"}
-            size="sm"
-            className="h-7 text-[9px] tracking-wider"
-            onClick={() => setShowMarkers(!showMarkers)}
-          >
-            <MapPin className="h-3 w-3 mr-1" />
-            MARKERS
-          </Button>
-          <Button
-            variant={showPlanner ? "default" : "outline"}
-            size="sm"
-            className="h-7 text-[9px] tracking-wider"
-            onClick={() => {
-              if (showPlanner) { setShowPlanner(false); setPlanAnchor(null); setPlanJobs([]); }
-              else if (selectedMarker) { handleStartPlan(selectedMarker); }
-              else { setShowPlanner(true); }
-            }}
-          >
-            <Route className="h-3 w-3 mr-1" />
-            PLANNER
-          </Button>
-          <Button
-            variant={showHeatmap ? "default" : "outline"}
-            size="sm"
-            className="h-7 text-[9px] tracking-wider"
-            onClick={toggleHeatmap}
-            disabled={heatmapLoading}
-          >
-            {heatmapLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Flame className="h-3 w-3 mr-1" />}
-            THREAT MAP
-          </Button>
-        </div>
+      <div>
+        <h2 className="text-lg font-bold font-display tracking-wider text-primary uppercase">
+          Tactical Grid
+        </h2>
+        <p className="text-xs text-muted-foreground mt-1">
+          Real-time territory control, threat levels, missions, and resource density — click to drop markers
+        </p>
       </div>
 
       {/* Faction Filter */}
-      <FactionFilter
-        factions={factions}
-        selectedFactionId={selectedFaction}
-        onSelect={setSelectedFaction}
+      <FactionFilter factions={factions} selectedFactionId={selectedFaction} onSelect={setSelectedFaction} />
+
+      {/* Layer Filter Bar */}
+      <MapFilterBar
+        showTerritories={showTerritories} setShowTerritories={setShowTerritories}
+        showMarkers={showMarkers} setShowMarkers={setShowMarkers}
+        showHeatmap={showHeatmap} toggleHeatmap={toggleHeatmap} heatmapLoading={heatmapLoading}
+        showMissions={showMissions} setShowMissions={setShowMissions}
+        showResourceDensity={showResourceDensity} setShowResourceDensity={setShowResourceDensity}
+        showContested={showContested} setShowContested={setShowContested}
+        showPlanner={showPlanner} onTogglePlanner={onTogglePlanner}
+        selectedMarker={selectedMarker}
+        counts={counts}
       />
 
       {/* Map + Side Panel */}
@@ -228,113 +233,86 @@ export default function WorldMap() {
           >
             {/* Heatmap overlay */}
             {showHeatmap && heatmapData?.sector_scores && (
-              <HeatmapOverlay
-                sectorScores={heatmapData.sector_scores}
-                onSectorClick={handleHeatmapSectorClick}
-              />
+              <HeatmapOverlay sectorScores={heatmapData.sector_scores} onSectorClick={(s) => setHoveredSector(s)} />
+            )}
+
+            {/* Resource density overlay */}
+            {showResourceDensity && (
+              <ResourceDensityOverlay territories={territories} />
+            )}
+
+            {/* Contested zones overlay */}
+            {showContested && (
+              <ContestedOverlay territories={territories} />
             )}
 
             {/* Territory zone overlays */}
-            {showTerritories &&
-              filteredTerritories.map((t) => {
-                const faction = getFaction(t.controlling_faction_id);
-                return (
-                  <TerritoryOverlay
-                    key={t.id}
-                    territory={t}
-                    factionColor={faction?.color}
-                  />
-                );
-              })}
+            {showTerritories && filteredTerritories.map(t => {
+              const faction = getFaction(t.controlling_faction_id);
+              return <TerritoryOverlay key={t.id} territory={t} factionColor={faction?.color} />;
+            })}
 
             {/* Territory center pins */}
-            {showTerritories &&
-              filteredTerritories
-                .filter((t) => t.sector)
-                .map((t) => {
-                  const faction = getFaction(t.controlling_faction_id);
-                  const parts = t.sector.split("-");
-                  if (parts.length !== 2) return null;
-                  const rowIdx = ["A", "B", "C", "D", "E"].indexOf(parts[0].toUpperCase());
-                  const colIdx = parseInt(parts[1]) - 1;
-                  if (rowIdx < 0 || colIdx < 0) return null;
-                  // Place in center of sector
-                  const x = colIdx * 20 + 10;
-                  const y = rowIdx * 20 + 10;
-                  return (
-                    <MapMarkerPin
-                      key={`t-${t.id}`}
-                      x={x}
-                      y={y}
-                      label={t.name}
-                      type="territory"
-                      color={faction?.color}
-                      size="sm"
-                      onClick={() => {}}
-                    />
-                  );
-                })}
+            {showTerritories && filteredTerritories.filter(t => t.sector).map(t => {
+              const faction = getFaction(t.controlling_faction_id);
+              const parts = t.sector.split("-");
+              if (parts.length !== 2) return null;
+              const rowIdx = ["A", "B", "C", "D", "E"].indexOf(parts[0].toUpperCase());
+              const colIdx = parseInt(parts[1]) - 1;
+              if (rowIdx < 0 || colIdx < 0) return null;
+              const x = colIdx * 20 + 10;
+              const y = rowIdx * 20 + 10;
+              return (
+                <MapMarkerPin key={`t-${t.id}`} x={x} y={y} label={t.name} type="territory" color={faction?.color} size="sm" onClick={() => {}} />
+              );
+            })}
+
+            {/* Mission markers */}
+            {showMissions && (
+              <MissionMarkers jobs={availableJobs} territories={territories} onSelect={handleSelectMission} />
+            )}
 
             {/* User markers */}
-            {showMarkers &&
-              visibleMarkers.map((m) => (
-                <MapMarkerPin
-                  key={m.id}
-                  x={m.grid_x}
-                  y={m.grid_y}
-                  label={m.label}
-                  type={m.marker_type}
-                  color={m.color}
-                  isSelected={selectedMarker?.id === m.id}
-                  onClick={() => handleSelectMarker(m)}
-                />
-              ))}
+            {showMarkers && visibleMarkers.map(m => (
+              <MapMarkerPin
+                key={m.id} x={m.grid_x} y={m.grid_y} label={m.label} type={m.marker_type}
+                color={m.color} isSelected={selectedMarker?.id === m.id} onClick={() => handleSelectMarker(m)}
+              />
+            ))}
 
             {/* Pending position indicator */}
             {pendingPosition && (
               <div
                 className="absolute z-20 h-6 w-6 rounded-full border-2 border-primary bg-primary/20 animate-pulse pointer-events-none"
-                style={{
-                  left: `${pendingPosition.x}%`,
-                  top: `${pendingPosition.y}%`,
-                  transform: "translate(-50%, -50%)",
-                }}
+                style={{ left: `${pendingPosition.x}%`, top: `${pendingPosition.y}%`, transform: "translate(-50%, -50%)" }}
               />
             )}
 
             {/* Mission planning route lines */}
             {showPlanner && planAnchor && (
-              <PlanRouteLines
-                anchorMarker={planAnchor}
-                selectedJobs={planJobs}
-                jobs={availableJobs}
-                territories={territories}
-              />
+              <PlanRouteLines anchorMarker={planAnchor} selectedJobs={planJobs} jobs={availableJobs} territories={territories} />
             )}
           </GridMap>
 
-          {/* Heatmap legend + Sector info bar */}
+          {/* Legend + Sector info bar */}
           <div className="mt-2 space-y-1.5">
-            {showHeatmap && heatmapData && <HeatmapLegend />}
+            <MapLegend
+              showHeatmap={showHeatmap} heatmapData={heatmapData}
+              showResourceDensity={showResourceDensity}
+              showContested={showContested}
+              showMissions={showMissions}
+            />
+
             {hoveredSector && (sectorTerritories.length > 0 || sectorMarkers.length > 0 || (showHeatmap && heatmapData)) && (
               <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
                 {showHeatmap && heatmapData?.sector_scores?.[hoveredSector] != null && (
-                  <span className="font-mono">
-                    <Flame className="h-3 w-3 inline mr-1" />
-                    THREAT: {heatmapData.sector_scores[hoveredSector]}
-                  </span>
+                  <span className="font-mono"><Flame className="h-3 w-3 inline mr-1" />THREAT: {heatmapData.sector_scores[hoveredSector]}</span>
                 )}
                 {sectorTerritories.length > 0 && (
-                  <span>
-                    <Layers className="h-3 w-3 inline mr-1" />
-                    {sectorTerritories.map((t) => t.name).join(", ")}
-                  </span>
+                  <span><Layers className="h-3 w-3 inline mr-1" />{sectorTerritories.map(t => t.name).join(", ")}</span>
                 )}
                 {sectorMarkers.length > 0 && (
-                  <span>
-                    <MapPin className="h-3 w-3 inline mr-1" />
-                    {sectorMarkers.length} marker{sectorMarkers.length !== 1 ? "s" : ""}
-                  </span>
+                  <span><MapPin className="h-3 w-3 inline mr-1" />{sectorMarkers.length} marker{sectorMarkers.length !== 1 ? "s" : ""}</span>
                 )}
               </div>
             )}
@@ -345,22 +323,25 @@ export default function WorldMap() {
         <div className="space-y-3">
           {/* Threat Predictions */}
           {showHeatmap && heatmapData?.predictions && (
-            <ThreatPredictionPanel
-              predictions={heatmapData.predictions}
-              summary={heatmapData.summary}
-              onSectorClick={handleHeatmapSectorClick}
+            <ThreatPredictionPanel predictions={heatmapData.predictions} summary={heatmapData.summary} onSectorClick={setHoveredSector} />
+          )}
+
+          {/* Mission Detail Popup */}
+          {selectedMission && (
+            <MissionDetailPopup
+              mission={selectedMission}
+              factionName={getFaction(selectedMission.faction_id)?.name}
+              onClose={() => setSelectedMission(null)}
             />
           )}
 
+          {/* Marker Panel */}
           <MarkerPanel
             selectedMarker={selectedMarker}
             pendingPosition={pendingPosition}
             onCreateMarker={handleCreateMarker}
             onDeleteMarker={handleDeleteMarker}
-            onClose={() => {
-              setSelectedMarker(null);
-              setPendingPosition(null);
-            }}
+            onClose={() => { setSelectedMarker(null); setPendingPosition(null); }}
             markers={visibleMarkers}
             onSelectMarker={handleSelectMarker}
             onStartPlan={handleStartPlan}
@@ -385,7 +366,7 @@ export default function WorldMap() {
               territories={territories}
               anchorMarker={planAnchor}
               selectedJobs={planJobs}
-              onToggleJob={handleTogglePlanJob}
+              onToggleJob={(id) => setPlanJobs(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])}
               onClear={() => setPlanJobs([])}
               onClose={() => { setShowPlanner(false); setPlanAnchor(null); setPlanJobs([]); }}
             />
@@ -400,14 +381,11 @@ export default function WorldMap() {
                 </span>
               </div>
               <div className="p-2 space-y-1 max-h-48 overflow-y-auto">
-                {filteredTerritories.map((t) => {
+                {filteredTerritories.map(t => {
                   const faction = getFaction(t.controlling_faction_id);
                   return (
                     <div key={t.id} className="flex items-center gap-2 px-2 py-1 text-[10px]">
-                      <span
-                        className="h-2 w-2 rounded-full shrink-0"
-                        style={{ backgroundColor: faction?.color || "hsl(var(--muted-foreground))" }}
-                      />
+                      <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: faction?.color || "hsl(var(--muted-foreground))" }} />
                       <span className="text-foreground flex-1 truncate">{t.name}</span>
                       <Badge variant="outline" className="text-[8px]">{t.sector}</Badge>
                       <span className="text-muted-foreground uppercase">{t.status}</span>
