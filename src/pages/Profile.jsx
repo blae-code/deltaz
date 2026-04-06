@@ -12,6 +12,7 @@ import ReputationHistory from "../components/profile/ReputationHistory";
 import CharacterProfileEditor from "../components/profile/CharacterProfileEditor";
 import PerformanceAnalytics from "../components/profile/PerformanceAnalytics";
 import SteamLinker from "../components/profile/SteamLinker";
+import OriginRecap from "../components/profile/OriginRecap";
 import { getDisplayName } from "../lib/displayName";
 
 export default function Profile() {
@@ -118,6 +119,9 @@ export default function Profile() {
           </Button>
         </div>
       </DataCard>
+
+      {/* Origin Story */}
+      {user?.email && <OriginRecap userEmail={user.email} />}
 
       {/* Steam Account */}
       <SteamLinker />

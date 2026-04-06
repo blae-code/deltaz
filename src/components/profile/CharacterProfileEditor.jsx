@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import DataCard from "../terminal/DataCard";
-import { BookOpen, Save, Loader2, Sparkles, Info } from "lucide-react";
+import { BookOpen, Save, Loader2, Sparkles, Info, Skull } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 const FIELDS = [
   { key: "character_name", label: "CHARACTER NAME", placeholder: "e.g. Viktor 'Ironjaw' Koval", type: "input", maxLength: 60 },
@@ -89,18 +90,36 @@ export default function CharacterProfileEditor({ userEmail }) {
       }
     >
       <div className="space-y-4">
-        {/* Info banner */}
-        <div className="flex items-start gap-2.5 border border-accent/20 bg-accent/5 rounded-sm p-3">
-          <Info className="h-3.5 w-3.5 text-accent shrink-0 mt-0.5" />
-          <div>
-            <p className="text-[10px] text-accent font-semibold tracking-wider">OPTIONAL ROLEPLAY DATA</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">
-              This is your fictional character's profile. The AI systems (ARTEMIS, GHOST PROTOCOL, Mission Forge) will use this
-              information to personalize briefings, narration, and mission assignments to match your character's story.
-              Fill in as much or as little as you like.
-            </p>
+        {/* Origin badge */}
+        {profile?.origin_generated && (
+          <div className="flex items-start gap-2.5 border border-primary/20 bg-primary/5 rounded-sm p-3">
+            <Skull className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+            <div>
+              <div className="flex items-center gap-2">
+                <p className="text-[10px] text-primary font-semibold tracking-wider">ORIGIN-GENERATED PROFILE</p>
+                <Badge className="text-[7px] bg-primary/20 text-primary border-0">AI-WRITTEN</Badge>
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                This dossier was generated from your origin story choices during onboarding. All fields are editable — the AI systems will always use whatever is saved here.
+              </p>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Info banner */}
+        {!profile?.origin_generated && (
+          <div className="flex items-start gap-2.5 border border-accent/20 bg-accent/5 rounded-sm p-3">
+            <Info className="h-3.5 w-3.5 text-accent shrink-0 mt-0.5" />
+            <div>
+              <p className="text-[10px] text-accent font-semibold tracking-wider">OPTIONAL ROLEPLAY DATA</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                This is your fictional character's profile. The AI systems (ARTEMIS, GHOST PROTOCOL, Mission Forge) will use this
+                information to personalize briefings, narration, and mission assignments to match your character's story.
+                Fill in as much or as little as you like.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Progress */}
         <div className="flex items-center gap-3">
