@@ -2,30 +2,22 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import useEntityQuery from "../hooks/useEntityQuery";
 import { useRegisterSync } from "../hooks/useSyncRegistry";
-import DataCard from "../components/terminal/DataCard";
 import PageShell from "../components/layout/PageShell";
 import StatusStrip from "../components/layout/StatusStrip";
-import { Button } from "@/components/ui/button";
-import { Search, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
-import ScavengeDeployPanel from "../components/scavenge/ScavengeDeployPanel";
-import ScavengeHistory from "../components/scavenge/ScavengeHistory";
-import MissionStats from "../components/missions/MissionStats";
 import MissionFilters from "../components/missions/MissionFilters";
 import MyMissionsPanel from "../components/missions/MyMissionsPanel";
 import MissionCard from "../components/missions/MissionCard";
-import MissionGenerator from "../components/missions/MissionGenerator";
+import MissionToolsDrawer from "../components/missions/MissionToolsDrawer";
 import SkeletonGrid from "../components/terminal/SkeletonGrid";
 import EmptyState from "../components/terminal/EmptyState";
-import { Filter, Sparkles as SparklesIcon } from "lucide-react";
+import { Filter, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function Jobs() {
   const [user, setUser] = useState(null);
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("available");
   const [typeFilter, setTypeFilter] = useState("all");
   const [factionFilter, setFactionFilter] = useState("all");
-  const [showScavenge, setShowScavenge] = useState(false);
-  const [showGenerator, setShowGenerator] = useState(false);
-  const [showStats, setShowStats] = useState(false);
   const [scavengeKey, setScavengeKey] = useState(0);
 
   useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); }, []);
@@ -50,7 +42,6 @@ export default function Jobs() {
   const jobs = jobsData || [];
   const loading = jobsLoading && jobs.length === 0;
 
-  // Register primary query sync state
   useRegisterSync("jobs", jobsQuery);
 
   const filtered = jobs.filter(j => {
@@ -61,6 +52,9 @@ export default function Jobs() {
   });
 
   const isAdmin = user?.role === "admin";
+  const myActive = jobs.filter(j => j.assigned_to === user?.email && j.status === "in_progress");
+  const availableCount = jobs.filter(j => j.status === "available").length;
+  const inProgressCount = jobs.filter(j => j.status === "in_progress").length;
 
   if (loading) {
     return (
@@ -71,72 +65,31 @@ export default function Jobs() {
   }
 
   const statusItems = [
-    { label: "AVAILABLE", value: jobs.filter(j => j.status === "available").length, color: "text-primary" },
-    { label: "IN PROGRESS", value: jobs.filter(j => j.status === "in_progress").length, color: "text-accent" },
-    { label: "MY ACTIVE", value: jobs.filter(j => j.assigned_to === user?.email && j.status === "in_progress").length, color: "text-status-ok" },
+    { label: "AVAILABLE", value: availableCount, color: "text-primary" },
+    { label: "IN PROGRESS", value: inProgressCount, color: "text-accent" },
+    { label: "YOUR ACTIVE", value: myActive.length, color: "text-status-ok" },
     { label: "COMPLETED", value: jobs.filter(j => j.status === "completed").length, color: "text-foreground" },
   ];
 
   return (
     <PageShell
       title="Mission Board"
-      subtitle="Accept missions, earn reputation, serve your clan"
+      subtitle="Accept a mission to earn reputation and credits for your clan"
       syncMeta={jobsSyncMeta}
-      actions={
-        <>
-          <Button variant={showGenerator ? "default" : "outline"} size="sm" className="text-[10px] uppercase tracking-wider h-7" onClick={() => setShowGenerator(!showGenerator)}>
-            <Sparkles className="h-3 w-3 mr-1" /> GENERATE
-          </Button>
-          <Button variant={showScavenge ? "default" : "outline"} size="sm" className="text-[10px] uppercase tracking-wider h-7" onClick={() => setShowScavenge(!showScavenge)}>
-            <Search className="h-3 w-3 mr-1" /> SCAVENGE
-          </Button>
-        </>
-      }
       statusStrip={<StatusStrip items={statusItems} />}
     >
-      {/* Mission Generator */}
-      {showGenerator && (
-        <DataCard title="Mission Generator">
-          <MissionGenerator />
-        </DataCard>
+      {/* 1. Your active missions — always visible if you have any */}
+      {myActive.length > 0 && (
+        <MyMissionsPanel
+          jobs={jobs}
+          factions={factions || []}
+          territories={territories || []}
+          userEmail={user?.email}
+          isAdmin={isAdmin}
+        />
       )}
 
-      {/* Scavenge Panel */}
-      {showScavenge && (
-        <div className="grid md:grid-cols-2 gap-4">
-          <DataCard title="Deploy Scout">
-            <ScavengeDeployPanel
-              territories={territories || []}
-              factions={factions || []}
-              onDeployed={() => setScavengeKey(k => k + 1)}
-            />
-          </DataCard>
-          <DataCard title="Recent Scavenge Runs">
-            <ScavengeHistory key={scavengeKey} userEmail={user?.email} />
-          </DataCard>
-        </div>
-      )}
-
-      {/* Stats — collapsible */}
-      <button
-        onClick={() => setShowStats(!showStats)}
-        className="w-full flex items-center justify-between border border-border rounded-sm px-3 py-2 bg-card hover:bg-secondary/30 transition-colors"
-      >
-        <span className="text-[9px] font-mono text-muted-foreground tracking-widest uppercase">MISSION STATISTICS</span>
-        {showStats ? <ChevronUp className="h-3 w-3 text-muted-foreground" /> : <ChevronDown className="h-3 w-3 text-muted-foreground" />}
-      </button>
-      {showStats && <MissionStats jobs={jobs} userEmail={user?.email} />}
-
-      {/* My Active Missions */}
-      <MyMissionsPanel
-        jobs={jobs}
-        factions={factions || []}
-        territories={territories || []}
-        userEmail={user?.email}
-        isAdmin={isAdmin}
-      />
-
-      {/* Filters */}
+      {/* 2. Filters — primary action: browse & accept */}
       <MissionFilters
         statusFilter={statusFilter}
         typeFilter={typeFilter}
@@ -147,19 +100,14 @@ export default function Jobs() {
         onFactionChange={setFactionFilter}
       />
 
-      {/* Mission List */}
+      {/* 3. Mission list — the main content */}
       {filtered.length === 0 ? (
         jobs.length === 0 ? (
           <EmptyState
-            icon={SparklesIcon}
+            icon={Sparkles}
             title="No Missions Posted Yet"
             why="The mission board is empty. Missions are created by clan leaders or generated by the AI engine based on live world conditions."
-            action='Hit the "GENERATE" button above to create your first AI-driven mission, or ask a faction leader to post one.'
-            cta={
-              <Button size="sm" className="text-[10px] uppercase tracking-wider h-7" onClick={() => setShowGenerator(true)}>
-                <Sparkles className="h-3 w-3 mr-1" /> Generate a Mission
-              </Button>
-            }
+            action='Open the GM Tools below to generate your first AI-driven mission, or ask a faction leader to post one.'
           />
         ) : (
           <EmptyState
@@ -183,6 +131,16 @@ export default function Jobs() {
           ))}
         </div>
       )}
+
+      {/* 4. GM Tools — subordinated at the bottom */}
+      <MissionToolsDrawer
+        jobs={jobs}
+        userEmail={user?.email}
+        territories={territories || []}
+        factions={factions || []}
+        scavengeKey={scavengeKey}
+        onDeployed={() => setScavengeKey(k => k + 1)}
+      />
     </PageShell>
   );
 }
