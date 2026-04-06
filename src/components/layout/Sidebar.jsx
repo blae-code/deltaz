@@ -25,6 +25,7 @@ import {
   LogOut,
   BookOpen,
   Target,
+  Flame,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
@@ -49,6 +50,7 @@ const playerNav = [
   { path: "/logistics", label: "LOGISTICS", icon: Truck },
   { path: "/journal", label: "JOURNAL", icon: BookOpen },
   { path: "/planner", label: "PLANNER", icon: Target },
+  { path: "/heatmap", label: "HEATMAP", icon: Flame },
   { path: "/profile", label: "PROFILE", icon: User },
 ];
 
