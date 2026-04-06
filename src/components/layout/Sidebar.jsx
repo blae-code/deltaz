@@ -28,6 +28,7 @@ import {
   Flame,
   BarChart3,
   Swords,
+  ArrowLeftRight,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
@@ -43,7 +44,8 @@ const coreNav = [
   { path: "/events", label: "COMMS", icon: Radio },
   { path: "/factions", label: "CLANS", icon: Shield },
   { path: "/colony", label: "COLONY", icon: Home },
-  { path: "/inventory", label: "INVENTORY", icon: Package },
+  { path: "/inventory", label: "GEAR", icon: Package },
+  { path: "/trade", label: "TRADE HUB", icon: ArrowLeftRight },
   { path: "/market", label: "MARKET", icon: TrendingUp },
 ];
 

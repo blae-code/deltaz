@@ -20,6 +20,7 @@ import Market from './pages/Market';
 import Colony from './pages/Colony';
 import Treaties from './pages/Treaties';
 import Inventory from './pages/Inventory';
+import TradeHub from './pages/TradeHub';
 import Records from './pages/Records';
 import WeeklyDossier from './pages/WeeklyDossier';
 import MissionLog from './pages/MissionLog';
@@ -65,6 +66,7 @@ const AuthenticatedApp = () => {
         <Route path="/colony" element={<Colony />} />
         <Route path="/treaties" element={<Treaties />} />
         <Route path="/inventory" element={<Inventory />} />
+        <Route path="/trade" element={<TradeHub />} />
         <Route path="/records" element={<Records />} />
         <Route path="/dossier" element={<WeeklyDossier />} />
         <Route path="/mission-log" element={<MissionLog />} />
