@@ -11,6 +11,7 @@ import TaskFeed from "../components/colony/TaskFeed";
 import BaseDefenseStatus from "../components/colony/BaseDefenseStatus";
 import ColonyVitalsPanel from "../components/colony/ColonyVitalsPanel";
 import ResourceHistoryFeed from "../components/colony/ResourceHistoryFeed";
+import SkillGapDashboard from "../components/colony/SkillGapDashboard";
 import { Home, Users, Plus, ChevronDown, ChevronUp, Shield, ClipboardList } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -98,6 +99,11 @@ export default function Colony() {
           survivors={survivors}
           onTaskAssigned={loadData}
         />
+      </DataCard>
+
+      {/* Skill Gap Dashboard */}
+      <DataCard title="Skill Coverage" subtitle="Colony-wide skill distribution & gaps">
+        <SkillGapDashboard survivors={survivors} />
       </DataCard>
 
       {/* Resource Change History */}
