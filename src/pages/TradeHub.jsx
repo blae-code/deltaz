@@ -4,7 +4,9 @@ import useEntityQuery from "../hooks/useEntityQuery";
 import { useRegisterSync } from "../hooks/useSyncRegistry";
 import DataCard from "../components/terminal/DataCard";
 import { Button } from "@/components/ui/button";
-import { Plus, ArrowLeftRight, Handshake, ScrollText } from "lucide-react";
+import { Plus, ArrowLeftRight, Handshake, ScrollText, Package } from "lucide-react";
+import StatusStrip from "../components/layout/StatusStrip";
+import NextStepBanner from "../components/terminal/NextStepBanner";
 import SectorTradeBoard from "../components/inventory/SectorTradeBoard";
 import CreateTradeForm from "../components/inventory/CreateTradeForm";
 import CreateTradeRequest from "../components/trading/CreateTradeRequest";
@@ -56,12 +58,29 @@ export default function TradeHub() {
     ledger: "Complete history of all your resolved trades",
   };
 
+  const openOffers = items.length; // rough proxy
+  const tradeStats = [
+    { label: "YOUR ITEMS", value: items.length, color: "text-primary" },
+  ];
+
   return (
     <PageShell
       title={tabTitles[tab]}
       subtitle={tabSubtitles[tab]}
+      statusStrip={tab === "trade" ? <StatusStrip items={tradeStats} /> : null}
       actionRail={<ActionRail tabs={railTabs} active={tab} onChange={setTab} />}
     >
+      {/* Continuity: if inventory is empty, nudge to Inventory */}
+      {items.length === 0 && tab === "trade" && (
+        <NextStepBanner
+          to="/inventory"
+          icon={Package}
+          label="Log your gear first"
+          hint="Add items to your Gear Locker so you have something to trade."
+          color="accent"
+        />
+      )}
+
       {tab === "trade" && (
         <>
           <div className="flex justify-end">

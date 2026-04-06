@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Package, Hammer, ChevronRight } from "lucide-react";
+import { Package, Hammer, ChevronRight, ArrowLeftRight } from "lucide-react";
+import NextStepBanner from "../terminal/NextStepBanner";
 
 export default function TodayInventory({ inventory, craftingProjects }) {
   const equipped = inventory.filter(i => i.is_equipped);
@@ -72,6 +73,17 @@ export default function TodayInventory({ inventory, craftingProjects }) {
             })}
           </div>
         </div>
+      )}
+
+      {/* Continuity cues */}
+      {lowCondition.length > 0 && (
+        <NextStepBanner
+          to="/trade"
+          icon={ArrowLeftRight}
+          label="Need replacements?"
+          hint={`${lowCondition.length} degraded item${lowCondition.length > 1 ? "s" : ""} — check the Trade Hub for gear.`}
+          color="accent"
+        />
       )}
 
       {/* Quick links */}

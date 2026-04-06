@@ -9,6 +9,7 @@ import TodayAlerts from "../components/today/TodayAlerts";
 import TodayInventory from "../components/today/TodayInventory";
 import TodayColony from "../components/today/TodayColony";
 import TodayActions from "../components/today/TodayActions";
+import TodayPriorityBriefing from "../components/today/TodayPriorityBriefing";
 import LiveEventWatcher from "../components/dashboard/LiveEventWatcher";
 import OperativeIdCard from "../components/today/OperativeIdCard";
 import { getDisplayName } from "../lib/displayName";
@@ -116,6 +117,15 @@ export default function Today() {
         jobs={jobs}
       />
 
+      {/* Priority Briefing — what matters right now */}
+      <TodayPriorityBriefing
+        jobs={jobs}
+        userEmail={user?.email}
+        inventory={inventory}
+        craftingProjects={craftingProjects}
+        colony={colony}
+      />
+
       {/* Quick Actions */}
       <TodayActions />
 
@@ -123,22 +133,22 @@ export default function Today() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Left column — missions & alerts */}
         <div className="space-y-4">
-          <DataCard title="Missions" headerRight={<span className="text-[9px] text-muted-foreground font-mono">Your active ops & available contracts</span>}>
+          <DataCard title="Active Ops" headerRight={<span className="text-[9px] text-muted-foreground font-mono">Your missions & available contracts</span>}>
             <TodayMissions jobs={jobs} userEmail={user?.email} />
           </DataCard>
 
-          <DataCard title="Situation Feed" headerRight={<span className="text-[9px] text-muted-foreground font-mono">Recent threats, intel, and comms</span>}>
-            <TodayAlerts events={events} intel={intel} broadcasts={broadcasts} />
-          </DataCard>
-        </div>
-
-        {/* Right column — gear & colony */}
-        <div className="space-y-4">
           <DataCard title="Gear & Crafting" headerRight={<span className="text-[9px] text-muted-foreground font-mono">Equipment status & active builds</span>}>
             <TodayInventory inventory={inventory} craftingProjects={craftingProjects} />
           </DataCard>
+        </div>
 
-          <DataCard title="Colony Status" headerRight={<span className="text-[9px] text-muted-foreground font-mono">Settlement vitals at a glance</span>}>
+        {/* Right column — situation & colony */}
+        <div className="space-y-4">
+          <DataCard title="Situation Feed" headerRight={<span className="text-[9px] text-muted-foreground font-mono">Threats, intel, and comms</span>}>
+            <TodayAlerts events={events} intel={intel} broadcasts={broadcasts} />
+          </DataCard>
+
+          <DataCard title="Colony Vitals" headerRight={<span className="text-[9px] text-muted-foreground font-mono">Settlement status at a glance</span>}>
             <TodayColony colony={colony} />
           </DataCard>
         </div>

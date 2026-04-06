@@ -3,7 +3,8 @@ import { base44 } from "@/api/base44Client";
 import useEntityQuery from "../hooks/useEntityQuery";
 import { useRegisterSync } from "../hooks/useSyncRegistry";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, ArrowLeftRight, Hammer } from "lucide-react";
+import NextStepBanner from "../components/terminal/NextStepBanner";
 import PageShell from "../components/layout/PageShell";
 import StatusStrip from "../components/layout/StatusStrip";
 import SkeletonGrid from "../components/terminal/SkeletonGrid";
@@ -72,6 +73,26 @@ export default function Inventory() {
 
       {/* Main inventory grid */}
       <InventoryGrid items={items} userEmail={user?.email} />
+
+      {/* Continuity cues */}
+      {items.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <NextStepBanner
+            to="/trade"
+            icon={ArrowLeftRight}
+            label="Trade surplus gear"
+            hint="Post unwanted items on the Trade Hub for other operatives."
+            color="muted"
+          />
+          <NextStepBanner
+            to="/workbench"
+            icon={Hammer}
+            label="Craft something new"
+            hint="Use your materials to start a build on the Workbench."
+            color="muted"
+          />
+        </div>
+      )}
     </PageShell>
   );
 }

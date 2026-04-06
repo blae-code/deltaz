@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import InventoryItemCard from "./InventoryItemCard";
 import InventorySorter, { sortItems } from "./InventorySorter";
 import EmptyState from "../terminal/EmptyState";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Package } from "lucide-react";
+import { Search, Package, ArrowLeftRight } from "lucide-react";
 
 const CATEGORIES = ["all", "weapon", "armor", "tool", "consumable", "material", "ammo", "misc"];
 
@@ -75,7 +77,14 @@ export default function InventoryGrid({ items, onUpdate, userEmail }) {
               icon={Package}
               title="Gear Locker Empty"
               why="No items registered. Your weapons, armor, consumables, and materials will appear here once you log them."
-              action='Hit ADD GEAR above to register a single item, paste a bulk list, or upload a screenshot of your in-game inventory for automatic scanning.'
+              action="Hit ADD GEAR above to register a single item, paste a bulk list, or upload a screenshot of your in-game inventory for automatic scanning."
+              cta={
+                <Link to="/trade">
+                  <Button variant="outline" size="sm" className="text-[10px] uppercase tracking-wider h-7">
+                    <ArrowLeftRight className="h-3 w-3 mr-1" /> Browse Trade Hub
+                  </Button>
+                </Link>
+              }
             />
           ) : (
             <EmptyState

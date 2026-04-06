@@ -10,8 +10,9 @@ import MissionCard from "../components/missions/MissionCard";
 import MissionToolsDrawer from "../components/missions/MissionToolsDrawer";
 import SkeletonGrid from "../components/terminal/SkeletonGrid";
 import EmptyState from "../components/terminal/EmptyState";
-import { Filter, Sparkles } from "lucide-react";
+import { Filter, Sparkles, Package, ArrowLeftRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import NextStepBanner from "../components/terminal/NextStepBanner";
 
 export default function Jobs() {
   const [user, setUser] = useState(null);
@@ -132,7 +133,27 @@ export default function Jobs() {
         </div>
       )}
 
-      {/* 4. GM Tools — subordinated at the bottom */}
+      {/* 4. Next-step continuity cues */}
+      {myActive.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <NextStepBanner
+            to="/inventory"
+            icon={Package}
+            label="Check your loadout"
+            hint="Make sure your gear is ready before heading out."
+            color="muted"
+          />
+          <NextStepBanner
+            to="/trade"
+            icon={ArrowLeftRight}
+            label="Need supplies?"
+            hint="Browse the Trade Hub for gear and materials."
+            color="muted"
+          />
+        </div>
+      )}
+
+      {/* 5. GM Tools — subordinated at the bottom */}
       <MissionToolsDrawer
         jobs={jobs}
         userEmail={user?.email}

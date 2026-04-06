@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Crosshair, Clock, Award, ChevronRight, Coins } from "lucide-react";
+import { Crosshair, Clock, Award, ChevronRight, Coins, Target } from "lucide-react";
+import NextStepBanner from "../terminal/NextStepBanner";
 import moment from "moment";
 import EmptyState from "../terminal/EmptyState";
 
@@ -82,6 +83,17 @@ export default function TodayMissions({ jobs, userEmail }) {
             ))}
           </div>
         </div>
+      )}
+
+      {/* Continuity cue: if player has active mission, suggest planner */}
+      {myActive.length > 0 && (
+        <NextStepBanner
+          to="/planner"
+          icon={Target}
+          label="Plan your op"
+          hint="Assign survivors and assess sector risk before deploying."
+          color="muted"
+        />
       )}
 
       <Link to="/jobs">

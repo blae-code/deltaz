@@ -8,7 +8,8 @@ import StatusStrip from "../components/layout/StatusStrip";
 import ActionRail from "../components/layout/ActionRail";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Hammer, BookOpen, Archive, CheckCircle, Clock, Package } from "lucide-react";
+import { Plus, Hammer, BookOpen, Archive, CheckCircle, Clock, Package, ArrowLeftRight } from "lucide-react";
+import NextStepBanner from "../components/terminal/NextStepBanner";
 import ProjectList from "../components/crafting/ProjectList";
 import CreateProjectForm from "../components/crafting/CreateProjectForm";
 import RecipeBrowser from "../components/crafting/RecipeBrowser";
@@ -112,6 +113,17 @@ export default function CraftingTracker() {
             onCreated={() => setShowCreate(false)}
           />
         </DataCard>
+      )}
+
+      {/* Blocked project hint: if any active projects have incomplete materials, suggest trading */}
+      {activeProjects.length > 0 && totalGathered < totalMaterialsNeeded && (
+        <NextStepBanner
+          to="/trade"
+          icon={ArrowLeftRight}
+          label="Missing materials?"
+          hint={`${totalMaterialsNeeded - totalGathered} material${(totalMaterialsNeeded - totalGathered) !== 1 ? "s" : ""} still needed — check the Trade Hub or scavenge runs.`}
+          color="accent"
+        />
       )}
 
       {/* Project list */}
