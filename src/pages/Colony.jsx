@@ -5,7 +5,10 @@ import BaseCard from "../components/colony/BaseCard";
 import SurvivorCard from "../components/colony/SurvivorCard";
 import ColonyBonusSummary from "../components/colony/ColonyBonusSummary";
 import BaseRegistrationForm from "../components/colony/BaseRegistrationForm";
-import { Home, Users, Plus, ChevronDown, ChevronUp } from "lucide-react";
+import TaskAssigner from "../components/colony/TaskAssigner";
+import TaskFeed from "../components/colony/TaskFeed";
+import BaseDefenseStatus from "../components/colony/BaseDefenseStatus";
+import { Home, Users, Plus, ChevronDown, ChevronUp, Shield, ClipboardList } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export default function Colony() {
@@ -65,6 +68,8 @@ export default function Colony() {
   const activeSurvivors = baseSurvivors.filter((s) => s.status === "active");
 
   const totalSurvivors = survivors.filter((s) => s.status === "active" && myBases.some((b) => b.id === s.base_id)).length;
+  const busyCount = survivors.filter(s => s.status === "active" && s.current_task && s.current_task !== "idle" && myBases.some(b => b.id === s.base_id)).length;
+  const isAdmin = user?.role === "admin";
 
   return (
     <div className="space-y-6">
@@ -166,6 +171,28 @@ export default function Colony() {
                   />
                 </div>
               </div>
+            </DataCard>
+
+            {/* Task Assignment */}
+            <DataCard
+              title="Task Assignment"
+              headerRight={
+                <span className="text-[9px] text-accent font-mono">
+                  {baseSurvivors.filter(s => s.current_task && s.current_task !== "idle").length} working
+                </span>
+              }
+            >
+              <TaskAssigner survivors={baseSurvivors} onTaskAssigned={loadData} />
+            </DataCard>
+
+            {/* Task Feed */}
+            <DataCard title="Task Log">
+              <TaskFeed baseId={selectedBaseId} onRefresh={loadData} />
+            </DataCard>
+
+            {/* Defense Status */}
+            <DataCard title="Defense Readiness">
+              <BaseDefenseStatus baseId={selectedBaseId} isAdmin={isAdmin} />
             </DataCard>
 
             {/* Colony Bonuses */}

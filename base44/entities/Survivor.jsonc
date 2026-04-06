@@ -109,6 +109,42 @@
         "departed"
       ],
       "default": "active"
+    },
+    "current_task": {
+      "type": "string",
+      "enum": [
+        "idle",
+        "scavenge",
+        "farm",
+        "craft",
+        "patrol",
+        "heal",
+        "cook",
+        "repair",
+        "trade",
+        "defend"
+      ],
+      "default": "idle",
+      "description": "What the survivor is currently doing"
+    },
+    "combat_rating": {
+      "type": "number",
+      "default": 1,
+      "description": "Combat effectiveness 1-10 for defense events"
+    },
+    "task_started_at": {
+      "type": "string",
+      "description": "ISO date when current task started"
+    },
+    "tasks_completed": {
+      "type": "number",
+      "default": 0,
+      "description": "Total tasks completed"
+    },
+    "defense_kills": {
+      "type": "number",
+      "default": 0,
+      "description": "Hostiles eliminated during defense events"
     }
   },
   "required": [

@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { User, Heart, Smile, Wrench, Shield, Wheat, Search, ShoppingBag, Cpu, ChefHat } from "lucide-react";
+import { User, Heart, Smile, Wrench, Shield, Wheat, Search, ShoppingBag, Cpu, ChefHat, Swords, Clock } from "lucide-react";
 
 const skillIcons = {
   scavenger: Search,
@@ -92,12 +92,32 @@ export default function SurvivorCard({ survivor, compact }) {
           </Badge>
         </div>
 
-        {/* Bonus */}
-        {survivor.bonus_type && (
-          <div className="text-[9px] text-primary font-mono">
-            +{survivor.bonus_value}% {survivor.bonus_type.replace(/_/g, " ")}
+        {/* Current Task */}
+        {survivor.current_task && survivor.current_task !== "idle" && (
+          <div className="flex items-center gap-1.5 text-[9px] font-mono">
+            <Clock className="h-3 w-3 text-accent" />
+            <span className="text-accent uppercase">{survivor.current_task}</span>
           </div>
         )}
+
+        {/* Combat + Tasks Stats */}
+        <div className="flex items-center gap-2">
+          {survivor.bonus_type && (
+            <span className="text-[9px] text-primary font-mono">
+              +{survivor.bonus_value}% {survivor.bonus_type.replace(/_/g, " ")}
+            </span>
+          )}
+          {(survivor.defense_kills || 0) > 0 && (
+            <span className="text-[8px] text-status-danger font-mono flex items-center gap-0.5">
+              <Swords className="h-2.5 w-2.5" /> {survivor.defense_kills} kills
+            </span>
+          )}
+          {(survivor.tasks_completed || 0) > 0 && (
+            <span className="text-[8px] text-muted-foreground font-mono">
+              {survivor.tasks_completed} tasks
+            </span>
+          )}
+        </div>
 
         {/* Backstory */}
         {survivor.backstory && (

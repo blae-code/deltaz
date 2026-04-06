@@ -1,0 +1,98 @@
+{
+  "name": "SurvivorTask",
+  "type": "object",
+  "properties": {
+    "survivor_id": {
+      "type": "string",
+      "description": "Survivor performing the task"
+    },
+    "survivor_name": {
+      "type": "string",
+      "description": "Snapshot of survivor name"
+    },
+    "base_id": {
+      "type": "string",
+      "description": "Base where the task is being performed"
+    },
+    "task_type": {
+      "type": "string",
+      "enum": [
+        "scavenge",
+        "farm",
+        "craft",
+        "patrol",
+        "heal",
+        "cook",
+        "repair",
+        "trade",
+        "defend"
+      ],
+      "description": "Type of task assigned"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "completed",
+        "failed",
+        "interrupted"
+      ],
+      "default": "active"
+    },
+    "started_at": {
+      "type": "string",
+      "description": "ISO date task started"
+    },
+    "completed_at": {
+      "type": "string",
+      "description": "ISO date task ended"
+    },
+    "duration_minutes": {
+      "type": "number",
+      "default": 30,
+      "description": "Estimated task duration in minutes"
+    },
+    "outcome_summary": {
+      "type": "string",
+      "description": "AI-generated narrative of what happened"
+    },
+    "resources_gained": {
+      "type": "string",
+      "description": "Description of resources produced or found"
+    },
+    "credits_gained": {
+      "type": "number",
+      "default": 0,
+      "description": "Credit value of task output"
+    },
+    "defense_contributed": {
+      "type": "number",
+      "default": 0,
+      "description": "Defense points contributed (for patrol/defend tasks)"
+    },
+    "quality": {
+      "type": "string",
+      "enum": [
+        "poor",
+        "standard",
+        "good",
+        "excellent"
+      ],
+      "default": "standard"
+    },
+    "interrupted_by": {
+      "type": "string",
+      "description": "What interrupted the task (e.g. base attack)"
+    },
+    "injury_caused": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the survivor was injured during this task"
+    }
+  },
+  "required": [
+    "survivor_id",
+    "base_id",
+    "task_type"
+  ]
+}
