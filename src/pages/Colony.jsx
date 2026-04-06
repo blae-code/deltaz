@@ -10,6 +10,7 @@ import TaskAssigner from "../components/colony/TaskAssigner";
 import TaskFeed from "../components/colony/TaskFeed";
 import BaseDefenseStatus from "../components/colony/BaseDefenseStatus";
 import ColonyVitalsPanel from "../components/colony/ColonyVitalsPanel";
+import ResourceHistoryFeed from "../components/colony/ResourceHistoryFeed";
 import { Home, Users, Plus, ChevronDown, ChevronUp, Shield, ClipboardList } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -98,6 +99,13 @@ export default function Colony() {
           onTaskAssigned={loadData}
         />
       </DataCard>
+
+      {/* Resource Change History */}
+      {colony && (
+        <DataCard title="Resource History" subtitle="Tracked changes over time">
+          <ResourceHistoryFeed colonyId={colony.id} />
+        </DataCard>
+      )}
 
       {/* Overview Stats */}
       <div className="grid grid-cols-3 gap-3">

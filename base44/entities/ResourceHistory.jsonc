@@ -1,0 +1,45 @@
+{
+  "name": "ResourceHistory",
+  "type": "object",
+  "properties": {
+    "colony_id": {
+      "type": "string",
+      "description": "Reference to the ColonyStatus record"
+    },
+    "resource": {
+      "type": "string",
+      "enum": [
+        "food_reserves",
+        "water_supply",
+        "medical_supplies",
+        "power_level",
+        "defense_integrity",
+        "morale"
+      ],
+      "description": "Which resource changed"
+    },
+    "old_value": {
+      "type": "number",
+      "description": "Previous value"
+    },
+    "new_value": {
+      "type": "number",
+      "description": "New value after change"
+    },
+    "delta": {
+      "type": "number",
+      "description": "Change amount (positive = increase, negative = decrease)"
+    },
+    "changed_by": {
+      "type": "string",
+      "description": "Email of the user who made the change"
+    }
+  },
+  "required": [
+    "colony_id",
+    "resource",
+    "old_value",
+    "new_value",
+    "delta"
+  ]
+}
