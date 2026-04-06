@@ -15,6 +15,7 @@ import TodayActions from "../components/today/TodayActions";
 import TodayPriorityBriefing from "../components/today/TodayPriorityBriefing";
 import LiveEventWatcher from "../components/dashboard/LiveEventWatcher";
 import OperativeIdCard from "../components/today/OperativeIdCard";
+import TodayWorldConditions from "../components/today/TodayWorldConditions";
 import { getDisplayName } from "../lib/displayName";
 
 export default function Today() {
@@ -84,6 +85,13 @@ export default function Today() {
   );
   const { data: reputations = [] } = reputationsQuery;
 
+  const worldQuery = useEntityQuery(
+    "today-world",
+    () => base44.entities.WorldConditions.list("-updated_date", 1).then(r => r[0] || null),
+    { subscribeEntities: ["WorldConditions"] }
+  );
+  const { data: worldConditions } = worldQuery;
+
   // Register primary sync
   useRegisterSync("today", jobsQuery);
 
@@ -121,6 +129,9 @@ export default function Today() {
     >
       {/* Live event watcher (critical alerts only) */}
       {user?.email && <LiveEventWatcher userEmail={user.email} />}
+
+      {/* World Conditions — immersive environment display */}
+      <TodayWorldConditions conditions={worldConditions} />
 
       {/* Operative Identity Card */}
       <OperativeIdCard

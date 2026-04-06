@@ -1,0 +1,117 @@
+{
+  "name": "WorldConditions",
+  "type": "object",
+  "properties": {
+    "world_date": {
+      "type": "string",
+      "description": "In-game date display (e.g. 'Day 147' or 'March 12, 2089')"
+    },
+    "world_time": {
+      "type": "string",
+      "description": "In-game time of day display (e.g. '14:32' or 'Late Afternoon')"
+    },
+    "season": {
+      "type": "string",
+      "enum": [
+        "spring",
+        "summer",
+        "autumn",
+        "winter",
+        "nuclear_winter",
+        "dry_season",
+        "monsoon"
+      ],
+      "default": "autumn",
+      "description": "Current in-game season"
+    },
+    "weather": {
+      "type": "string",
+      "enum": [
+        "clear",
+        "overcast",
+        "fog",
+        "rain",
+        "heavy_rain",
+        "thunderstorm",
+        "snow",
+        "blizzard",
+        "dust_storm",
+        "ashfall",
+        "acid_rain",
+        "radiation_storm"
+      ],
+      "default": "overcast",
+      "description": "Current weather conditions"
+    },
+    "temperature_c": {
+      "type": "number",
+      "default": 15,
+      "description": "Current temperature in Celsius"
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "excellent",
+        "good",
+        "reduced",
+        "poor",
+        "zero"
+      ],
+      "default": "good",
+      "description": "Current visibility conditions"
+    },
+    "radiation_level": {
+      "type": "string",
+      "enum": [
+        "safe",
+        "low",
+        "moderate",
+        "high",
+        "lethal"
+      ],
+      "default": "safe",
+      "description": "Ambient radiation level"
+    },
+    "wind": {
+      "type": "string",
+      "enum": [
+        "calm",
+        "light",
+        "moderate",
+        "strong",
+        "gale"
+      ],
+      "default": "light",
+      "description": "Wind conditions"
+    },
+    "daylight_phase": {
+      "type": "string",
+      "enum": [
+        "dawn",
+        "morning",
+        "midday",
+        "afternoon",
+        "dusk",
+        "night",
+        "midnight"
+      ],
+      "default": "midday",
+      "description": "Current phase of daylight"
+    },
+    "special_conditions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Any special active conditions (e.g. 'Solar Eclipse', 'Aurora', 'Horde Migration')"
+    },
+    "gm_flavor_text": {
+      "type": "string",
+      "description": "Optional GM-authored atmospheric description"
+    }
+  },
+  "required": [
+    "season",
+    "weather"
+  ]
+}
