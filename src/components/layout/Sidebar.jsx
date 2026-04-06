@@ -34,27 +34,33 @@ import { base44 } from "@/api/base44Client";
 import NavTooltip from "./NavTooltip";
 import { isAdminOrGM } from "../../lib/displayName";
 
-const playerNav = [
+const coreNav = [
   { path: "/", label: "SITREP", icon: LayoutDashboard },
   { path: "/jobs", label: "MISSIONS", icon: Crosshair },
   { path: "/map", label: "AO MAP", icon: Map },
   { path: "/events", label: "COMMS", icon: Radio },
   { path: "/factions", label: "CLANS", icon: Shield },
   { path: "/colony", label: "COLONY", icon: Home },
-  { path: "/market", label: "MARKET", icon: TrendingUp },
   { path: "/inventory", label: "INVENTORY", icon: Package },
-  { path: "/intel", label: "INTEL", icon: Eye },
-  { path: "/treaties", label: "TREATIES", icon: FileSignature },
-  { path: "/records", label: "RECORDS", icon: Trophy },
-  { path: "/dossier", label: "DOSSIER", icon: FileText },
-  { path: "/mission-log", label: "MISSION LOG", icon: ScrollText },
-  { path: "/workbench", label: "WORKBENCH", icon: Hammer },
-  { path: "/logistics", label: "LOGISTICS", icon: Truck },
-  { path: "/journal", label: "JOURNAL", icon: BookOpen },
+  { path: "/market", label: "MARKET", icon: TrendingUp },
+];
+
+const planningNav = [
   { path: "/planner", label: "PLANNER", icon: Target },
+  { path: "/intel", label: "INTEL", icon: Eye },
   { path: "/heatmap", label: "HEATMAP", icon: Flame },
+  { path: "/treaties", label: "TREATIES", icon: FileSignature },
+  { path: "/logistics", label: "LOGISTICS", icon: Truck },
   { path: "/ledger", label: "LEDGER", icon: BarChart3 },
   { path: "/conflicts", label: "CONFLICTS", icon: Swords },
+];
+
+const secondaryNav = [
+  { path: "/journal", label: "JOURNAL", icon: BookOpen },
+  { path: "/workbench", label: "WORKBENCH", icon: Hammer },
+  { path: "/dossier", label: "DOSSIER", icon: FileText },
+  { path: "/mission-log", label: "MISSION LOG", icon: ScrollText },
+  { path: "/records", label: "RECORDS", icon: Trophy },
   { path: "/profile", label: "PROFILE", icon: User },
 ];
 
@@ -73,7 +79,13 @@ export default function Sidebar() {
   }, []);
 
   const isAdmin = isAdminOrGM(user);
-  const navItems = isAdmin ? [...playerNav, ...adminNav] : playerNav;
+
+  const navGroups = [
+    { label: null, items: coreNav },
+    { label: "PLANNING & INTEL", items: planningNav },
+    { label: "ARCHIVE", items: secondaryNav },
+    ...(isAdmin ? [{ label: "GM TOOLS", items: adminNav }] : []),
+  ];
 
   return (
     <>
@@ -130,27 +142,43 @@ export default function Sidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 py-4 space-y-1 px-2">
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
-          return (
-            <NavTooltip key={item.path} path={item.path} collapsed={collapsed}>
-              <Link
-                to={item.path}
-                onClick={() => setMobileOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 rounded-sm px-3 py-2.5 text-xs font-medium tracking-wider transition-colors",
-                  isActive
-                    ? "bg-primary/10 text-primary border border-primary/30"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/50 border border-transparent"
-                )}
-              >
-                <item.icon className="h-4 w-4 shrink-0" />
-                {!collapsed && <span>{item.label}</span>}
-              </Link>
-            </NavTooltip>
-          );
-        })}
+      <nav className="flex-1 py-2 px-2 overflow-y-auto space-y-3">
+        {navGroups.map((group, gi) => (
+          <div key={gi}>
+            {group.label && !collapsed && (
+              <div className="px-3 pt-2 pb-1">
+                <span className="text-[8px] font-mono text-muted-foreground/60 tracking-[0.2em] uppercase">
+                  {group.label}
+                </span>
+              </div>
+            )}
+            {group.label && collapsed && (
+              <div className="mx-auto my-1 w-6 border-t border-border/50" />
+            )}
+            <div className="space-y-0.5">
+              {group.items.map((item) => {
+                const isActive = location.pathname === item.path;
+                return (
+                  <NavTooltip key={item.path} path={item.path} collapsed={collapsed}>
+                    <Link
+                      to={item.path}
+                      onClick={() => setMobileOpen(false)}
+                      className={cn(
+                        "flex items-center gap-3 rounded-sm px-3 py-2 text-xs font-medium tracking-wider transition-colors",
+                        isActive
+                          ? "bg-primary/10 text-primary border border-primary/30"
+                          : "text-muted-foreground hover:text-foreground hover:bg-secondary/50 border border-transparent"
+                      )}
+                    >
+                      <item.icon className="h-4 w-4 shrink-0" />
+                      {!collapsed && <span>{item.label}</span>}
+                    </Link>
+                  </NavTooltip>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
       {/* User identity + Logout + Collapse */}
