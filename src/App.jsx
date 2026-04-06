@@ -30,6 +30,7 @@ import MissionPlanner from './pages/MissionPlanner';
 import SectorHeatmap from './pages/SectorHeatmap';
 import ResourceLedger from './pages/ResourceLedger';
 import ConflictTimeline from './pages/ConflictTimeline';
+import Today from './pages/Today';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -52,7 +53,8 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route element={<AppShell />}>
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/" element={<Today />} />
+        <Route path="/sitrep" element={<Dashboard />} />
         <Route path="/jobs" element={<Jobs />} />
         <Route path="/map" element={<WorldMap />} />
         <Route path="/events" element={<Events />} />

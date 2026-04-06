@@ -33,9 +33,11 @@ import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import NavTooltip from "./NavTooltip";
 import { isAdminOrGM } from "../../lib/displayName";
+import { Zap } from "lucide-react";
 
 const coreNav = [
-  { path: "/", label: "SITREP", icon: LayoutDashboard },
+  { path: "/", label: "TODAY", icon: Zap },
+  { path: "/sitrep", label: "SITREP", icon: LayoutDashboard },
   { path: "/jobs", label: "MISSIONS", icon: Crosshair },
   { path: "/map", label: "AO MAP", icon: Map },
   { path: "/events", label: "COMMS", icon: Radio },
@@ -155,7 +157,7 @@ export default function Sidebar({ user: propUser }) {
           <div key={gi}>
             {group.label && !collapsed && (
               <div className="px-3 pt-2 pb-1">
-                <span className="text-[8px] font-mono text-muted-foreground/60 tracking-[0.2em] uppercase">
+                <span className="text-[10px] font-mono text-muted-foreground/60 tracking-[0.2em] uppercase">
                   {group.label}
                 </span>
               </div>
@@ -206,7 +208,7 @@ export default function Sidebar({ user: propUser }) {
               <span className="text-[10px] font-semibold text-foreground truncate block leading-tight">
                 {user.callsign || user.full_name || "Operative"}
               </span>
-              <span className="text-[8px] text-muted-foreground uppercase tracking-widest leading-tight">
+              <span className="text-[10px] text-muted-foreground uppercase tracking-widest leading-tight">
                 {user.role || "player"}
               </span>
             </div>
