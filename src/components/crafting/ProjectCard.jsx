@@ -17,6 +17,7 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import MaterialRow from "./MaterialRow";
 import TradeFromProject from "./TradeFromProject";
+import InlineConfirm from "../terminal/InlineConfirm";
 
 const priorityStyle = {
   low: "bg-muted text-muted-foreground",
@@ -219,16 +220,32 @@ export default function ProjectCard({ project, inventory: rawInventory, userEmai
                   </Button>
                 )}
 
-                <Button size="sm" variant="ghost" onClick={abandon} className="h-7 text-[10px] font-mono uppercase tracking-wider text-muted-foreground hover:text-status-warn ml-auto">
+                <InlineConfirm
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-[10px] font-mono uppercase tracking-wider text-muted-foreground hover:text-status-warn ml-auto"
+                  confirmLabel="SHELVE PROJECT"
+                  warning={`"${project.title}" will be shelved. Progress is saved — you can view it later in the Completed filter.`}
+                  severity="warning"
+                  onConfirm={abandon}
+                >
                   SHELVE
-                </Button>
+                </InlineConfirm>
               </>
             )}
 
             {isFinished && (
-              <Button size="sm" variant="ghost" onClick={deleteProject} className="h-7 text-[10px] font-mono uppercase tracking-wider text-destructive/60 hover:text-destructive">
+              <InlineConfirm
+                variant="ghost"
+                size="sm"
+                className="h-7 text-[10px] font-mono uppercase tracking-wider text-destructive/60 hover:text-destructive"
+                confirmLabel="DELETE PERMANENTLY"
+                warning={`"${project.title}" and all its material tracking data will be permanently removed.`}
+                severity="danger"
+                onConfirm={deleteProject}
+              >
                 <Trash2 className="h-3 w-3 mr-0.5" /> DELETE
-              </Button>
+              </InlineConfirm>
             )}
           </div>
 

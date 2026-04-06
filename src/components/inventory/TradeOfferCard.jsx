@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeftRight, X, Check, MapPin, Coins } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import InlineConfirm from "../terminal/InlineConfirm";
 import moment from "moment";
 
 export default function TradeOfferCard({ trade, isOwn, userEmail, onUpdate }) {
@@ -67,15 +68,18 @@ export default function TradeOfferCard({ trade, isOwn, userEmail, onUpdate }) {
       {/* Actions */}
       <div className="mt-2">
         {isOwn ? (
-          <Button
+          <InlineConfirm
             variant="outline"
             size="sm"
             className="w-full h-6 text-[9px] uppercase tracking-wider text-destructive border-destructive/20"
-            onClick={cancelTrade}
+            confirmLabel="CANCEL LISTING"
+            warning={`Remove your listing for ${trade.item_name}. The item stays in your inventory.`}
+            severity="warning"
+            onConfirm={cancelTrade}
             disabled={loading}
           >
             <X className="h-3 w-3 mr-1" /> CANCEL
-          </Button>
+          </InlineConfirm>
         ) : (
           <Button
             size="sm"

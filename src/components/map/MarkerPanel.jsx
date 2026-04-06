@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import InlineConfirm from "../terminal/InlineConfirm";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -104,14 +105,17 @@ export default function MarkerPanel({
             >
               <Route className="h-3 w-3 mr-1" />PLAN RUN
             </Button>
-            <Button
+            <InlineConfirm
               variant="ghost"
               size="sm"
               className="h-6 text-[9px] text-destructive"
-              onClick={() => onDeleteMarker(selectedMarker.id)}
+              confirmLabel="DELETE MARKER"
+              warning={`Remove "${selectedMarker.label}" from sector ${selectedMarker.sector}. ${selectedMarker.is_shared ? "All operatives will lose visibility of this marker." : "This is a private marker — only you see it."}`}
+              severity="danger"
+              onConfirm={() => onDeleteMarker(selectedMarker.id)}
             >
               <Trash2 className="h-3 w-3 mr-1" />DELETE
-            </Button>
+            </InlineConfirm>
           </div>
         </div>
       </div>

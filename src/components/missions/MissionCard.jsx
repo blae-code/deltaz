@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import StatusIndicator from "../terminal/StatusIndicator";
+import InlineConfirm from "../terminal/InlineConfirm";
 import {
   Crosshair, Clock, Award, MapPin, Shield, Loader2,
   CheckCircle, XCircle, LogOut, Coins
@@ -182,16 +183,34 @@ export default function MissionCard({ job, faction, territory, userEmail, isAdmi
               </Button>
             )}
             {canAbandon && (
-              <Button variant="destructive" size="sm" className="text-[10px] h-7 uppercase tracking-wider" onClick={() => doAction("abandon")} disabled={!!acting}>
+              <InlineConfirm
+                variant="destructive"
+                size="sm"
+                className="text-[10px] h-7 uppercase tracking-wider"
+                confirmLabel="ABANDON MISSION"
+                warning="Abandoning applies a reputation penalty with the issuing faction. The mission returns to the board for others."
+                severity="danger"
+                onConfirm={() => doAction("abandon")}
+                disabled={!!acting}
+              >
                 {acting === "abandon" ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <LogOut className="h-3 w-3 mr-1" />}
                 ABANDON
-              </Button>
+              </InlineConfirm>
             )}
             {isAdmin && job.status === "in_progress" && (
-              <Button variant="outline" size="sm" className="text-[10px] h-7 uppercase tracking-wider text-status-danger border-status-danger/30" onClick={() => doAction("fail")} disabled={!!acting}>
+              <InlineConfirm
+                variant="outline"
+                size="sm"
+                className="text-[10px] h-7 uppercase tracking-wider text-status-danger border-status-danger/30"
+                confirmLabel="MARK FAILED"
+                warning={`This fails the mission for ${job.assigned_to || "the operative"}. They may receive a reputation penalty.`}
+                severity="danger"
+                onConfirm={() => doAction("fail")}
+                disabled={!!acting}
+              >
                 {acting === "fail" ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <XCircle className="h-3 w-3 mr-1" />}
                 MARK FAILED
-              </Button>
+              </InlineConfirm>
             )}
           </div>
         </div>

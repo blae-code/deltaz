@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Check, X, ArrowRight, Coins, Package, Clock, MessageCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import InlineConfirm from "../terminal/InlineConfirm";
 import moment from "moment";
 
 const statusColors = {
@@ -155,15 +156,18 @@ export default function TradeRequestCard({ trade, userEmail, onUpdate }) {
                 >
                   <Check className="h-3 w-3 mr-1" /> ACCEPT
                 </Button>
-                <Button
+                <InlineConfirm
                   variant="outline"
                   size="sm"
                   className="flex-1 h-6 text-[9px] uppercase tracking-wider text-destructive border-destructive/20"
-                  onClick={() => { showResponse ? respond("rejected") : setShowResponse(true); }}
+                  confirmLabel="REJECT TRADE"
+                  warning="The sender will be notified that you rejected their proposal."
+                  severity="warning"
+                  onConfirm={() => respond("rejected")}
                   disabled={responding}
                 >
                   <X className="h-3 w-3 mr-1" /> REJECT
-                </Button>
+                </InlineConfirm>
               </div>
             </>
           )}

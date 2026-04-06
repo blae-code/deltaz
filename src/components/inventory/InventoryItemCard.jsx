@@ -7,6 +7,7 @@ import { Shield, Sword, Wrench, Apple, Box, Zap, Trash2, Hammer, ArrowRight } fr
 import { useToast } from "@/components/ui/use-toast";
 import DismantleDialog from "./DismantleDialog";
 import TransferDialog from "./TransferDialog";
+import useUndoToast from "../../hooks/useUndoToast.jsx";
 
 const catIcons = { weapon: Sword, armor: Shield, tool: Wrench, consumable: Apple, material: Box, ammo: Zap, misc: Box };
 
@@ -23,6 +24,7 @@ export default function InventoryItemCard({ item, userEmail }) {
   const [showDismantle, setShowDismantle] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
   const { toast } = useToast();
+  const { fireWithUndo } = useUndoToast();
   const queryClient = useQueryClient();
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["inventory"] });
   const Icon = catIcons[item.category] || Box;
@@ -43,19 +45,28 @@ export default function InventoryItemCard({ item, userEmail }) {
     setLoading(false);
   };
 
-  const deleteItem = async () => {
-    setLoading(true);
+  const deleteItem = () => {
     // Optimistic remove
     queryClient.setQueryData(["inventory", userEmail], (old) => {
       if (!Array.isArray(old)) return old;
       return old.filter((i) => i.id !== item.id);
     });
-    try {
-      await base44.entities.InventoryItem.delete(item.id);
-      toast({ title: "Discarded", description: item.name });
-    } catch {
-      invalidate(); // rollback
-    }
+
+    fireWithUndo({
+      title: `Discarded ${item.name}`,
+      description: "Tap UNDO to restore",
+      action: async () => {
+        await base44.entities.InventoryItem.delete(item.id);
+      },
+      onUndo: () => {
+        // Rollback — re-add item to cache
+        queryClient.setQueryData(["inventory", userEmail], (old) => {
+          if (!Array.isArray(old)) return [item];
+          return [item, ...old];
+        });
+      },
+      delay: 4000,
+    });
   };
 
   const condColor = (item.condition ?? 100) < 25 ? "text-status-danger" : (item.condition ?? 100) < 50 ? "text-accent" : "text-primary";
