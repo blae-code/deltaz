@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
+import useCurrentUser from "../hooks/useCurrentUser";
 import useEntityQuery from "../hooks/useEntityQuery";
 import { useRegisterSync } from "../hooks/useSyncRegistry";
 import PageShell from "../components/layout/PageShell";
@@ -24,14 +25,10 @@ const DEFAULT_FILTERS = {
 };
 
 export default function OpsLog() {
-  const [user, setUser] = useState(null);
+  const { user } = useCurrentUser();
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [showForm, setShowForm] = useState(false);
   const [displayCount, setDisplayCount] = useState(50);
-
-  useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
-  }, []);
 
   // Data queries
   const logsQuery = useEntityQuery(

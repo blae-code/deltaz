@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import useEntityQuery from "../hooks/useEntityQuery";
-import { useRegisterSync } from "../hooks/useSyncRegistry";
+import useCurrentUser from "../hooks/useCurrentUser";
 import DataCard from "../components/terminal/DataCard";
 import { Button } from "@/components/ui/button";
 import { Plus, ArrowLeftRight, Handshake, ScrollText, Package } from "lucide-react";
@@ -12,19 +12,15 @@ import CreateTradeForm from "../components/inventory/CreateTradeForm";
 import CreateTradeRequest from "../components/trading/CreateTradeRequest";
 import TradeRequestList from "../components/trading/TradeRequestList";
 import TradeLedger from "../components/trading/TradeLedger";
-import GuidanceBox from "../components/terminal/GuidanceBox";
 import PageShell from "../components/layout/PageShell";
 import ActionRail from "../components/layout/ActionRail";
-import SkeletonGrid from "../components/terminal/SkeletonGrid";
 import AuthLoadingState from "../components/terminal/AuthLoadingState";
 
 export default function TradeHub() {
-  const [user, setUser] = useState(null);
+  const { user, loading: userLoading } = useCurrentUser();
   const [tab, setTab] = useState("trade");
   const [showCreateTrade, setShowCreateTrade] = useState(false);
   const [showCreateDeal, setShowCreateDeal] = useState(false);
-
-  useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); }, []);
 
   // Need inventory items for the CreateTradeForm
   const { data: items = [], isLoading: itemsLoading } = useEntityQuery(
@@ -33,7 +29,7 @@ export default function TradeHub() {
     { subscribeEntities: ["InventoryItem"], queryOpts: { enabled: !!user?.email } }
   );
 
-  if (!user) {
+  if (!user || userLoading) {
     return (
       <PageShell title="Trade Hub" subtitle="Trade resources with other operatives">
         <AuthLoadingState message="CONNECTING TO TRADE NETWORK..." />

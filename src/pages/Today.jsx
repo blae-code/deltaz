@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import useEntityQuery from "../hooks/useEntityQuery";
 import { useRegisterSync } from "../hooks/useSyncRegistry";
+import useCurrentUser from "../hooks/useCurrentUser";
 import PageShell from "../components/layout/PageShell";
 import DataCard from "../components/terminal/DataCard";
 import StatusStripSkeleton from "../components/layout/StatusStripSkeleton";
@@ -18,12 +18,7 @@ import OperativeIdCard from "../components/today/OperativeIdCard";
 import { getDisplayName } from "../lib/displayName";
 
 export default function Today() {
-  const [user, setUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
-
-  useEffect(() => {
-    base44.auth.me().then(u => { setUser(u); setAuthLoading(false); }).catch(() => setAuthLoading(false));
-  }, []);
+  const { user, loading: authLoading } = useCurrentUser();
 
   // Core data queries
   const jobsQuery = useEntityQuery(
@@ -92,7 +87,6 @@ export default function Today() {
   // Register primary sync
   useRegisterSync("today", jobsQuery);
 
-  // Auth loading state — prevents empty flash
   if (authLoading) {
     return (
       <PageShell title="Today" subtitle="Loading your command surface...">
@@ -152,22 +146,22 @@ export default function Today() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
         {/* Left column — missions & gear */}
         <div className="space-y-4">
-          <DataCard title="Active Ops" headerRight={<span className="text-[9px] text-muted-foreground font-mono">Your missions & available contracts</span>}>
+          <DataCard title="Active Ops" subtitle="Your missions & available contracts">
             <TodayMissions jobs={jobs} userEmail={user?.email} />
           </DataCard>
 
-          <DataCard title="Gear & Crafting" headerRight={<span className="text-[9px] text-muted-foreground font-mono">Equipment status & active builds</span>}>
+          <DataCard title="Gear & Crafting" subtitle="Equipment status & active builds">
             <TodayInventory inventory={inventory} craftingProjects={craftingProjects} />
           </DataCard>
         </div>
 
         {/* Right column — situation & colony */}
         <div className="space-y-4">
-          <DataCard title="Situation Feed" headerRight={<span className="text-[9px] text-muted-foreground font-mono">Threats, intel, and comms</span>}>
+          <DataCard title="Situation Feed" subtitle="Threats, intel, and comms">
             <TodayAlerts events={events} intel={intel} broadcasts={broadcasts} />
           </DataCard>
 
-          <DataCard title="Colony Vitals" headerRight={<span className="text-[9px] text-muted-foreground font-mono">Settlement status at a glance</span>}>
+          <DataCard title="Colony Vitals" subtitle="Settlement status at a glance">
             <TodayColony colony={colony} />
           </DataCard>
         </div>

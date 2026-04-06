@@ -7,8 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Flag, Shield, Plus, Megaphone, MapPin } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import AdminSectionHeader from "./AdminSectionHeader";
-import AdminTabButton from "./AdminTabButton";
+import AdminSubSection from "./AdminSubSection";
 import SchemaWarningBanner from "./SchemaWarningBanner";
 import InlineConfirm from "../terminal/InlineConfirm";
 import TerritoryOpsPanel from "./TerritoryOpsPanel";
@@ -210,46 +209,32 @@ function CreateEventForm({ onCreated }) {
 }
 
 // --- Main World Mgmt ---
+const TABS = [
+  { key: "territory_ops", label: "Territory Ops", icon: Flag },
+  { key: "territories", label: "Add Territory", icon: MapPin },
+  { key: "factions", label: "Register Clan", icon: Shield },
+  { key: "diplomacy", label: "Diplomacy", icon: Shield },
+  { key: "events", label: "Broadcast Event", icon: Megaphone, risk: "medium" },
+];
+
 export default function AdminWorldMgmt() {
   const [tab, setTab] = useState("territory_ops");
   const [refreshKey, setRefreshKey] = useState(0);
   const refresh = () => setRefreshKey(k => k + 1);
 
-  const TABS = [
-    { key: "territory_ops", label: "Territory Ops", icon: Flag },
-    { key: "territories", label: "Add Territory", icon: MapPin },
-    { key: "factions", label: "Register Clan", icon: Shield },
-    { key: "diplomacy", label: "Diplomacy", icon: Shield },
-    { key: "events", label: "Broadcast Event", icon: Megaphone, risk: "medium" },
-  ];
-
   return (
-    <div className="space-y-4">
-      <AdminSectionHeader
-        title="World Management"
-        description="Manage the map, factions, diplomatic relations, and global events. Territory and clan changes persist immediately."
-      />
-
-      <div className="flex gap-1.5 flex-wrap">
-        {TABS.map(t => (
-          <AdminTabButton
-            key={t.key}
-            icon={t.icon}
-            label={t.label}
-            active={tab === t.key}
-            onClick={() => setTab(t.key)}
-            risk={t.risk}
-          />
-        ))}
-      </div>
-
-      <div className="border border-border bg-card rounded-sm p-4">
-        {tab === "territory_ops" && <TerritoryOpsPanel />}
-        {tab === "territories" && <CreateTerritoryForm key={refreshKey} onCreated={refresh} />}
-        {tab === "factions" && <CreateFactionForm key={refreshKey} onCreated={refresh} />}
-        {tab === "diplomacy" && <DiplomacyPanel />}
-        {tab === "events" && <CreateEventForm key={refreshKey} onCreated={refresh} />}
-      </div>
-    </div>
+    <AdminSubSection
+      title="World Management"
+      description="Manage the map, factions, diplomatic relations, and global events. Territory and clan changes persist immediately."
+      tabs={TABS}
+      activeTab={tab}
+      onTabChange={setTab}
+    >
+      {tab === "territory_ops" && <TerritoryOpsPanel />}
+      {tab === "territories" && <CreateTerritoryForm key={refreshKey} onCreated={refresh} />}
+      {tab === "factions" && <CreateFactionForm key={refreshKey} onCreated={refresh} />}
+      {tab === "diplomacy" && <DiplomacyPanel />}
+      {tab === "events" && <CreateEventForm key={refreshKey} onCreated={refresh} />}
+    </AdminSubSection>
   );
 }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
+import AuthLoadingState from "../components/terminal/AuthLoadingState";
 import DataCard from "../components/terminal/DataCard";
 import StatusIndicator from "../components/terminal/StatusIndicator";
 import { Badge } from "@/components/ui/badge";
@@ -55,11 +56,7 @@ export default function Profile() {
   const getFactionName = (id) => factions.find((f) => f.id === id)?.name || "Unknown";
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-primary text-xs tracking-widest animate-pulse">ACCESSING DOSSIER...</div>
-      </div>
-    );
+    return <AuthLoadingState message="ACCESSING DOSSIER..." />;
   }
 
   return (

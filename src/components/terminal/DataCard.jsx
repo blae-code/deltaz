@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-export default function DataCard({ title, children, className, headerRight }) {
+export default function DataCard({ title, subtitle, children, className, headerRight }) {
   return (
     <div className={cn("border border-border bg-card rounded-sm overflow-hidden", className)}>
       {title && (
@@ -8,6 +8,9 @@ export default function DataCard({ title, children, className, headerRight }) {
           <h3 className="text-[11px] sm:text-xs font-semibold uppercase tracking-widest text-primary font-display truncate">
             {title}
           </h3>
+          {subtitle && !headerRight && (
+            <span className="text-[9px] text-muted-foreground font-mono truncate">{subtitle}</span>
+          )}
           {headerRight}
         </div>
       )}

@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import useEntityQuery from "../hooks/useEntityQuery";
 import { useRegisterSync } from "../hooks/useSyncRegistry";
+import useCurrentUser from "../hooks/useCurrentUser";
 import DataCard from "../components/terminal/DataCard";
 import PageShell from "../components/layout/PageShell";
 import StatusStrip from "../components/layout/StatusStrip";
@@ -18,15 +19,10 @@ import StatusStripSkeleton from "../components/layout/StatusStripSkeleton";
 import AuthLoadingState from "../components/terminal/AuthLoadingState";
 
 export default function CraftingTracker() {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { user, loading } = useCurrentUser();
   const [showCreate, setShowCreate] = useState(false);
   const [showRecipes, setShowRecipes] = useState(false);
   const [filter, setFilter] = useState("active");
-
-  useEffect(() => {
-    base44.auth.me().then((u) => { setUser(u); setLoading(false); }).catch(() => setLoading(false));
-  }, []);
 
   const projectsQuery = useEntityQuery(
     ["craftingProjects", user?.email],

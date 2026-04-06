@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { useState } from "react";
+import useCurrentUser from "../hooks/useCurrentUser";
+import AuthLoadingState from "../components/terminal/AuthLoadingState";
 import { Shield, Radio, Globe, Coins, Server, AlertTriangle, ChevronRight } from "lucide-react";
 import PageShell from "../components/layout/PageShell";
 import AdminLiveOps from "../components/admin/AdminLiveOps";
@@ -39,20 +40,13 @@ const SECTIONS = [
 ];
 
 export default function Admin() {
-  const [user, setUser] = useState(null);
+  const { user, loading } = useCurrentUser();
   const [section, setSection] = useState("live");
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    base44.auth.me().then(u => { setUser(u); setLoading(false); }).catch(() => setLoading(false));
-  }, []);
 
   if (loading) {
     return (
       <PageShell title="Command Center" subtitle="Game Master Operations">
-        <div className="flex items-center justify-center py-16">
-          <div className="text-primary text-xs tracking-widest animate-pulse font-mono">AUTHENTICATING...</div>
-        </div>
+        <AuthLoadingState message="AUTHENTICATING GM CLEARANCE..." />
       </PageShell>
     );
   }

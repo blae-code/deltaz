@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
+import AuthLoadingState from "../components/terminal/AuthLoadingState";
 import { Trophy, Crosshair, Coins, Star, TrendingUp, Skull, Zap } from "lucide-react";
 import PageShell from "../components/layout/PageShell";
 import LeaderboardTable from "../components/records/LeaderboardTable";
@@ -121,11 +122,7 @@ export default function Records() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-primary text-xs tracking-widest animate-pulse">COMPILING RECORDS...</div>
-      </div>
-    );
+    return <AuthLoadingState message="COMPILING RECORDS..." />;
   }
 
   const isGM = isAdminOrGM(user);

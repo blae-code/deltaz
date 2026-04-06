@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
+import AuthLoadingState from "../components/terminal/AuthLoadingState";
 import DataCard from "../components/terminal/DataCard";
 import BaseCard from "../components/colony/BaseCard";
 import SurvivorCard from "../components/colony/SurvivorCard";
@@ -55,11 +56,7 @@ export default function Colony() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-primary text-xs tracking-widest animate-pulse">SCANNING SETTLEMENT DATA...</div>
-      </div>
-    );
+    return <AuthLoadingState message="SCANNING SETTLEMENT DATA..." />;
   }
 
   const myBases = bases.filter((b) => b.owner_email === user?.email);

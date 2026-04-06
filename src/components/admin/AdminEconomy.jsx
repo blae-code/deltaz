@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { ArrowLeftRight, Coins, Users } from "lucide-react";
-import AdminSectionHeader from "./AdminSectionHeader";
-import AdminTabButton from "./AdminTabButton";
+import AdminSubSection from "./AdminSubSection";
 import TradePanel from "./TradePanel";
 import ResourceDashboard from "./ResourceDashboard";
 import SurvivorAdminPanel from "./SurvivorAdminPanel";
@@ -14,38 +13,18 @@ const TABS = [
 
 export default function AdminEconomy() {
   const [tab, setTab] = useState("economy");
-  const activeTab = TABS.find(t => t.key === tab);
 
   return (
-    <div className="space-y-4">
-      <AdminSectionHeader
-        title="Systems & Economy"
-        description="Control trade routes, resource production, economic cycles, and survivor populations. Changes affect faction balance."
-      />
-
-      <div className="flex gap-1.5 flex-wrap">
-        {TABS.map(t => (
-          <AdminTabButton
-            key={t.key}
-            icon={t.icon}
-            label={t.label}
-            active={tab === t.key}
-            onClick={() => setTab(t.key)}
-          />
-        ))}
-      </div>
-
-      {activeTab && (
-        <p className="text-[9px] text-muted-foreground font-mono border-l-2 border-primary/30 pl-2">
-          {activeTab.description}
-        </p>
-      )}
-
-      <div className="border border-border bg-card rounded-sm p-4">
-        {tab === "economy" && <ResourceDashboard />}
-        {tab === "trade" && <TradePanel />}
-        {tab === "survivors" && <SurvivorAdminPanel />}
-      </div>
-    </div>
+    <AdminSubSection
+      title="Systems & Economy"
+      description="Control trade routes, resource production, economic cycles, and survivor populations. Changes affect faction balance."
+      tabs={TABS}
+      activeTab={tab}
+      onTabChange={setTab}
+    >
+      {tab === "economy" && <ResourceDashboard />}
+      {tab === "trade" && <TradePanel />}
+      {tab === "survivors" && <SurvivorAdminPanel />}
+    </AdminSubSection>
   );
 }

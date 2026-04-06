@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import useEntityQuery from "../hooks/useEntityQuery";
+import useCurrentUser from "../hooks/useCurrentUser";
 import { useRegisterSync } from "../hooks/useSyncRegistry";
 import PageShell from "../components/layout/PageShell";
 import StatusStrip from "../components/layout/StatusStrip";
@@ -17,13 +18,11 @@ import StatusStripSkeleton from "../components/layout/StatusStripSkeleton";
 import AuthLoadingState from "../components/terminal/AuthLoadingState";
 
 export default function Jobs() {
-  const [user, setUser] = useState(null);
+  const { user, isAdmin } = useCurrentUser();
   const [statusFilter, setStatusFilter] = useState("available");
   const [typeFilter, setTypeFilter] = useState("all");
   const [factionFilter, setFactionFilter] = useState("all");
   const [scavengeKey, setScavengeKey] = useState(0);
-
-  useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); }, []);
 
   const jobsQuery = useEntityQuery(
     "jobs",
@@ -55,7 +54,6 @@ export default function Jobs() {
     return true;
   });
 
-  const isAdmin = user?.role === "admin";
   const myActive = jobs.filter(j => j.assigned_to === user?.email && j.status === "in_progress");
   const availableCount = jobs.filter(j => j.status === "available").length;
   const inProgressCount = jobs.filter(j => j.status === "in_progress").length;

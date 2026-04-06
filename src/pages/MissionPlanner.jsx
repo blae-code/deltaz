@@ -1,5 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
+import AuthLoadingState from "../components/terminal/AuthLoadingState";
+import GuidanceBox from "../components/terminal/GuidanceBox";
 import { DragDropContext } from "@hello-pangea/dnd";
 import SquadPool from "../components/planner/SquadPool";
 import TerritorySlot from "../components/planner/TerritorySlot";
@@ -201,9 +203,7 @@ export default function MissionPlanner() {
   if (loading) {
     return (
       <PageShell title="Mission Planner" subtitle="Plan operations, assign squads, assess risk, and deploy">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-primary text-xs tracking-widest animate-pulse font-mono">INITIALIZING PLANNING TABLE...</div>
-        </div>
+        <AuthLoadingState message="INITIALIZING PLANNING TABLE..." />
       </PageShell>
     );
   }
@@ -224,11 +224,9 @@ export default function MissionPlanner() {
 
         {/* Planning guide — only when nothing selected yet */}
         {!selectedTerritory && survivors.length > 0 && (
-          <div className="border border-primary/20 bg-primary/5 rounded-sm px-3 py-2">
-            <p className="text-[10px] text-primary font-mono">
-              Start by selecting a target territory below, then drag operatives from the pool onto it.
-            </p>
-          </div>
+          <GuidanceBox color="primary">
+            Start by selecting a target territory below, then drag operatives from the pool onto it.
+          </GuidanceBox>
         )}
 
         {/* Main planning grid */}

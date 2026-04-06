@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import useEntityQuery from "../hooks/useEntityQuery";
+import useCurrentUser from "../hooks/useCurrentUser";
 import { useRegisterSync } from "../hooks/useSyncRegistry";
 import { Button } from "@/components/ui/button";
 import { Plus, ArrowLeftRight, Hammer } from "lucide-react";
@@ -14,10 +15,8 @@ import StatusStripSkeleton from "../components/layout/StatusStripSkeleton";
 import AuthLoadingState from "../components/terminal/AuthLoadingState";
 
 export default function Inventory() {
-  const [user, setUser] = useState(null);
+  const { user } = useCurrentUser();
   const [showAdd, setShowAdd] = useState(false);
-
-  useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); }, []);
 
   const inventoryQuery = useEntityQuery(
     ["inventory", user?.email],

@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
+import useCurrentUser from "../hooks/useCurrentUser";
+import AuthLoadingState from "../components/terminal/AuthLoadingState";
+import ActionRail from "../components/layout/ActionRail";
 import DataCard from "../components/terminal/DataCard";
 import JournalEventCard from "../components/journal/JournalEventCard";
 import JournalTimeline from "../components/journal/JournalTimeline";
@@ -10,7 +13,7 @@ import { BookOpen, Loader2, GitBranch, Tag } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function Journal() {
-  const [user, setUser] = useState(null);
+  const { user } = useCurrentUser();
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -18,21 +21,21 @@ export default function Journal() {
   const { toast } = useToast();
 
   const loadData = async () => {
-    const u = await base44.auth.me();
-    setUser(u);
-    const ents = await base44.entities.JournalEntry.filter({ player_email: u.email }, "-created_date", 100);
+    if (!user?.email) return;
+    const ents = await base44.entities.JournalEntry.filter({ player_email: user.email }, "-created_date", 100);
     setEntries(ents);
     setLoading(false);
   };
 
   useEffect(() => {
+    if (!user?.email) return;
     loadData();
     const unsub = base44.entities.JournalEntry.subscribe((ev) => {
       if (ev.type === "create") setEntries(prev => [ev.data, ...prev]);
       else if (ev.type === "update") setEntries(prev => prev.map(e => e.id === ev.id ? ev.data : e));
     });
     return unsub;
-  }, []);
+  }, [user?.email]);
 
   const generateEvent = async () => {
     setGenerating(true);
@@ -66,8 +69,8 @@ export default function Journal() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-primary text-xs tracking-widest animate-pulse">LOADING JOURNAL...</div>
+      <div className="space-y-5 max-w-3xl">
+        <AuthLoadingState message="LOADING JOURNAL..." />
       </div>
     );
   }
@@ -93,27 +96,16 @@ export default function Journal() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1.5 border-b border-border pb-2 flex-wrap">
-        {[
-          { key: "active", label: `Pending (${pending.length})`, icon: BookOpen },
-          { key: "resolved", label: `Resolved (${resolved.length})` },
+      <ActionRail
+        tabs={[
+          { key: "active", label: `Pending`, icon: BookOpen, count: pending.length },
+          { key: "resolved", label: `Resolved`, count: resolved.length },
           { key: "chains", label: "Branches", icon: GitBranch },
           { key: "timeline", label: "Timeline" },
-        ].map(t => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`flex items-center gap-1 text-[9px] uppercase tracking-wider font-mono px-2.5 py-1 rounded-sm transition-colors ${
-              tab === t.key
-                ? "bg-primary/10 text-primary border border-primary/30"
-                : "text-muted-foreground hover:text-foreground border border-transparent"
-            }`}
-          >
-            {t.icon && <t.icon className="h-3 w-3" />}
-            {t.label}
-          </button>
-        ))}
-      </div>
+        ]}
+        active={tab}
+        onChange={setTab}
+      />
 
       {tab === "active" && (
         <div className="space-y-4">

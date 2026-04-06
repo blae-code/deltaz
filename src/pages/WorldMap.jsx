@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
+import useCurrentUser from "../hooks/useCurrentUser";
 import useEntityQuery from "../hooks/useEntityQuery";
 import { useRegisterSync } from "../hooks/useSyncRegistry";
 import PageShell from "../components/layout/PageShell";
@@ -25,8 +26,7 @@ import SkeletonGrid from "../components/terminal/SkeletonGrid";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
 export default function WorldMap() {
-  const [user, setUser] = useState(null);
-  useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); }, []);
+  const { user } = useCurrentUser();
 
   // Layer toggles
   const [showTerritories, setShowTerritories] = useState(true);
