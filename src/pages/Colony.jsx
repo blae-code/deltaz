@@ -9,6 +9,7 @@ import BaseRegistrationForm from "../components/colony/BaseRegistrationForm";
 import TaskAssigner from "../components/colony/TaskAssigner";
 import TaskFeed from "../components/colony/TaskFeed";
 import BaseDefenseStatus from "../components/colony/BaseDefenseStatus";
+import ColonyVitalsPanel from "../components/colony/ColonyVitalsPanel";
 import { Home, Users, Plus, ChevronDown, ChevronUp, Shield, ClipboardList } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -20,6 +21,7 @@ export default function Colony() {
   const [loading, setLoading] = useState(true);
   const [selectedBaseId, setSelectedBaseId] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [colony, setColony] = useState(null);
 
   const loadData = () => {
     setLoading(true);
@@ -28,12 +30,14 @@ export default function Colony() {
       base44.entities.PlayerBase.list("-created_date", 50),
       base44.entities.Survivor.list("-created_date", 200),
       base44.entities.Territory.list("-created_date", 100),
+      base44.entities.ColonyStatus.list("-updated_date", 1).then(r => r[0] || null),
     ])
-      .then(([u, b, s, t]) => {
+      .then(([u, b, s, t, c]) => {
         setUser(u);
         setBases(b);
         setSurvivors(s);
         setTerritories(t);
+        setColony(c);
         // Auto-select first owned base
         const myBases = b.filter((base) => base.owner_email === u.email);
         if (myBases.length > 0 && !selectedBaseId) {
@@ -52,7 +56,12 @@ export default function Colony() {
         setSurvivors((prev) => prev.map((s) => (s.id === event.id ? event.data : s)));
       }
     });
-    return unsub;
+    const unsubColony = base44.entities.ColonyStatus.subscribe((event) => {
+      if (event.type === "update" || event.type === "create") {
+        setColony(event.data);
+      }
+    });
+    return () => { unsub(); unsubColony(); };
   }, []);
 
   if (loading) {
@@ -79,6 +88,16 @@ export default function Colony() {
           Your bases and the survivors who call them home
         </p>
       </div>
+
+      {/* Colony Vitals Dashboard */}
+      <DataCard title="Colony Vitals" subtitle={colony?.colony_name || "Settlement Status"}>
+        <ColonyVitalsPanel
+          colony={colony}
+          isAdmin={isAdmin}
+          survivors={survivors}
+          onTaskAssigned={loadData}
+        />
+      </DataCard>
 
       {/* Overview Stats */}
       <div className="grid grid-cols-3 gap-3">
