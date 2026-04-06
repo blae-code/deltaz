@@ -48,11 +48,11 @@ const coreNav = [
 const planningNav = [
   { path: "/planner", label: "PLANNER", icon: Target },
   { path: "/intel", label: "INTEL", icon: Eye },
-  { path: "/heatmap", label: "HEATMAP", icon: Flame },
   { path: "/treaties", label: "TREATIES", icon: FileSignature },
-  { path: "/logistics", label: "LOGISTICS", icon: Truck },
-  { path: "/ledger", label: "LEDGER", icon: BarChart3 },
-  { path: "/conflicts", label: "CONFLICTS", icon: Swords },
+  { path: "/heatmap", label: "HEATMAP", icon: Flame, gmOnly: true },
+  { path: "/logistics", label: "LOGISTICS", icon: Truck, gmOnly: true },
+  { path: "/ledger", label: "LEDGER", icon: BarChart3, gmOnly: true },
+  { path: "/conflicts", label: "CONFLICTS", icon: Swords, gmOnly: true },
 ];
 
 const secondaryNav = [
@@ -68,24 +68,32 @@ const adminNav = [
   { path: "/admin", label: "COMMAND", icon: Terminal },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ user: propUser }) {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(propUser || null);
 
   useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
-  }, []);
+    if (propUser) {
+      setUser(propUser);
+    } else {
+      base44.auth.me().then(setUser).catch(() => {});
+    }
+  }, [propUser]);
 
   const isAdmin = isAdminOrGM(user);
 
+  // Filter out gmOnly items for regular players
+  const filterItems = (items) =>
+    isAdmin ? items : items.filter((i) => !i.gmOnly);
+
   const navGroups = [
-    { label: null, items: coreNav },
-    { label: "PLANNING & INTEL", items: planningNav },
-    { label: "ARCHIVE", items: secondaryNav },
+    { label: null, items: filterItems(coreNav) },
+    { label: "PLANNING & INTEL", items: filterItems(planningNav) },
+    { label: "ARCHIVE", items: filterItems(secondaryNav) },
     ...(isAdmin ? [{ label: "GM TOOLS", items: adminNav }] : []),
-  ];
+  ].filter((g) => g.items.length > 0);
 
   return (
     <>

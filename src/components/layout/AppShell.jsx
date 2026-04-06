@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
+import { isAdminOrGM } from "../../lib/displayName";
 import ScanlineOverlay from "../terminal/ScanlineOverlay";
 import Onboarding from "../../pages/Onboarding";
 import { isGameMaster } from "../../lib/displayName";
@@ -44,14 +45,16 @@ export default function AppShell() {
     );
   }
 
+  const isAdmin = isAdminOrGM(user);
+
   return (
     <div className="flex h-screen overflow-hidden terminal-flicker">
       <ScanlineOverlay />
-      <Sidebar />
+      <Sidebar user={user} />
       <div className="flex flex-1 flex-col overflow-hidden">
-        <TopBar />
+        <TopBar user={user} />
         <main className="flex-1 overflow-auto p-4 md:p-6 pt-14 md:pt-6">
-          <Outlet />
+          <Outlet context={{ user, isAdmin }} />
         </main>
         <footer className="border-t border-border/30 px-4 py-1.5 flex items-center justify-between bg-card/50">
           <span className="text-[7px] text-muted-foreground/40 font-mono tracking-[0.3em]">DEAD SIGNAL FIELD TERMINAL v2.1.7b</span>

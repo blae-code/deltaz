@@ -3,20 +3,25 @@ import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import StatusIndicator from "../terminal/StatusIndicator";
 import { Clock, Lock, User, Search } from "lucide-react";
+import { cn } from "@/lib/utils";
 import GlobalSearchDialog from "../search/GlobalSearchDialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { getDisplayName } from "../../lib/displayName";
+import { getDisplayName, isAdminOrGM } from "../../lib/displayName";
 
-export default function TopBar() {
-  const [user, setUser] = useState(null);
+export default function TopBar({ user: propUser }) {
+  const [user, setUser] = useState(propUser || null);
   const [time, setTime] = useState(new Date());
   const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
+    if (propUser) {
+      setUser(propUser);
+    } else {
+      base44.auth.me().then(setUser).catch(() => {});
+    }
     const interval = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [propUser]);
 
   // Ctrl+K / Cmd+K to open search
   useEffect(() => {
@@ -100,8 +105,11 @@ export default function TopBar() {
                       <span className="text-xs text-primary font-semibold tracking-wider block leading-tight">
                         {getDisplayName(user)}
                       </span>
-                      <span className="text-[8px] text-muted-foreground uppercase tracking-widest leading-tight">
-                        {user.role || "player"}
+                      <span className={cn(
+                        "text-[8px] uppercase tracking-widest leading-tight",
+                        isAdminOrGM(user) ? "text-accent" : "text-muted-foreground"
+                      )}>
+                        {isAdminOrGM(user) ? "GM" : "OPERATIVE"}
                       </span>
                     </div>
                   </div>
