@@ -1,73 +1,63 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Server, ShieldCheck, CalendarClock } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Server, ShieldCheck, CalendarClock, AlertTriangle } from "lucide-react";
+import AdminSectionHeader from "./AdminSectionHeader";
+import AdminTabButton from "./AdminTabButton";
 import ServerDashboard from "./ServerDashboard";
 import WhitelistPanel from "./WhitelistPanel";
 import SchedulerPanel from "./SchedulerPanel";
 
+const TABS = [
+  { key: "server", label: "Server", icon: Server, risk: "high", description: "Live server status, power controls, and RCON command execution. Actions affect all connected players." },
+  { key: "whitelist", label: "Whitelist", icon: ShieldCheck, description: "Manage player access to the game server." },
+  { key: "scheduler", label: "Scheduler", icon: CalendarClock, description: "Configure automated tasks like restarts, broadcasts, and maintenance windows." },
+];
+
 export default function AdminServerPanel() {
   const [user, setUser] = useState(null);
+  const [tab, setTab] = useState("server");
   useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); }, []);
+
+  const activeTab = TABS.find(t => t.key === tab);
 
   return (
     <div className="space-y-4">
-      <div className="border-b border-border pb-2">
-        <h3 className="text-xs font-mono font-semibold tracking-widest text-primary uppercase">
-          Server &amp; Admin
-        </h3>
-        <p className="text-[10px] text-muted-foreground mt-1">
-          Server status, power controls, player whitelist, and RCON management.
-        </p>
+      <AdminSectionHeader
+        icon={Server}
+        title="Server & Infrastructure"
+        description="Direct control over the game server. Power, access, and scheduling operations. Handle with care."
+        riskLevel="high"
+      />
+
+      <div className="flex gap-1.5 flex-wrap">
+        {TABS.map(t => (
+          <AdminTabButton
+            key={t.key}
+            icon={t.icon}
+            label={t.label}
+            active={tab === t.key}
+            onClick={() => setTab(t.key)}
+            risk={t.risk}
+          />
+        ))}
       </div>
 
-      <Tabs defaultValue="server" className="w-full">
-        <TabsList className="bg-muted border border-border font-mono">
-          <TabsTrigger value="server" className="text-[10px] font-mono">
-            <Server className="h-3 w-3 mr-1" /> SERVER
-          </TabsTrigger>
-          <TabsTrigger value="whitelist" className="text-[10px] font-mono">
-            <ShieldCheck className="h-3 w-3 mr-1" /> WHITELIST
-          </TabsTrigger>
-          <TabsTrigger value="scheduler" className="text-[10px] font-mono">
-            <CalendarClock className="h-3 w-3 mr-1" /> SCHEDULER
-          </TabsTrigger>
-        </TabsList>
+      {activeTab && (
+        <div className={`flex items-start gap-2 px-3 py-2 rounded-sm border text-[9px] font-mono ${
+          activeTab.risk === "high"
+            ? "border-destructive/30 bg-destructive/5 text-destructive"
+            : "border-border bg-secondary/30 text-muted-foreground"
+        }`}>
+          {activeTab.risk === "high" && <AlertTriangle className="h-3 w-3 shrink-0 mt-0.5" />}
+          <span>{activeTab.description}</span>
+        </div>
+      )}
 
-        <TabsContent value="server">
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="text-xs font-mono text-muted-foreground tracking-widest flex items-center gap-2">
-                <Server className="h-3.5 w-3.5" /> SERVER MANAGEMENT
-              </CardTitle>
-            </CardHeader>
-            <CardContent><ServerDashboard /></CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="whitelist">
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="text-xs font-mono text-muted-foreground tracking-widest flex items-center gap-2">
-                <ShieldCheck className="h-3.5 w-3.5" /> SERVER WHITELIST
-              </CardTitle>
-            </CardHeader>
-            <CardContent><WhitelistPanel /></CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="scheduler">
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="text-xs font-mono text-muted-foreground tracking-widest flex items-center gap-2">
-                <CalendarClock className="h-3.5 w-3.5" /> TASK SCHEDULER
-              </CardTitle>
-            </CardHeader>
-            <CardContent><SchedulerPanel userEmail={user?.email} /></CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <div className="border border-border bg-card rounded-sm p-4">
+        {tab === "server" && <ServerDashboard />}
+        {tab === "whitelist" && <WhitelistPanel />}
+        {tab === "scheduler" && <SchedulerPanel userEmail={user?.email} />}
+      </div>
     </div>
   );
 }

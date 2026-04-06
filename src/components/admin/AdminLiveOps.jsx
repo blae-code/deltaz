@@ -1,83 +1,59 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
 import { Send, Zap, Crosshair, Cloud } from "lucide-react";
+import AdminSectionHeader from "./AdminSectionHeader";
+import AdminTabButton from "./AdminTabButton";
 import DispatchPanel from "./DispatchPanel";
 import AutoAssignPanel from "./AutoAssignPanel";
 import MissionForgePanel from "./MissionForgePanel";
 import SectorEventAdmin from "./SectorEventAdmin";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+const TABS = [
+  { key: "dispatch", label: "Dispatch", icon: Send, description: "Send a specific operative on a mission." },
+  { key: "autoassign", label: "Auto-Assign", icon: Zap, description: "Automatically match available operatives to open missions.", risk: "medium" },
+  { key: "forge", label: "Mission Forge", icon: Crosshair, description: "Generate new missions using the AI war engine." },
+  { key: "sector_events", label: "Sector Events", icon: Cloud, description: "Trigger world events in specific sectors.", risk: "medium" },
+];
 
 export default function AdminLiveOps() {
+  const [tab, setTab] = useState("dispatch");
+  const activeTab = TABS.find(t => t.key === tab);
+
   return (
     <div className="space-y-4">
-      <div className="border-b border-border pb-2">
-        <h3 className="text-xs font-mono font-semibold tracking-widest text-primary uppercase">
-          Live Operations
-        </h3>
-        <p className="text-[10px] text-muted-foreground mt-1">
-          Dispatch operatives, auto-assign missions, forge new operations, and trigger world events.
-        </p>
+      <AdminSectionHeader
+        icon={null}
+        title="Live Operations"
+        description="Dispatch operatives, generate missions, and trigger world events. Actions here affect the active game state."
+      />
+
+      {/* Sub-tab navigation */}
+      <div className="flex gap-1.5 flex-wrap">
+        {TABS.map(t => (
+          <AdminTabButton
+            key={t.key}
+            icon={t.icon}
+            label={t.label}
+            active={tab === t.key}
+            onClick={() => setTab(t.key)}
+            risk={t.risk}
+          />
+        ))}
       </div>
 
-      <Tabs defaultValue="dispatch" className="w-full">
-        <TabsList className="bg-muted border border-border font-mono">
-          <TabsTrigger value="dispatch" className="text-[10px] font-mono">
-            <Send className="h-3 w-3 mr-1" /> DISPATCH
-          </TabsTrigger>
-          <TabsTrigger value="autoassign" className="text-[10px] font-mono">
-            <Zap className="h-3 w-3 mr-1" /> AUTO-ASSIGN
-          </TabsTrigger>
-          <TabsTrigger value="forge" className="text-[10px] font-mono">
-            <Crosshair className="h-3 w-3 mr-1" /> MISSION FORGE
-          </TabsTrigger>
-          <TabsTrigger value="sector_events" className="text-[10px] font-mono">
-            <Cloud className="h-3 w-3 mr-1" /> SECTOR EVENTS
-          </TabsTrigger>
-        </TabsList>
+      {/* Active tab description */}
+      {activeTab && (
+        <p className="text-[9px] text-muted-foreground font-mono border-l-2 border-primary/30 pl-2">
+          {activeTab.description}
+        </p>
+      )}
 
-        <TabsContent value="dispatch">
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="text-xs font-mono text-muted-foreground tracking-widest flex items-center gap-2">
-                <Send className="h-3.5 w-3.5" /> DISPATCH OPERATIVE
-              </CardTitle>
-            </CardHeader>
-            <CardContent><DispatchPanel /></CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="autoassign">
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="text-xs font-mono text-muted-foreground tracking-widest flex items-center gap-2">
-                <Zap className="h-3.5 w-3.5" /> AUTO-ASSIGN OPERATIVES
-              </CardTitle>
-            </CardHeader>
-            <CardContent><AutoAssignPanel /></CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="forge">
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="text-xs font-mono text-muted-foreground tracking-widest flex items-center gap-2">
-                <Crosshair className="h-3.5 w-3.5" /> AUTOMATED MISSION GENERATOR
-              </CardTitle>
-            </CardHeader>
-            <CardContent><MissionForgePanel /></CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="sector_events">
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="text-xs font-mono text-muted-foreground tracking-widest flex items-center gap-2">
-                <Cloud className="h-3.5 w-3.5" /> SECTOR EVENT ENGINE
-              </CardTitle>
-            </CardHeader>
-            <CardContent><SectorEventAdmin /></CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      {/* Tab content */}
+      <div className="border border-border bg-card rounded-sm p-4">
+        {tab === "dispatch" && <DispatchPanel />}
+        {tab === "autoassign" && <AutoAssignPanel />}
+        {tab === "forge" && <MissionForgePanel />}
+        {tab === "sector_events" && <SectorEventAdmin />}
+      </div>
     </div>
   );
 }

@@ -1,68 +1,51 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
 import { ArrowLeftRight, Coins, Users } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import AdminSectionHeader from "./AdminSectionHeader";
+import AdminTabButton from "./AdminTabButton";
 import TradePanel from "./TradePanel";
 import ResourceDashboard from "./ResourceDashboard";
 import SurvivorAdminPanel from "./SurvivorAdminPanel";
 
+const TABS = [
+  { key: "economy", label: "Resources", icon: Coins, description: "View and adjust commodity prices, production rates, and economic cycle parameters." },
+  { key: "trade", label: "Trade Routes", icon: ArrowLeftRight, description: "Manage inter-faction trade agreements and route configurations." },
+  { key: "survivors", label: "Survivors", icon: Users, description: "Overview of all colony survivors, their assignments, and population health." },
+];
+
 export default function AdminEconomy() {
+  const [tab, setTab] = useState("economy");
+  const activeTab = TABS.find(t => t.key === tab);
+
   return (
     <div className="space-y-4">
-      <div className="border-b border-border pb-2">
-        <h3 className="text-xs font-mono font-semibold tracking-widest text-primary uppercase">
-          Systems &amp; Economy
-        </h3>
-        <p className="text-[10px] text-muted-foreground mt-1">
-          Control trade routes, resource production, economic cycles, and survivor populations.
-        </p>
+      <AdminSectionHeader
+        title="Systems & Economy"
+        description="Control trade routes, resource production, economic cycles, and survivor populations. Changes affect faction balance."
+      />
+
+      <div className="flex gap-1.5 flex-wrap">
+        {TABS.map(t => (
+          <AdminTabButton
+            key={t.key}
+            icon={t.icon}
+            label={t.label}
+            active={tab === t.key}
+            onClick={() => setTab(t.key)}
+          />
+        ))}
       </div>
 
-      <Tabs defaultValue="economy" className="w-full">
-        <TabsList className="bg-muted border border-border font-mono">
-          <TabsTrigger value="economy" className="text-[10px] font-mono">
-            <Coins className="h-3 w-3 mr-1" /> ECONOMY
-          </TabsTrigger>
-          <TabsTrigger value="trade" className="text-[10px] font-mono">
-            <ArrowLeftRight className="h-3 w-3 mr-1" /> TRADE
-          </TabsTrigger>
-          <TabsTrigger value="survivors" className="text-[10px] font-mono">
-            <Users className="h-3 w-3 mr-1" /> SURVIVORS
-          </TabsTrigger>
-        </TabsList>
+      {activeTab && (
+        <p className="text-[9px] text-muted-foreground font-mono border-l-2 border-primary/30 pl-2">
+          {activeTab.description}
+        </p>
+      )}
 
-        <TabsContent value="economy">
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="text-xs font-mono text-muted-foreground tracking-widest flex items-center gap-2">
-                <Coins className="h-3.5 w-3.5" /> RESOURCE ECONOMY CONTROL
-              </CardTitle>
-            </CardHeader>
-            <CardContent><ResourceDashboard /></CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="trade">
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="text-xs font-mono text-muted-foreground tracking-widest flex items-center gap-2">
-                <ArrowLeftRight className="h-3.5 w-3.5" /> INTER-FACTION TRADE
-              </CardTitle>
-            </CardHeader>
-            <CardContent><TradePanel /></CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="survivors">
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="text-xs font-mono text-muted-foreground tracking-widest flex items-center gap-2">
-                <Users className="h-3.5 w-3.5" /> SURVIVOR COLONY MANAGEMENT
-              </CardTitle>
-            </CardHeader>
-            <CardContent><SurvivorAdminPanel /></CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <div className="border border-border bg-card rounded-sm p-4">
+        {tab === "economy" && <ResourceDashboard />}
+        {tab === "trade" && <TradePanel />}
+        {tab === "survivors" && <SurvivorAdminPanel />}
+      </div>
     </div>
   );
 }
