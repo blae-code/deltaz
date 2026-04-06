@@ -3,7 +3,8 @@ import { base44 } from "@/api/base44Client";
 import DataCard from "../components/terminal/DataCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileSignature, ScrollText, RefreshCw, Network, Handshake, HeartPulse, Plus } from "lucide-react";
+import { FileSignature, ScrollText, RefreshCw, Network, Handshake, HeartPulse, Plus, History } from "lucide-react";
+import DiplomacyTimeline from "../components/diplomacy/DiplomacyTimeline";
 import RelationsMatrix from "../components/diplomacy/RelationsMatrix";
 import RelationDetail from "../components/diplomacy/RelationDetail";
 import TreatyCard from "../components/diplomacy/TreatyCard";
@@ -135,6 +136,7 @@ export default function Treaties() {
         {[
           { key: "relations", label: "Relations", icon: Network },
           { key: "treaties", label: "Treaties", icon: FileSignature },
+          { key: "history", label: "History", icon: History },
           { key: "aid", label: "Aid Requests", icon: HeartPulse },
         ].map(t => (
           <Button
@@ -174,6 +176,9 @@ export default function Treaties() {
                 factionA={factions.find(f => f.id === selectedPair.aId)}
                 factionB={factions.find(f => f.id === selectedPair.bId)}
                 treaties={treaties}
+                userFactionIds={userFactionIds}
+                factions={factions}
+                onUpdate={loadData}
               />
             </DataCard>
           )}
@@ -238,6 +243,11 @@ export default function Treaties() {
             </div>
           )}
         </div>
+      )}
+
+      {/* HISTORY TAB */}
+      {tab === "history" && (
+        <DiplomacyTimeline factions={factions} />
       )}
 
       {/* AID REQUESTS TAB */}

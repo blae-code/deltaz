@@ -1,0 +1,60 @@
+{
+  "name": "DiplomacyLog",
+  "type": "object",
+  "properties": {
+    "faction_a_id": {
+      "type": "string",
+      "description": "First faction involved"
+    },
+    "faction_b_id": {
+      "type": "string",
+      "description": "Second faction involved"
+    },
+    "action": {
+      "type": "string",
+      "enum": [
+        "war_declared",
+        "ceasefire_signed",
+        "treaty_proposed",
+        "treaty_accepted",
+        "treaty_rejected",
+        "treaty_revoked",
+        "status_changed",
+        "non_aggression_signed",
+        "alliance_formed",
+        "embargo_imposed",
+        "embargo_lifted"
+      ],
+      "description": "What diplomatic action occurred"
+    },
+    "old_status": {
+      "type": "string",
+      "description": "Previous diplomatic status"
+    },
+    "new_status": {
+      "type": "string",
+      "description": "New diplomatic status"
+    },
+    "initiated_by_email": {
+      "type": "string",
+      "description": "Email of the player who initiated the action"
+    },
+    "initiated_by_faction_id": {
+      "type": "string",
+      "description": "Faction that initiated the action"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description of the event"
+    },
+    "treaty_id": {
+      "type": "string",
+      "description": "Related treaty ID if applicable"
+    }
+  },
+  "required": [
+    "faction_a_id",
+    "faction_b_id",
+    "action"
+  ]
+}

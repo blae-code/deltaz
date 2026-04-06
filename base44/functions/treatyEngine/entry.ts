@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.24';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 const LEADERSHIP_RANKS = new Set(['trusted', 'allied', 'revered']);
 const NEGOTIABLE_STATUSES = new Set(['proposed', 'negotiating']);
@@ -57,6 +57,37 @@ const invokeCommodityRefresh = async (base44) => {
   } catch (error) {
     console.error('Treaty commodity refresh failed:', error);
   }
+};
+
+const notifyAllFactionMembers = async (base44, factionId, title, message, priority, referenceId) => {
+  const reps = await base44.asServiceRole.entities.Reputation.filter({ faction_id: factionId });
+  const emails = [...new Set(reps.map(r => r.player_email))];
+  const batch = emails.slice(0, 50).map(email => ({
+    player_email: email,
+    title,
+    message,
+    type: 'diplomacy_alert',
+    priority: priority || 'high',
+    is_read: false,
+    reference_id: referenceId || '',
+  }));
+  if (batch.length > 0) {
+    await base44.asServiceRole.entities.Notification.bulkCreate(batch);
+  }
+};
+
+const logDiplomacyEvent = async (base44, params) => {
+  await base44.asServiceRole.entities.DiplomacyLog.create({
+    faction_a_id: params.faction_a_id,
+    faction_b_id: params.faction_b_id,
+    action: params.action,
+    old_status: params.old_status || '',
+    new_status: params.new_status || '',
+    initiated_by_email: params.email || '',
+    initiated_by_faction_id: params.initiator_faction_id || '',
+    description: params.description || '',
+    treaty_id: params.treaty_id || '',
+  });
 };
 
 Deno.serve(async (req) => {
@@ -140,6 +171,7 @@ Deno.serve(async (req) => {
         signed_by_proposer: user.email,
       });
 
+      // Notify target faction leaders
       const targetReps = await base44.asServiceRole.entities.Reputation.filter({ faction_id: target_faction_id });
       const targetLeads = targetReps.filter((rep) => LEADERSHIP_RANKS.has(rep.rank));
       for (const lead of targetLeads.slice(0, 10)) {
@@ -147,12 +179,25 @@ Deno.serve(async (req) => {
           player_email: lead.player_email,
           title: `Treaty Proposal from ${proposerFaction.name}`,
           message: `${proposerFaction.name} proposes a ${TREATY_LABELS[treaty_type]}. Review and respond in the Diplomacy section.`,
-          type: 'system_alert',
+          type: 'diplomacy_alert',
           priority: 'high',
           is_read: false,
           reference_id: treaty.id,
         });
       }
+
+      // Log the proposal
+      await logDiplomacyEvent(base44, {
+        faction_a_id: proposer_faction_id,
+        faction_b_id: target_faction_id,
+        action: 'treaty_proposed',
+        old_status: '',
+        new_status: 'proposed',
+        email: user.email,
+        initiator_faction_id: proposer_faction_id,
+        description: `${proposerFaction.name} proposed a ${TREATY_LABELS[treaty_type]} to ${targetFaction.name}`,
+        treaty_id: treaty.id,
+      });
 
       return Response.json({ status: 'ok', treaty });
     }
@@ -302,15 +347,14 @@ Deno.serve(async (req) => {
 
       await invokeCommodityRefresh(base44);
 
-      await base44.asServiceRole.entities.Notification.create({
-        player_email: treaty.proposer_email,
-        title: 'Treaty Accepted',
-        message: `${targetFaction.name} accepted your ${TREATY_LABELS[treaty.treaty_type]}.`,
-        type: 'system_alert',
-        priority: 'high',
-        is_read: false,
-        reference_id: treaty.id,
-      });
+      // Notify ALL members of both factions
+      const acceptTitle = `TREATY SIGNED: ${proposerFaction.name} & ${targetFaction.name}`;
+      const acceptMsgA = `Your faction's ${TREATY_LABELS[treaty.treaty_type]} with ${targetFaction.name} has been signed! ${commodityEffects.length > 0 ? 'Market effects are now active.' : ''}`;
+      const acceptMsgB = `${proposerFaction.name}'s ${TREATY_LABELS[treaty.treaty_type]} with your faction has been signed! ${commodityEffects.length > 0 ? 'Market effects are now active.' : ''}`;
+      await Promise.all([
+        notifyAllFactionMembers(base44, treaty.proposer_faction_id, acceptTitle, acceptMsgA, 'high', treaty.id),
+        notifyAllFactionMembers(base44, treaty.target_faction_id, acceptTitle, acceptMsgB, 'high', treaty.id),
+      ]);
 
       await base44.asServiceRole.entities.Event.create({
         title: `TREATY SIGNED: ${proposerFaction.name} & ${targetFaction.name} — ${TREATY_LABELS[treaty.treaty_type]}`,
@@ -318,6 +362,19 @@ Deno.serve(async (req) => {
         type: 'world_event',
         severity: treaty.treaty_type === 'alliance' ? 'warning' : 'info',
         is_active: true,
+      });
+
+      // Log the event
+      await logDiplomacyEvent(base44, {
+        faction_a_id: treaty.proposer_faction_id,
+        faction_b_id: treaty.target_faction_id,
+        action: treaty.treaty_type === 'alliance' ? 'alliance_formed' : treaty.treaty_type === 'non_aggression' ? 'non_aggression_signed' : 'treaty_accepted',
+        old_status: existingDip?.status || 'neutral',
+        new_status: newDipStatus,
+        email: user.email,
+        initiator_faction_id: treaty.target_faction_id,
+        description: `${TREATY_LABELS[treaty.treaty_type]} between ${proposerFaction.name} and ${targetFaction.name} signed`,
+        treaty_id: treaty.id,
       });
 
       return Response.json({
@@ -347,15 +404,30 @@ Deno.serve(async (req) => {
 
       await base44.asServiceRole.entities.Treaty.update(treaty_id, { status: 'rejected' });
 
+      const proposerFactionRej = factions.find((faction) => faction.id === treaty.proposer_faction_id);
       const targetFaction = factions.find((faction) => faction.id === treaty.target_faction_id);
-      await base44.asServiceRole.entities.Notification.create({
-        player_email: treaty.proposer_email,
-        title: 'Treaty Rejected',
-        message: `${targetFaction?.name || 'The target faction'} has rejected your treaty proposal.`,
-        type: 'system_alert',
-        priority: 'high',
-        is_read: false,
-        reference_id: treaty.id,
+
+      // Notify proposer faction members
+      await notifyAllFactionMembers(
+        base44,
+        treaty.proposer_faction_id,
+        'Treaty Rejected',
+        `${targetFaction?.name || 'The target faction'} has rejected your faction's treaty proposal.`,
+        'high',
+        treaty.id
+      );
+
+      // Log the rejection
+      await logDiplomacyEvent(base44, {
+        faction_a_id: treaty.proposer_faction_id,
+        faction_b_id: treaty.target_faction_id,
+        action: 'treaty_rejected',
+        old_status: treaty.status,
+        new_status: 'rejected',
+        email: user.email,
+        initiator_faction_id: treaty.target_faction_id,
+        description: `${targetFaction?.name} rejected ${proposerFactionRej?.name}'s treaty proposal`,
+        treaty_id: treaty.id,
       });
 
       return Response.json({ status: 'ok' });
@@ -410,6 +482,27 @@ Deno.serve(async (req) => {
         type: 'faction_conflict',
         severity: 'warning',
         is_active: true,
+      });
+
+      // Notify ALL members of both factions
+      const revokeTitle = `TREATY REVOKED: ${proposerFaction?.name} — ${targetFaction?.name}`;
+      const revokeMsg = `The treaty between ${proposerFaction?.name} and ${targetFaction?.name} has been revoked. Diplomatic relations reverted to ${dip?.previous_status || 'neutral'}.`;
+      await Promise.all([
+        notifyAllFactionMembers(base44, treaty.proposer_faction_id, revokeTitle, revokeMsg, 'high', treaty.id),
+        notifyAllFactionMembers(base44, treaty.target_faction_id, revokeTitle, revokeMsg, 'high', treaty.id),
+      ]);
+
+      // Log the revocation
+      await logDiplomacyEvent(base44, {
+        faction_a_id: treaty.proposer_faction_id,
+        faction_b_id: treaty.target_faction_id,
+        action: 'treaty_revoked',
+        old_status: 'accepted',
+        new_status: dip?.previous_status || 'neutral',
+        email: user.email,
+        initiator_faction_id: user.email === treaty.proposer_email ? treaty.proposer_faction_id : treaty.target_faction_id,
+        description: `Treaty between ${proposerFaction?.name} and ${targetFaction?.name} revoked`,
+        treaty_id: treaty.id,
       });
 
       return Response.json({ status: 'ok' });

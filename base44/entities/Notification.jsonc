@@ -21,7 +21,8 @@
         "mission_update",
         "reputation_change",
         "system_alert",
-        "colony_alert"
+        "colony_alert",
+        "diplomacy_alert"
       ],
       "default": "system_alert"
     },
@@ -40,7 +41,7 @@
     },
     "reference_id": {
       "type": "string",
-      "description": "ID of related entity (e.g. job ID)"
+      "description": "ID of related entity (e.g. job ID, treaty ID)"
     }
   },
   "required": [

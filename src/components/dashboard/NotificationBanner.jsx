@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Bell, X, Crosshair, AlertTriangle, Check } from "lucide-react";
+import { Bell, X, Crosshair, AlertTriangle, Check, Swords } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import moment from "moment";
 
@@ -95,6 +95,8 @@ export default function NotificationBanner({ userEmail }) {
         >
           {n.type === "mission_assigned" ? (
             <Crosshair className="h-4 w-4 text-accent shrink-0 mt-0.5" />
+          ) : n.type === "diplomacy_alert" ? (
+            <Swords className="h-4 w-4 text-status-danger shrink-0 mt-0.5" />
           ) : (
             <AlertTriangle className="h-4 w-4 text-primary shrink-0 mt-0.5" />
           )}

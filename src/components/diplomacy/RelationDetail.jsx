@@ -1,11 +1,14 @@
 import { Badge } from "@/components/ui/badge";
 import { Shield, Swords, Handshake, Minus, Clock } from "lucide-react";
 import moment from "moment";
+import DiplomaticActionPanel from "./DiplomaticActionPanel";
+import DiplomacyHistory from "./DiplomacyHistory";
 
 const statusIcons = {
   allied: Handshake,
   trade_agreement: Handshake,
   ceasefire: Shield,
+  non_aggression: Shield,
   neutral: Minus,
   hostile: Swords,
   war: Swords,
@@ -15,12 +18,13 @@ const statusColors = {
   allied: "text-status-ok",
   trade_agreement: "text-status-info",
   ceasefire: "text-accent",
+  non_aggression: "text-primary",
   neutral: "text-muted-foreground",
   hostile: "text-orange-400",
   war: "text-status-danger",
 };
 
-export default function RelationDetail({ relation, factionA, factionB, treaties }) {
+export default function RelationDetail({ relation, factionA, factionB, treaties, userFactionIds, factions, onUpdate }) {
   const status = relation?.status || "neutral";
   const Icon = statusIcons[status] || Minus;
 
@@ -71,6 +75,19 @@ export default function RelationDetail({ relation, factionA, factionB, treaties 
         </p>
       )}
 
+      {/* War info */}
+      {status === "war" && relation?.war_declared_at && (
+        <div className="border border-status-danger/30 bg-status-danger/5 rounded-sm p-2">
+          <p className="text-[9px] text-status-danger font-semibold uppercase tracking-wider">⚔ Active War</p>
+          <p className="text-[9px] text-muted-foreground mt-0.5">
+            Declared {moment(relation.war_declared_at).fromNow()}
+          </p>
+          {relation.war_reason && (
+            <p className="text-[9px] text-foreground mt-0.5">Reason: {relation.war_reason}</p>
+          )}
+        </div>
+      )}
+
       {/* Active Treaties */}
       {activeTreaties.length > 0 && (
         <div>
@@ -91,6 +108,26 @@ export default function RelationDetail({ relation, factionA, factionB, treaties 
 
       {!relation && (
         <p className="text-[10px] text-muted-foreground text-center py-2">No formal relationship established.</p>
+      )}
+
+      {/* Diplomatic Actions */}
+      {userFactionIds?.length > 0 && factionA && factionB && (
+        <DiplomaticActionPanel
+          factionA={factionA}
+          factionB={factionB}
+          currentStatus={status}
+          userFactionIds={userFactionIds}
+          onActionComplete={onUpdate}
+        />
+      )}
+
+      {/* Diplomacy History */}
+      {factionA && factionB && (
+        <DiplomacyHistory
+          factionAId={factionA.id}
+          factionBId={factionB.id}
+          factions={factions}
+        />
       )}
     </div>
   );

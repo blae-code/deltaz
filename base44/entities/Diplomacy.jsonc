@@ -17,6 +17,7 @@
         "allied",
         "trade_agreement",
         "ceasefire",
+        "non_aggression",
         "hostile",
         "war"
       ],
@@ -38,6 +39,14 @@
     "expires_at": {
       "type": "string",
       "description": "ISO date when this agreement expires (optional)"
+    },
+    "war_declared_at": {
+      "type": "string",
+      "description": "ISO date when war was declared"
+    },
+    "war_reason": {
+      "type": "string",
+      "description": "Stated reason for war declaration"
     }
   },
   "required": [
