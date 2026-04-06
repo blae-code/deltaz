@@ -10,7 +10,6 @@ import TodayInventory from "../components/today/TodayInventory";
 import TodayColony from "../components/today/TodayColony";
 import TodayActions from "../components/today/TodayActions";
 import LiveEventWatcher from "../components/dashboard/LiveEventWatcher";
-import NotificationBanner from "../components/dashboard/NotificationBanner";
 import OperativeIdCard from "../components/today/OperativeIdCard";
 import { getDisplayName } from "../lib/displayName";
 
@@ -106,8 +105,7 @@ export default function Today() {
       subtitle={`${greeting}, ${displayName} — here's what matters right now`}
       syncMeta={jobsQuery.syncMeta}
     >
-      {/* Notifications */}
-      {user?.email && <NotificationBanner userEmail={user.email} />}
+      {/* Live event watcher (critical alerts only) */}
       {user?.email && <LiveEventWatcher userEmail={user.email} />}
 
       {/* Operative Identity Card */}

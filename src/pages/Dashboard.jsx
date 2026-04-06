@@ -4,7 +4,6 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import WIDGET_REGISTRY, { DEFAULT_LAYOUT } from "../components/dashboard/WidgetRegistry";
 import WidgetWrapper from "../components/dashboard/WidgetWrapper";
 import DashboardCustomizer from "../components/dashboard/DashboardCustomizer";
-import NotificationBanner from "../components/dashboard/NotificationBanner";
 import WorldPulseStatus from "../components/dashboard/WorldPulseStatus";
 import LiveEventWatcher from "../components/dashboard/LiveEventWatcher";
 import StatCard from "../components/dashboard/StatCard";
@@ -182,8 +181,7 @@ export default function Dashboard() {
         />
       )}
 
-      {/* Notifications */}
-      {user?.email && <NotificationBanner userEmail={user.email} />}
+
 
       {/* Widget grid with drag and drop */}
       <DragDropContext onDragEnd={handleDragEnd}>

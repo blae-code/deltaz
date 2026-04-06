@@ -5,6 +5,7 @@ import StatusIndicator from "../terminal/StatusIndicator";
 import { Clock, Lock, User, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import GlobalSearchDialog from "../search/GlobalSearchDialog";
+import NotificationDropdown from "./NotificationDropdown";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { getDisplayName, isAdminOrGM } from "../../lib/displayName";
 
@@ -69,6 +70,8 @@ export default function TopBar({ user: propUser }) {
         </Tooltip>
       </div>
       <div className="flex items-center gap-3">
+        {/* Notifications */}
+        {user?.email && <NotificationDropdown userEmail={user.email} />}
         {/* Search button */}
         <button
           onClick={() => setSearchOpen(true)}
