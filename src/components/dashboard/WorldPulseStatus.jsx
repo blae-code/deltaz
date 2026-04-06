@@ -24,21 +24,20 @@ export default function WorldPulseStatus({ isAdmin }) {
     <div className="flex items-center gap-3 border border-border bg-card rounded-sm px-3 py-2">
       <div className="flex items-center gap-2">
         <span className="relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
           <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
         </span>
-        <span className="text-[10px] font-mono text-primary tracking-widest">WORLD PULSE ACTIVE</span>
+        <span className="text-[10px] font-mono text-primary tracking-widest">WORLD PULSE</span>
       </div>
       <Tooltip>
         <TooltipTrigger asChild>
           <div className="flex items-center gap-1.5 cursor-help">
-            <span className="text-[9px] text-muted-foreground">Auto-cycle: 30 min</span>
+            <span className="text-[9px] text-muted-foreground">Scheduled: every 30 min</span>
             <Info className="h-3 w-3 text-muted-foreground/50 hover:text-primary transition-colors" />
           </div>
         </TooltipTrigger>
         <TooltipContent side="bottom" className="font-mono text-[11px] bg-card border-primary/30 max-w-[260px]">
           <p className="text-primary font-semibold text-[10px] mb-1">WORLD PULSE ENGINE</p>
-          <p className="text-muted-foreground">AI-driven background process that generates new intel reports, world events, and combat log entries every 30 minutes based on the current state of factions, territories, and missions.</p>
+          <p className="text-muted-foreground">AI-driven scheduled process that generates new intel reports and world events every 30 minutes based on the current state of factions, territories, and missions. Admins can trigger a manual cycle below.</p>
         </TooltipContent>
       </Tooltip>
       {isAdmin && (
