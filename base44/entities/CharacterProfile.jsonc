@@ -48,7 +48,21 @@
     },
     "origin": {
       "type": "string",
-      "description": "Where they came from before the apocalypse"
+      "description": "Origin tags from background generator"
+    },
+    "origin_generated": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this profile was created via the origin story generator"
+    },
+    "primary_skill": {
+      "type": "string",
+      "description": "Primary skill determined by origin choices"
+    },
+    "combat_rating": {
+      "type": "number",
+      "default": 2,
+      "description": "Base combat effectiveness from origin"
     }
   },
   "required": [
