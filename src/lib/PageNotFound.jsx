@@ -41,7 +41,7 @@ export default function PageNotFound() {
             className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-mono tracking-wider text-primary border border-primary/30 rounded-sm bg-primary/10 hover:bg-primary/20 transition-colors"
           >
             <Home className="h-3.5 w-3.5" />
-            RETURN TO SITREP
+            RETURN TO HQ
           </Link>
         </div>
 

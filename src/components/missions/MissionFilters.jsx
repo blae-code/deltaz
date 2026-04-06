@@ -17,7 +17,7 @@ export default function MissionFilters({ statusFilter, typeFilter, factionFilter
             className="text-[10px] uppercase tracking-wider h-8 px-2.5 sm:px-3"
             onClick={() => onStatusChange(f)}
           >
-            {f.replace("_", " ")}
+            {f === "in_progress" ? "IN PROGRESS" : f.replace("_", " ")}
           </Button>
         ))}
       </div>

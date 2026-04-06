@@ -2,7 +2,12 @@
 module.exports = {
   darkMode: ["class"],
   content: ["./index.html", "./src/**/*.{ts,tsx,js,jsx}"],
-  safelist: ["col-span-1", "col-span-full", "md:col-span-2"],
+  safelist: [
+    "col-span-1", "col-span-full", "md:col-span-2",
+    "text-status-ok", "text-status-warn", "text-status-danger", "text-status-info",
+    "bg-status-ok", "bg-status-warn", "bg-status-danger",
+    "border-status-ok", "border-status-warn", "border-status-danger",
+  ],
   theme: {
     extend: {
       fontFamily: {

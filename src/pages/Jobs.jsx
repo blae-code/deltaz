@@ -164,6 +164,7 @@ export default function Jobs() {
         factions={factions || []}
         scavengeKey={scavengeKey}
         onDeployed={() => setScavengeKey(k => k + 1)}
+        isAdmin={isAdmin}
       />
     </PageShell>
   );

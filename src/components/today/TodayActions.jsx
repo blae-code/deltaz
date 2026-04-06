@@ -17,7 +17,7 @@ const actions = [
 
 export default function TodayActions() {
   return (
-    <div className="grid grid-cols-4 gap-1.5">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
       {actions.map(a => (
         <Link
           key={a.to}

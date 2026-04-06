@@ -70,8 +70,10 @@ export default function InventoryGrid({ items: rawItems, onUpdate, userEmail }) 
 
       {/* Stash */}
       <div>
-        {equipped.length > 0 && (
+        {equipped.length > 0 ? (
           <div className="text-[10px] text-muted-foreground tracking-widest uppercase mb-2.5 font-mono font-semibold">STASH — stored items not in loadout ({unequipped.length})</div>
+        ) : items.length > 0 && (
+          <div className="text-[10px] text-muted-foreground tracking-widest uppercase mb-2.5 font-mono font-semibold">ALL ITEMS ({filtered.length})</div>
         )}
         {filtered.length === 0 ? (
           items.length === 0 ? (

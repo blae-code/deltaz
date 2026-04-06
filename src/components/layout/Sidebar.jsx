@@ -96,7 +96,7 @@ export default function Sidebar({ user: propUser }) {
   const navGroups = [
     { label: null, items: filterItems(coreNav) },
     { label: "PLANNING & INTEL", items: filterItems(planningNav) },
-    { label: "ARCHIVE", items: filterItems(secondaryNav) },
+    { label: "PERSONAL", items: filterItems(secondaryNav) },
     ...(isAdmin ? [{ label: "GM TOOLS", items: adminNav }] : []),
   ].filter((g) => g.items.length > 0);
 

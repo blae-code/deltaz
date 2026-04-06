@@ -18,8 +18,8 @@ export default function MyMissionsPanel({ jobs, factions, territories, userEmail
 
   return (
     <div className="space-y-2">
-      <div className="text-[10px] text-accent font-mono tracking-widest uppercase">
-        {myJobs.length} ACTIVE MISSION{myJobs.length !== 1 ? "S" : ""}
+      <div className="text-[10px] text-accent font-mono tracking-widest uppercase font-semibold">
+        YOUR ACTIVE OPS ({myJobs.length})
       </div>
       {myJobs.map(job => (
         <MissionCard

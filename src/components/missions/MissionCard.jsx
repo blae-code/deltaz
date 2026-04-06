@@ -8,7 +8,7 @@ import StatusIndicator from "../terminal/StatusIndicator";
 import InlineConfirm from "../terminal/InlineConfirm";
 import {
   Crosshair, Clock, Award, MapPin, Shield, Loader2,
-  CheckCircle, XCircle, LogOut, Coins
+  CheckCircle, XCircle, LogOut, Coins, ChevronDown, ChevronUp
 } from "lucide-react";
 import moment from "moment";
 
@@ -40,10 +40,11 @@ const statusMap = {
 export default function MissionCard({ job, faction, territory, userEmail, isAdmin }) {
   const [acting, setActing] = useState(null);
   const [expanded, setExpanded] = useState(false);
-  // Defensive: bail on missing job record
-  if (!job) return null;
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Defensive: bail on missing job record (hooks must be called first)
+  if (!job) return null;
 
   const isMine = job.assigned_to === userEmail;
   const canAccept = job.status === "available" && !job.assigned_to;
@@ -140,6 +141,10 @@ export default function MissionCard({ job, faction, territory, userEmail, isAdmi
                 <Coins className="h-3 w-3" /> +{job.reward_credits} CR
               </div>
             )}
+            {expanded
+              ? <ChevronUp className="h-3 w-3 text-muted-foreground mt-0.5" />
+              : <ChevronDown className="h-3 w-3 text-muted-foreground mt-0.5" />
+            }
           </div>
         </div>
       </div>

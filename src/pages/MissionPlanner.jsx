@@ -223,9 +223,14 @@ export default function MissionPlanner() {
         />
 
         {/* Planning guide — only when nothing selected yet */}
+        {survivors.length === 0 && (
+          <GuidanceBox color="accent">
+            No operatives available. Register survivors at your base through the Colony page, or ask a GM to assign them.
+          </GuidanceBox>
+        )}
         {!selectedTerritory && survivors.length > 0 && (
           <GuidanceBox color="primary">
-            Start by selecting a target territory below, then drag operatives from the pool onto it.
+            Select a target territory below, then drag operatives from the squad pool onto it.
           </GuidanceBox>
         )}
 

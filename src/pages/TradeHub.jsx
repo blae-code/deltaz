@@ -55,7 +55,6 @@ export default function TradeHub() {
     ledger: "Complete history of all your resolved trades",
   };
 
-  const openOffers = items.length; // rough proxy
   const tradeStats = [
     { label: "YOUR ITEMS", value: items.length, color: "text-primary" },
   ];

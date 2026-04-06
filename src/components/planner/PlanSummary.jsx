@@ -103,9 +103,9 @@ export default function PlanSummary({
           </div>
         )}
         {isHighRisk && !isSuicidal && (
-          <div className="flex items-center gap-1.5 bg-status-warn/10 border border-status-warn/20 rounded-sm px-2 py-1.5">
-            <AlertTriangle className="h-3 w-3 text-status-warn shrink-0" />
-            <span className="text-[9px] text-status-warn font-mono">
+          <div className="flex items-center gap-1.5 bg-accent/10 border border-accent/20 rounded-sm px-2 py-1.5">
+            <AlertTriangle className="h-3 w-3 text-accent shrink-0" />
+            <span className="text-[9px] text-accent font-mono">
               HIGH RISK — Below 40% success. Consider adding more operatives or changing approach.
             </span>
           </div>

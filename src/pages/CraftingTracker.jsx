@@ -8,8 +8,7 @@ import PageShell from "../components/layout/PageShell";
 import StatusStrip from "../components/layout/StatusStrip";
 import ActionRail from "../components/layout/ActionRail";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Hammer, BookOpen, Archive, CheckCircle, Clock, Package, ArrowLeftRight } from "lucide-react";
+import { Plus, Hammer, BookOpen, CheckCircle, Clock, Package, ArrowLeftRight } from "lucide-react";
 import NextStepBanner from "../components/terminal/NextStepBanner";
 import ProjectList from "../components/crafting/ProjectList";
 import CreateProjectForm from "../components/crafting/CreateProjectForm";
@@ -71,10 +70,10 @@ export default function CraftingTracker() {
   }, 0);
 
   const statusItems = [
-    { label: "Active Projects", value: activeProjects.length, color: "text-primary" },
-    { label: "Materials Sourced", value: `${totalGathered}/${totalMaterialsNeeded}`, color: "text-accent" },
-    { label: "Ready to Build", value: projects.filter(p => p.status === "ready").length, color: "text-status-ok" },
-    { label: "Completed", value: completedProjects.filter(p => p.status === "completed").length, color: "text-foreground" },
+    { label: "ACTIVE", value: activeProjects.length, color: "text-primary" },
+    { label: "MATERIALS", value: `${totalGathered}/${totalMaterialsNeeded}`, color: "text-accent" },
+    { label: "READY", value: projects.filter(p => p.status === "ready").length, color: "text-status-ok" },
+    { label: "COMPLETED", value: completedProjects.filter(p => p.status === "completed").length, color: "text-foreground" },
   ];
 
   const filterTabs = [

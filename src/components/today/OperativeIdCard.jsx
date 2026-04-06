@@ -33,7 +33,7 @@ export default function OperativeIdCard({ user, factions, reputations, jobs }) {
   return (
     <div className="border border-primary/30 rounded-sm bg-card overflow-hidden">
       {/* Header band */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-primary/5 border-b border-primary/20">
+      <div className="flex items-center justify-between gap-3 px-3 sm:px-4 py-2.5 bg-primary/5 border-b border-primary/20">
         <div className="flex items-center gap-3">
           {/* Avatar / Monogram */}
           <div

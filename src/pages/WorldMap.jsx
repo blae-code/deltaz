@@ -347,6 +347,13 @@ export default function WorldMap() {
               onSectorClick={setSelectedSector}
             />
           )}
+
+          {/* Hint when no panel is open */}
+          {!selectedMission && !selectedMarker && !pendingPosition && !selectedSector && !showPlanner && !(showHeatmap && threatPredictions) && (
+            <div className="border border-dashed border-border rounded-sm py-6 px-4 text-center">
+              <p className="text-[11px] text-muted-foreground/60 font-mono">Click a sector on the map to inspect it, or open Map Layers to toggle overlays.</p>
+            </div>
+          )}
         </div>
       </div>
     </PageShell>

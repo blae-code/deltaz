@@ -13,9 +13,12 @@ const TOOLS = [
   { key: "stats", label: "Mission Stats", icon: BarChart3, desc: "Performance breakdown" },
 ];
 
-export default function MissionToolsDrawer({ jobs, userEmail, territories, factions, scavengeKey, onDeployed }) {
+export default function MissionToolsDrawer({ jobs, userEmail, territories, factions, scavengeKey, onDeployed, isAdmin }) {
   const [open, setOpen] = useState(false);
   const [activeTool, setActiveTool] = useState(null);
+
+  // Only GMs should see the tools drawer
+  if (!isAdmin) return null;
 
   const handleToolClick = (key) => {
     if (activeTool === key) {
