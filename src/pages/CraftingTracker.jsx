@@ -12,6 +12,7 @@ import { Plus, Hammer, BookOpen, Archive, CheckCircle, Clock, Package } from "lu
 import ProjectList from "../components/crafting/ProjectList";
 import CreateProjectForm from "../components/crafting/CreateProjectForm";
 import RecipeBrowser from "../components/crafting/RecipeBrowser";
+import SkeletonGrid from "../components/terminal/SkeletonGrid";
 
 export default function CraftingTracker() {
   const [user, setUser] = useState(null);
@@ -46,9 +47,9 @@ export default function CraftingTracker() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-primary text-xs tracking-widest animate-pulse">LOADING WORKBENCH...</div>
-      </div>
+      <PageShell title="Workbench" subtitle="Track materials, plan builds, and source what you need">
+        <SkeletonGrid count={4} variant="project" />
+      </PageShell>
     );
   }
 

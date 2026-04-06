@@ -19,6 +19,7 @@ import BulkAddForm from "../components/inventory/BulkAddForm";
 import GuidanceBox from "../components/terminal/GuidanceBox";
 import PageShell from "../components/layout/PageShell";
 import ActionRail from "../components/layout/ActionRail";
+import SkeletonGrid from "../components/terminal/SkeletonGrid";
 
 export default function Inventory() {
   const [user, setUser] = useState(null);
@@ -46,9 +47,9 @@ export default function Inventory() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-primary text-xs tracking-widest animate-pulse">SCANNING INVENTORY...</div>
-      </div>
+      <PageShell title="Inventory" subtitle="Manage your gear, weapons, and supplies">
+        <SkeletonGrid count={6} variant="inventory" />
+      </PageShell>
     );
   }
 

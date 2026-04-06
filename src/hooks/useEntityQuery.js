@@ -21,6 +21,8 @@ export default function useEntityQuery(key, fetcher, opts = {}) {
     queryKey,
     queryFn: fetcher,
     staleTime: 30_000,
+    // Keep showing previous data while refetching (partial rendering)
+    placeholderData: (prev) => prev,
     ...queryOpts,
   });
 

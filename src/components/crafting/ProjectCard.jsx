@@ -66,18 +66,34 @@ export default function ProjectCard({ project, inventory, userEmail, userCallsig
   };
 
   const markComplete = async () => {
-    await base44.entities.CraftingProject.update(project.id, {
-      status: "completed",
-      completed_at: new Date().toISOString(),
+    // Optimistic
+    queryClient.setQueryData(["craftingProjects", userEmail], (old) => {
+      if (!Array.isArray(old)) return old;
+      return old.map((p) => p.id === project.id ? { ...p, status: "completed", completed_at: new Date().toISOString() } : p);
     });
-    toast({ title: "Project Completed!", description: `"${project.title}" marked as built` });
-    invalidate();
+    try {
+      await base44.entities.CraftingProject.update(project.id, {
+        status: "completed",
+        completed_at: new Date().toISOString(),
+      });
+      toast({ title: "Project Completed!", description: `"${project.title}" marked as built` });
+    } catch {
+      invalidate();
+    }
   };
 
   const abandon = async () => {
-    await base44.entities.CraftingProject.update(project.id, { status: "abandoned" });
-    toast({ title: "Project Abandoned", description: `"${project.title}" shelved` });
-    invalidate();
+    // Optimistic
+    queryClient.setQueryData(["craftingProjects", userEmail], (old) => {
+      if (!Array.isArray(old)) return old;
+      return old.map((p) => p.id === project.id ? { ...p, status: "abandoned" } : p);
+    });
+    try {
+      await base44.entities.CraftingProject.update(project.id, { status: "abandoned" });
+      toast({ title: "Project Abandoned", description: `"${project.title}" shelved` });
+    } catch {
+      invalidate();
+    }
   };
 
   const deleteProject = async () => {

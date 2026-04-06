@@ -14,6 +14,7 @@ import MissionFilters from "../components/missions/MissionFilters";
 import MyMissionsPanel from "../components/missions/MyMissionsPanel";
 import MissionCard from "../components/missions/MissionCard";
 import MissionGenerator from "../components/missions/MissionGenerator";
+import SkeletonGrid from "../components/terminal/SkeletonGrid";
 
 export default function Jobs() {
   const [user, setUser] = useState(null);
@@ -61,9 +62,9 @@ export default function Jobs() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-primary text-xs tracking-widest animate-pulse">LOADING MISSION DATA...</div>
-      </div>
+      <PageShell title="Mission Board" subtitle="Accept missions, earn reputation, serve your clan">
+        <SkeletonGrid count={5} variant="mission" />
+      </PageShell>
     );
   }
 

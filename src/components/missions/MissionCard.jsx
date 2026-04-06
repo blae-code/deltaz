@@ -47,6 +47,24 @@ export default function MissionCard({ job, faction, territory, userEmail, isAdmi
 
   const doAction = async (action) => {
     setActing(action);
+
+    // Optimistic update — immediately reflect the change in UI
+    const optimisticStatus = { accept: "in_progress", complete: "completed", abandon: "available", fail: "failed" };
+    if (optimisticStatus[action]) {
+      queryClient.setQueryData(["jobs"], (old) => {
+        if (!Array.isArray(old)) return old;
+        return old.map((j) =>
+          j.id === job.id
+            ? {
+                ...j,
+                status: optimisticStatus[action],
+                assigned_to: action === "accept" ? userEmail : action === "abandon" ? null : j.assigned_to,
+              }
+            : j
+        );
+      });
+    }
+
     try {
       const res = await base44.functions.invoke("missionOps", { action, job_id: job.id });
       const data = res.data;
@@ -62,6 +80,8 @@ export default function MissionCard({ job, faction, territory, userEmail, isAdmi
       }
       queryClient.invalidateQueries({ queryKey: ["jobs"] });
     } catch (err) {
+      // Rollback optimistic update on failure
+      queryClient.invalidateQueries({ queryKey: ["jobs"] });
       toast({ title: "Action Failed", description: err.response?.data?.error || err.message, variant: "destructive" });
     } finally {
       setActing(null);

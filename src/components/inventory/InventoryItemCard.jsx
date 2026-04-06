@@ -29,17 +29,33 @@ export default function InventoryItemCard({ item, userEmail }) {
 
   const toggleEquip = async () => {
     setLoading(true);
-    await base44.entities.InventoryItem.update(item.id, { is_equipped: !item.is_equipped });
-    toast({ title: item.is_equipped ? "Unequipped" : "Equipped", description: item.name });
-    invalidate();
+    // Optimistic toggle
+    queryClient.setQueryData(["inventory", userEmail], (old) => {
+      if (!Array.isArray(old)) return old;
+      return old.map((i) => i.id === item.id ? { ...i, is_equipped: !i.is_equipped } : i);
+    });
+    try {
+      await base44.entities.InventoryItem.update(item.id, { is_equipped: !item.is_equipped });
+      toast({ title: item.is_equipped ? "Unequipped" : "Equipped", description: item.name });
+    } catch {
+      invalidate(); // rollback
+    }
     setLoading(false);
   };
 
   const deleteItem = async () => {
     setLoading(true);
-    await base44.entities.InventoryItem.delete(item.id);
-    toast({ title: "Discarded", description: item.name });
-    invalidate();
+    // Optimistic remove
+    queryClient.setQueryData(["inventory", userEmail], (old) => {
+      if (!Array.isArray(old)) return old;
+      return old.filter((i) => i.id !== item.id);
+    });
+    try {
+      await base44.entities.InventoryItem.delete(item.id);
+      toast({ title: "Discarded", description: item.name });
+    } catch {
+      invalidate(); // rollback
+    }
   };
 
   const condColor = (item.condition ?? 100) < 25 ? "text-status-danger" : (item.condition ?? 100) < 50 ? "text-accent" : "text-primary";
