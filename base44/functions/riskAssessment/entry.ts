@@ -1,76 +1,100 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.24';
+
+const VALID_OPERATION_TYPES = new Set(['assault', 'recon', 'defense', 'sabotage', 'scavenge', 'escort']);
 
 Deno.serve(async (req) => {
+  if (req.method !== 'POST') {
+    return Response.json({ error: 'Method not allowed' }, { status: 405 });
+  }
+
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const { territory_id, survivor_ids, operation_type } = await req.json();
-
-    if (!territory_id || !survivor_ids?.length || !operation_type) {
-      return Response.json({ error: 'Missing required fields' }, { status: 400 });
+    if (!user?.email) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Fetch all needed data in parallel
-    const [territory, allDiplomacy, allFactions, allInventory, survivors] = await Promise.all([
-      base44.entities.Territory.filter({ id: territory_id }),
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== 'object') {
+      return Response.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+
+    const territoryId = sanitizeText(body.territory_id, 80);
+    const operationType = sanitizeText(body.operation_type, 40);
+    const survivorIds = normalizeIdArray(body.survivor_ids, 12);
+
+    if (!territoryId || survivorIds.length === 0 || !VALID_OPERATION_TYPES.has(operationType)) {
+      return Response.json({ error: 'territory_id, valid survivor_ids, and valid operation_type are required' }, { status: 400 });
+    }
+
+    const [territories, diplomacyRecords, factions, inventoryItems, survivorGroups, playerBases] = await Promise.all([
+      base44.asServiceRole.entities.Territory.filter({ id: territoryId }),
       base44.asServiceRole.entities.Diplomacy.list('-updated_date', 100),
       base44.asServiceRole.entities.Faction.list('-created_date', 50),
       base44.asServiceRole.entities.InventoryItem.filter({ owner_email: user.email }, '-created_date', 500),
-      Promise.all(survivor_ids.map(id => base44.asServiceRole.entities.Survivor.filter({ id }))),
+      Promise.all(survivorIds.map((id) => base44.asServiceRole.entities.Survivor.filter({ id }))),
+      user.role === 'admin'
+        ? Promise.resolve([])
+        : base44.asServiceRole.entities.PlayerBase.filter({ owner_email: user.email }),
     ]);
 
-    const terr = territory[0];
-    if (!terr) return Response.json({ error: 'Territory not found' }, { status: 404 });
+    const territory = territories[0];
+    if (!territory) {
+      return Response.json({ error: 'Territory not found' }, { status: 404 });
+    }
 
-    const squad = survivors.map(s => s[0]).filter(Boolean);
-    if (squad.length === 0) return Response.json({ error: 'No valid survivors found' }, { status: 400 });
+    const squad = survivorGroups.map((group) => group[0]).filter(Boolean);
+    if (squad.length === 0) {
+      return Response.json({ error: 'No valid survivors found' }, { status: 400 });
+    }
+
+    if (user.role !== 'admin') {
+      const ownedBaseIds = new Set(playerBases.map((base) => base.id).filter(Boolean));
+      const unauthorized = squad.filter((survivor) => !ownedBaseIds.has(survivor.base_id));
+      if (unauthorized.length > 0 || squad.length !== survivorIds.length) {
+        return Response.json({ error: 'One or more survivors are not available to this planner' }, { status: 403 });
+      }
+    }
 
     const riskFactors = [];
-    let baseSuccess = 60; // Start at 60%
+    let baseSuccess = 60;
 
-    // === 1. SQUAD COMBAT POWER ===
-    const avgCombat = squad.reduce((s, sv) => s + (sv.combat_rating || 1), 0) / squad.length;
-    const combatBonus = Math.min(20, (avgCombat - 3) * 5); // 3 is "average", each point above adds 5%
+    const averageCombat = squad.reduce((sum, survivor) => sum + clampNumber(survivor.combat_rating, 1, 10, 1), 0) / squad.length;
+    const combatBonus = clampNumber((averageCombat - 3) * 5, -15, 20, 0);
     riskFactors.push({
-      factor: "Squad Combat Rating",
-      impact: combatBonus,
-      detail: `Average combat: ${avgCombat.toFixed(1)}/10 across ${squad.length} operatives`
+      factor: 'Squad Combat Rating',
+      impact: Math.round(combatBonus),
+      detail: `Average combat: ${averageCombat.toFixed(1)}/10 across ${squad.length} operatives`,
     });
     baseSuccess += combatBonus;
 
-    // === 2. SQUAD SIZE ===
-    const sizeBonus = Math.min(10, (squad.length - 1) * 3);
+    const sizeBonus = Math.min(10, Math.max(0, (squad.length - 1) * 3));
     riskFactors.push({
-      factor: "Squad Size",
+      factor: 'Squad Size',
       impact: sizeBonus,
-      detail: `${squad.length} operative${squad.length > 1 ? 's' : ''} assigned`
+      detail: `${squad.length} operative${squad.length > 1 ? 's' : ''} assigned`,
     });
     baseSuccess += sizeBonus;
 
-    // === 3. SQUAD HEALTH ===
     const healthPenalties = { critical: -20, injured: -12, sick: -8, healthy: 0, peak: 5 };
-    const avgHealth = squad.reduce((s, sv) => s + (healthPenalties[sv.health] || 0), 0) / squad.length;
+    const averageHealth = squad.reduce((sum, survivor) => sum + (healthPenalties[survivor.health] ?? 0), 0) / squad.length;
     riskFactors.push({
-      factor: "Squad Health",
-      impact: Math.round(avgHealth),
-      detail: squad.map(s => `${s.name}: ${s.health}`).join(', ')
+      factor: 'Squad Health',
+      impact: Math.round(averageHealth),
+      detail: squad.map((survivor) => `${sanitizeText(survivor.name, 40)}: ${sanitizeText(survivor.health, 20) || 'unknown'}`).join(', '),
     });
-    baseSuccess += avgHealth;
+    baseSuccess += averageHealth;
 
-    // === 4. SQUAD MORALE ===
-    const moraleMods = { desperate: -15, anxious: -8, neutral: 0, content: 5, thriving: 10 };
-    const avgMorale = squad.reduce((s, sv) => s + (moraleMods[sv.morale] || 0), 0) / squad.length;
+    const moraleModifiers = { desperate: -15, anxious: -8, neutral: 0, content: 5, thriving: 10 };
+    const averageMorale = squad.reduce((sum, survivor) => sum + (moraleModifiers[survivor.morale] ?? 0), 0) / squad.length;
     riskFactors.push({
-      factor: "Squad Morale",
-      impact: Math.round(avgMorale),
-      detail: squad.map(s => `${s.name}: ${s.morale}`).join(', ')
+      factor: 'Squad Morale',
+      impact: Math.round(averageMorale),
+      detail: squad.map((survivor) => `${sanitizeText(survivor.name, 40)}: ${sanitizeText(survivor.morale, 20) || 'unknown'}`).join(', '),
     });
-    baseSuccess += avgMorale;
+    baseSuccess += averageMorale;
 
-    // === 5. SKILL MATCH ===
-    const opSkillMap = {
+    const operationSkillMap = {
       assault: ['guard', 'scavenger'],
       recon: ['scavenger', 'mechanic'],
       defense: ['guard', 'engineer'],
@@ -78,111 +102,103 @@ Deno.serve(async (req) => {
       scavenge: ['scavenger', 'trader'],
       escort: ['guard', 'medic'],
     };
-    const idealSkills = opSkillMap[operation_type] || [];
-    const matchCount = squad.filter(s => idealSkills.includes(s.skill)).length;
-    const skillBonus = matchCount > 0 ? Math.min(15, matchCount * 8) : -5;
+    const idealSkills = operationSkillMap[operationType] || [];
+    const matchingSpecialists = squad.filter((survivor) => idealSkills.includes(survivor.skill)).length;
+    const skillBonus = matchingSpecialists > 0 ? Math.min(15, matchingSpecialists * 8) : -5;
     riskFactors.push({
-      factor: "Skill Compatibility",
+      factor: 'Skill Compatibility',
       impact: skillBonus,
-      detail: matchCount > 0 
-        ? `${matchCount}/${squad.length} have ideal skills (${idealSkills.join(', ')})` 
-        : `No specialists for ${operation_type} (ideal: ${idealSkills.join(', ')})`
+      detail: matchingSpecialists > 0
+        ? `${matchingSpecialists}/${squad.length} have ideal skills (${idealSkills.join(', ')})`
+        : `No specialists for ${operationType} (ideal: ${idealSkills.join(', ')})`,
     });
     baseSuccess += skillBonus;
 
-    // === 6. EQUIPMENT CONDITION ===
-    const equippedItems = allInventory.filter(i => i.is_equipped);
+    const equippedItems = inventoryItems.filter((item) => item.is_equipped);
     if (equippedItems.length > 0) {
-      const avgCondition = equippedItems.reduce((s, i) => s + (i.condition || 50), 0) / equippedItems.length;
-      const equipBonus = Math.round((avgCondition - 50) / 5); // 50 = baseline
+      const averageCondition = equippedItems.reduce((sum, item) => sum + clampNumber(item.condition, 0, 100, 50), 0) / equippedItems.length;
+      const equipmentBonus = Math.round((averageCondition - 50) / 5);
       riskFactors.push({
-        factor: "Equipment Condition",
-        impact: equipBonus,
-        detail: `Average gear condition: ${avgCondition.toFixed(0)}% across ${equippedItems.length} items`
+        factor: 'Equipment Condition',
+        impact: equipmentBonus,
+        detail: `Average gear condition: ${averageCondition.toFixed(0)}% across ${equippedItems.length} items`,
       });
-      baseSuccess += equipBonus;
+      baseSuccess += equipmentBonus;
     } else {
       riskFactors.push({
-        factor: "Equipment Condition",
+        factor: 'Equipment Condition',
         impact: -10,
-        detail: "No equipped items found — squad is underequipped"
+        detail: 'No equipped items found - squad is underequipped',
       });
       baseSuccess -= 10;
     }
 
-    // === 7. TERRITORY THREAT LEVEL ===
-    const threatMods = { minimal: 10, low: 5, moderate: 0, high: -12, critical: -25 };
-    const threatPenalty = threatMods[terr.threat_level] || 0;
+    const threatModifiers = { minimal: 10, low: 5, moderate: 0, high: -12, critical: -25 };
+    const threatPenalty = threatModifiers[territory.threat_level] ?? 0;
     riskFactors.push({
-      factor: "Territory Threat",
+      factor: 'Territory Threat',
       impact: threatPenalty,
-      detail: `${terr.name} threat level: ${terr.threat_level}`
+      detail: `${sanitizeText(territory.name, 80)} threat level: ${sanitizeText(territory.threat_level, 20) || 'unknown'}`,
     });
     baseSuccess += threatPenalty;
 
-    // === 8. TERRITORY STATUS ===
-    const statusMods = { secured: 8, uncharted: -3, contested: -12, hostile: -20 };
-    const statusPenalty = statusMods[terr.status] || 0;
+    const statusModifiers = { secured: 8, uncharted: -3, contested: -12, hostile: -20 };
+    const statusPenalty = statusModifiers[territory.status] ?? 0;
     riskFactors.push({
-      factor: "Territory Control",
+      factor: 'Territory Control',
       impact: statusPenalty,
-      detail: `${terr.name} status: ${terr.status}${terr.controlling_faction_id ? '' : ' (unclaimed)'}`
+      detail: `${sanitizeText(territory.name, 80)} status: ${sanitizeText(territory.status, 20) || 'unknown'}${territory.controlling_faction_id ? '' : ' (unclaimed)'}`,
     });
     baseSuccess += statusPenalty;
 
-    // === 9. DIPLOMATIC TENSION ===
-    if (terr.controlling_faction_id) {
-      const controllingFaction = allFactions.find(f => f.id === terr.controlling_faction_id);
-      // Find diplomacy entries involving the controlling faction
-      const relevantDip = allDiplomacy.filter(d => 
-        d.faction_a_id === terr.controlling_faction_id || d.faction_b_id === terr.controlling_faction_id
+    if (territory.controlling_faction_id) {
+      const controllingFaction = factions.find((faction) => faction.id === territory.controlling_faction_id) || null;
+      const relevantDiplomacy = diplomacyRecords.filter((record) =>
+        record.faction_a_id === territory.controlling_faction_id || record.faction_b_id === territory.controlling_faction_id
       );
-      
-      const dipStatusMods = { war: -20, hostile: -12, neutral: 0, ceasefire: 3, trade_agreement: 8, allied: 12 };
-      let worstDip = 0;
+
+      const diplomacyStatusModifiers = { war: -20, hostile: -12, neutral: 0, ceasefire: 3, trade_agreement: 8, allied: 12 };
+      let worstModifier = 0;
       let worstStatus = 'neutral';
-      
-      for (const d of relevantDip) {
-        const mod = dipStatusMods[d.status] || 0;
-        if (mod < worstDip) {
-          worstDip = mod;
-          worstStatus = d.status;
+      for (const record of relevantDiplomacy) {
+        const modifier = diplomacyStatusModifiers[record.status] ?? 0;
+        if (modifier < worstModifier) {
+          worstModifier = modifier;
+          worstStatus = record.status;
         }
       }
 
-      const activeWars = relevantDip.filter(d => d.status === 'war' || d.status === 'hostile').length;
-      const tensionPenalty = worstDip - (activeWars * 3);
-      
+      const activeWars = relevantDiplomacy.filter((record) => record.status === 'war' || record.status === 'hostile').length;
+      const diplomaticPenalty = worstModifier - (activeWars * 3);
+
       riskFactors.push({
-        factor: "Diplomatic Tension",
-        impact: tensionPenalty,
-        detail: controllingFaction 
-          ? `Controlled by [${controllingFaction.tag}] ${controllingFaction.name} — ${activeWars} active conflicts, worst status: ${worstStatus}`
-          : `Unknown faction controls this territory — worst status: ${worstStatus}`
+        factor: 'Diplomatic Tension',
+        impact: diplomaticPenalty,
+        detail: controllingFaction
+          ? `Controlled by [${sanitizeText(controllingFaction.tag, 20)}] ${sanitizeText(controllingFaction.name, 80)} - ${activeWars} active conflicts, worst status: ${worstStatus}`
+          : `Unknown faction controls this territory - worst status: ${worstStatus}`,
       });
-      baseSuccess += tensionPenalty;
+      baseSuccess += diplomaticPenalty;
     }
 
-    // === 10. OPERATION TYPE MODIFIER ===
-    const opDifficulty = { recon: 5, scavenge: 3, escort: 0, defense: -3, sabotage: -8, assault: -12 };
-    const opMod = opDifficulty[operation_type] || 0;
+    const operationDifficulty = { recon: 5, scavenge: 3, escort: 0, defense: -3, sabotage: -8, assault: -12 };
+    const operationModifier = operationDifficulty[operationType] ?? 0;
     riskFactors.push({
-      factor: "Operation Difficulty",
-      impact: opMod,
-      detail: `${operation_type.toUpperCase()} operations have ${opMod >= 0 ? 'lower' : 'higher'} inherent risk`
+      factor: 'Operation Difficulty',
+      impact: operationModifier,
+      detail: `${operationType.toUpperCase()} operations have ${operationModifier >= 0 ? 'lower' : 'higher'} inherent risk`,
     });
-    baseSuccess += opMod;
+    baseSuccess += operationModifier;
 
-    // Clamp to 5-98%
     const successProbability = Math.max(5, Math.min(98, Math.round(baseSuccess)));
     const riskScore = 100 - successProbability;
-
-    // Risk tier
-    let riskTier;
-    if (successProbability >= 80) riskTier = 'low';
-    else if (successProbability >= 60) riskTier = 'moderate';
-    else if (successProbability >= 40) riskTier = 'high';
-    else riskTier = 'critical';
+    const riskTier = successProbability >= 80
+      ? 'low'
+      : successProbability >= 60
+        ? 'moderate'
+        : successProbability >= 40
+          ? 'high'
+          : 'critical';
 
     return Response.json({
       success_probability: successProbability,
@@ -191,17 +207,47 @@ Deno.serve(async (req) => {
       risk_factors: riskFactors,
       squad_summary: {
         count: squad.length,
-        avg_combat: parseFloat(avgCombat.toFixed(1)),
-        names: squad.map(s => s.name),
+        avg_combat: Number.parseFloat(averageCombat.toFixed(1)),
+        names: squad.map((survivor) => survivor.name),
       },
       territory_summary: {
-        name: terr.name,
-        sector: terr.sector,
-        threat: terr.threat_level,
-        status: terr.status,
+        name: territory.name,
+        sector: territory.sector,
+        threat: territory.threat_level,
+        status: territory.status,
       },
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('riskAssessment error:', error);
+    return Response.json({ error: error.message || 'Failed to calculate risk' }, { status: 500 });
   }
 });
+
+function normalizeIdArray(value, maxItems = 12) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return Array.from(new Set(
+    value
+      .map((item) => sanitizeText(item, 80))
+      .filter(Boolean),
+  )).slice(0, maxItems);
+}
+
+function sanitizeText(value, maxLength = 200) {
+  if (typeof value !== 'string') {
+    return '';
+  }
+
+  return value.replace(/\s+/g, ' ').trim().slice(0, maxLength);
+}
+
+function clampNumber(value, min, max, fallback) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return fallback;
+  }
+
+  return Math.min(max, Math.max(min, numeric));
+}
