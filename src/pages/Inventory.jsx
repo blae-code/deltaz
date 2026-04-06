@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import useEntityQuery from "../hooks/useEntityQuery";
+import { useRegisterSync } from "../hooks/useSyncRegistry";
 import DataCard from "../components/terminal/DataCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,7 +32,7 @@ export default function Inventory() {
 
   useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); }, []);
 
-  const { data: items = [], isLoading: loading } = useEntityQuery(
+  const inventoryQuery = useEntityQuery(
     ["inventory", user?.email],
     () => user ? base44.entities.InventoryItem.filter({ owner_email: user.email }, "-created_date", 200) : Promise.resolve([]),
     {
@@ -39,6 +40,9 @@ export default function Inventory() {
       queryOpts: { enabled: !!user?.email },
     }
   );
+  const { data: items = [], isLoading: loading, syncMeta: inventorySyncMeta } = inventoryQuery;
+
+  useRegisterSync("inventory", inventoryQuery);
 
   if (loading) {
     return (
@@ -62,6 +66,7 @@ export default function Inventory() {
     <PageShell
       title={tabTitles[tab]}
       subtitle={tabSubtitles[tab]}
+      syncMeta={inventorySyncMeta}
       actionRail={<ActionRail tabs={railTabs} active={tab} onChange={setTab} />}
     >
       {tab === "inventory" && (

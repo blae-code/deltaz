@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import useEntityQuery from "../hooks/useEntityQuery";
+import { useRegisterSync } from "../hooks/useSyncRegistry";
 import DataCard from "../components/terminal/DataCard";
 import PageShell from "../components/layout/PageShell";
 import StatusStrip from "../components/layout/StatusStrip";
@@ -26,11 +27,12 @@ export default function Jobs() {
 
   useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); }, []);
 
-  const { data: jobsData, isLoading: jobsLoading } = useEntityQuery(
+  const jobsQuery = useEntityQuery(
     "jobs",
     () => base44.entities.Job.list("-created_date", 100),
     { subscribeEntities: ["Job"] }
   );
+  const { data: jobsData, isLoading: jobsLoading, syncMeta: jobsSyncMeta } = jobsQuery;
   const { data: territories } = useEntityQuery(
     "territories",
     () => base44.entities.Territory.list("-created_date", 100),
@@ -44,6 +46,9 @@ export default function Jobs() {
 
   const jobs = jobsData || [];
   const loading = jobsLoading && jobs.length === 0;
+
+  // Register primary query sync state
+  useRegisterSync("jobs", jobsQuery);
 
   const filtered = jobs.filter(j => {
     if (statusFilter !== "all" && j.status !== statusFilter) return false;
@@ -73,6 +78,7 @@ export default function Jobs() {
     <PageShell
       title="Mission Board"
       subtitle="Accept missions, earn reputation, serve your clan"
+      syncMeta={jobsSyncMeta}
       actions={
         <>
           <Button variant={showGenerator ? "default" : "outline"} size="sm" className="text-[10px] uppercase tracking-wider h-7" onClick={() => setShowGenerator(!showGenerator)}>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import useEntityQuery from "../hooks/useEntityQuery";
+import { useRegisterSync } from "../hooks/useSyncRegistry";
 import DataCard from "../components/terminal/DataCard";
 import PageShell from "../components/layout/PageShell";
 import StatusStrip from "../components/layout/StatusStrip";
@@ -23,11 +24,15 @@ export default function CraftingTracker() {
     base44.auth.me().then((u) => { setUser(u); setLoading(false); }).catch(() => setLoading(false));
   }, []);
 
-  const { data: projects = [] } = useEntityQuery(
+  const projectsQuery = useEntityQuery(
     ["craftingProjects", user?.email],
     () => user ? base44.entities.CraftingProject.filter({ owner_email: user.email }, "-created_date", 100) : Promise.resolve([]),
     { subscribeEntities: ["CraftingProject"], queryOpts: { enabled: !!user?.email } }
   );
+  const { data: projects = [], syncMeta: craftingSyncMeta } = projectsQuery;
+
+  useRegisterSync("crafting", projectsQuery);
+
   const { data: inventory = [] } = useEntityQuery(
     ["inventory", user?.email],
     () => user ? base44.entities.InventoryItem.filter({ owner_email: user.email }, "-created_date", 200) : Promise.resolve([]),
@@ -73,6 +78,7 @@ export default function CraftingTracker() {
     <PageShell
       title="Workbench"
       subtitle="Track materials, plan builds, and source what you need"
+      syncMeta={craftingSyncMeta}
       actions={
         <>
           <Button variant={showRecipes ? "default" : "outline"} size="sm" className="text-[10px] uppercase tracking-wider h-7" onClick={() => { setShowRecipes(!showRecipes); setShowCreate(false); }}>

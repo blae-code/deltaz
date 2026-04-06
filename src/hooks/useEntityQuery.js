@@ -38,5 +38,15 @@ export default function useEntityQuery(key, fetcher, opts = {}) {
     return () => unsubs.forEach((u) => u?.());
   }, [queryClient, ...queryKey]);
 
-  return query;
+  // Expose sync metadata alongside standard query fields
+  return {
+    ...query,
+    syncMeta: {
+      dataUpdatedAt: query.dataUpdatedAt,
+      isFetching: query.isFetching,
+      isStale: query.isStale,
+      isError: query.isError,
+      error: query.error,
+    },
+  };
 }
