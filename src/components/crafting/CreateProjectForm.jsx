@@ -6,13 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Hammer } from "lucide-react";
+import { Plus, Trash2, Hammer, BookOpen } from "lucide-react";
+import GuidanceBox from "../terminal/GuidanceBox";
 import { useToast } from "@/components/ui/use-toast";
 
 const CATEGORIES = ["weapon", "armor", "tool", "consumable", "upgrade", "trade_good", "building", "custom"];
 const PRIORITIES = ["low", "normal", "high", "urgent"];
 
-export default function CreateProjectForm({ userEmail, recipes, onCreated }) {
+export default function CreateProjectForm({ userEmail, recipes: rawRecipes, onCreated }) {
+  const recipes = Array.isArray(rawRecipes) ? rawRecipes : [];
   const queryClient = useQueryClient();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -82,11 +84,11 @@ export default function CreateProjectForm({ userEmail, recipes, onCreated }) {
   return (
     <form onSubmit={submit} className="space-y-3">
       {/* Recipe shortcut */}
-      {recipes.length > 0 && (
-        <div>
-          <Label className="text-[9px] uppercase tracking-wider text-muted-foreground font-mono">
-            Load from Recipe (optional)
-          </Label>
+      <div>
+        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-mono">
+          Load from Recipe (optional)
+        </Label>
+        {recipes.length > 0 ? (
           <Select value={recipeId} onValueChange={loadFromRecipe}>
             <SelectTrigger className="h-7 text-[10px] bg-secondary/50 border-border font-mono mt-0.5">
               <SelectValue placeholder="Choose a recipe to auto-fill..." />
@@ -94,13 +96,17 @@ export default function CreateProjectForm({ userEmail, recipes, onCreated }) {
             <SelectContent>
               {recipes.map(r => (
                 <SelectItem key={r.id} value={r.id}>
-                  {r.name} ({r.category}) — {r.difficulty}
+                  {r.name || "Unnamed Recipe"} ({r.category || "custom"}) — {r.difficulty || "unknown"}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-        </div>
-      )}
+        ) : (
+          <GuidanceBox icon={BookOpen} title="No Recipes Loaded" color="muted">
+            The recipe catalogue is empty — define your own materials below. Recipes will auto-fill when your GM adds them.
+          </GuidanceBox>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>

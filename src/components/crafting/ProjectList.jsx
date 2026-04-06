@@ -2,7 +2,8 @@ import ProjectCard from "./ProjectCard";
 import EmptyState from "../terminal/EmptyState";
 import { Hammer } from "lucide-react";
 
-export default function ProjectList({ projects, inventory, userEmail, userCallsign }) {
+export default function ProjectList({ projects: rawProjects, inventory, userEmail, userCallsign }) {
+  const projects = Array.isArray(rawProjects) ? rawProjects : [];
   if (projects.length === 0) {
     return (
       <EmptyState

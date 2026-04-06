@@ -32,10 +32,11 @@ const statusStyle = {
   abandoned: "bg-muted text-muted-foreground",
 };
 
-export default function ProjectCard({ project, inventory, userEmail, userCallsign }) {
+export default function ProjectCard({ project, inventory: rawInventory, userEmail, userCallsign }) {
+  const inventory = Array.isArray(rawInventory) ? rawInventory : [];
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [materials, setMaterials] = useState(project.materials || []);
+  const [materials, setMaterials] = useState(Array.isArray(project.materials) ? project.materials : []);
   const [showTrade, setShowTrade] = useState(false);
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
@@ -104,9 +105,10 @@ export default function ProjectCard({ project, inventory, userEmail, userCallsig
 
   // Check inventory for auto-detection
   const getInventoryCount = (resourceName) => {
+    if (!resourceName) return 0;
     const lower = resourceName.toLowerCase();
     return inventory
-      .filter(i => i.name.toLowerCase().includes(lower))
+      .filter(i => i.name && i.name.toLowerCase().includes(lower))
       .reduce((sum, i) => sum + (i.quantity || 1), 0);
   };
 

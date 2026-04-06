@@ -5,7 +5,9 @@ import DataCard from "../terminal/DataCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Hammer, Search, Plus, Check, X } from "lucide-react";
+import { Hammer, Search, Plus, Check, X, BookOpen } from "lucide-react";
+import EmptyState from "../terminal/EmptyState";
+import GuidanceBox from "../terminal/GuidanceBox";
 import { useToast } from "@/components/ui/use-toast";
 
 const diffColor = {
@@ -30,9 +32,10 @@ export default function RecipeBrowser({ recipes, inventory, userEmail, onProject
   });
 
   const getInventoryCount = (resourceName) => {
+    if (!resourceName) return 0;
     const lower = resourceName.toLowerCase();
     return inventory
-      .filter(i => i.name.toLowerCase().includes(lower))
+      .filter(i => i.name && i.name.toLowerCase().includes(lower))
       .reduce((sum, i) => sum + (i.quantity || 1), 0);
   };
 
@@ -75,7 +78,7 @@ export default function RecipeBrowser({ recipes, inventory, userEmail, onProject
               <button
                 key={cat}
                 onClick={() => setCatFilter(cat)}
-                className={`text-[8px] uppercase tracking-wider font-mono px-2 py-1 rounded-sm ${
+                className={`text-[10px] uppercase tracking-wider font-mono px-2 py-1 rounded-sm ${
                   catFilter === cat ? "bg-primary/10 text-primary border border-primary/30" : "text-muted-foreground border border-transparent hover:text-foreground"
                 }`}
               >
@@ -87,7 +90,12 @@ export default function RecipeBrowser({ recipes, inventory, userEmail, onProject
 
         {/* Recipe list */}
         {filtered.length === 0 && (
-          <p className="text-[10px] text-muted-foreground font-mono text-center py-4">No recipes found.</p>
+          <div className="py-4">
+            <GuidanceBox icon={Search} title="No Matching Recipes" color="muted">
+              {search ? `No recipes match "${search}".` : `No recipes in the "${catFilter}" category.`}
+              {" "}Try adjusting your search or filter, or create a custom project instead.
+            </GuidanceBox>
+          </div>
         )}
 
         <div className="space-y-2 max-h-[400px] overflow-y-auto">
@@ -101,10 +109,14 @@ export default function RecipeBrowser({ recipes, inventory, userEmail, onProject
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-[11px] font-semibold font-mono text-foreground">{recipe.name}</span>
-                      <span className={`text-[8px] font-mono uppercase tracking-wider ${diffColor[recipe.difficulty] || ""}`}>
-                        {recipe.difficulty}
-                      </span>
-                      <span className="text-[8px] text-muted-foreground uppercase">{recipe.category}</span>
+                      {recipe.difficulty && (
+                        <span className={`text-[10px] font-mono uppercase tracking-wider ${diffColor[recipe.difficulty] || "text-muted-foreground"}`}>
+                          {recipe.difficulty}
+                        </span>
+                      )}
+                      {recipe.category && (
+                        <span className="text-[10px] text-muted-foreground uppercase">{recipe.category}</span>
+                      )}
                     </div>
                     {recipe.description && (
                       <p className="text-[9px] text-muted-foreground italic mt-0.5">{recipe.description}</p>
@@ -114,7 +126,7 @@ export default function RecipeBrowser({ recipes, inventory, userEmail, onProject
                     size="sm"
                     variant={canCraft ? "default" : "outline"}
                     onClick={() => startProject(recipe)}
-                    className="h-6 text-[8px] font-mono uppercase tracking-wider shrink-0"
+                    className="h-6 text-[10px] font-mono uppercase tracking-wider shrink-0"
                   >
                     <Plus className="h-3 w-3 mr-0.5" /> TRACK
                   </Button>
@@ -133,15 +145,15 @@ export default function RecipeBrowser({ recipes, inventory, userEmail, onProject
                         }`}
                       >
                         {hasEnough ? <Check className="h-2.5 w-2.5" /> : <X className="h-2.5 w-2.5 text-destructive/50" />}
-                        <span>{ing.amount}x {ing.resource}</span>
-                        <span className="text-[8px] opacity-60">({invCount})</span>
+                        <span>{ing.amount}x {ing.resource || "???"}</span>
+                        <span className="text-[10px] opacity-60">({invCount})</span>
                       </div>
                     );
                   })}
                 </div>
 
                 {recipe.bonus_type && recipe.bonus_type !== "none" && (
-                  <div className="mt-1.5 text-[8px] text-chart-4 font-mono">
+                  <div className="mt-1.5 text-[10px] text-chart-4 font-mono">
                     +{recipe.bonus_value || 0}% {recipe.bonus_type} • Value: {recipe.output_value || 0}c
                   </div>
                 )}

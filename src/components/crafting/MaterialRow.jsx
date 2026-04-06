@@ -1,9 +1,11 @@
 import { Input } from "@/components/ui/input";
 import { Check, Minus } from "lucide-react";
 
-export default function MaterialRow({ mat, idx, editing, inventoryCount, onUpdate }) {
+export default function MaterialRow({ mat, idx, editing, inventoryCount = 0, onUpdate }) {
+  if (!mat) return null;
   const have = mat.have || 0;
   const needed = mat.needed || 1;
+  const resourceName = mat.resource || "Unknown Material";
   const complete = have >= needed;
   const inInventory = inventoryCount > 0;
 
@@ -21,7 +23,7 @@ export default function MaterialRow({ mat, idx, editing, inventoryCount, onUpdat
           {complete && <Check className="h-2.5 w-2.5 text-status-ok" />}
         </div>
         <span className={`text-[10px] font-mono truncate ${complete ? "text-muted-foreground line-through" : "text-foreground"}`}>
-          {mat.resource}
+          {resourceName}
         </span>
       </div>
 
