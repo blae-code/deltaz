@@ -27,6 +27,7 @@ import {
   Target,
   Flame,
   BarChart3,
+  Swords,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
@@ -53,6 +54,7 @@ const playerNav = [
   { path: "/planner", label: "PLANNER", icon: Target },
   { path: "/heatmap", label: "HEATMAP", icon: Flame },
   { path: "/ledger", label: "LEDGER", icon: BarChart3 },
+  { path: "/conflicts", label: "CONFLICTS", icon: Swords },
   { path: "/profile", label: "PROFILE", icon: User },
 ];
 

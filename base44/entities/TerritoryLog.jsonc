@@ -1,0 +1,52 @@
+{
+  "name": "TerritoryLog",
+  "type": "object",
+  "properties": {
+    "territory_id": {
+      "type": "string",
+      "description": "Reference to the Territory entity"
+    },
+    "sector": {
+      "type": "string",
+      "description": "Sector code snapshot e.g. A-7"
+    },
+    "territory_name": {
+      "type": "string",
+      "description": "Territory name snapshot"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "status_change",
+        "control_change",
+        "threat_change"
+      ],
+      "description": "What kind of change occurred"
+    },
+    "old_value": {
+      "type": "string",
+      "description": "Previous status, controlling faction, or threat level"
+    },
+    "new_value": {
+      "type": "string",
+      "description": "New status, controlling faction, or threat level"
+    },
+    "old_faction_id": {
+      "type": "string",
+      "description": "Previous controlling faction ID (for control changes)"
+    },
+    "new_faction_id": {
+      "type": "string",
+      "description": "New controlling faction ID (for control changes)"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable summary of the change"
+    }
+  },
+  "required": [
+    "territory_id",
+    "sector",
+    "event_type"
+  ]
+}

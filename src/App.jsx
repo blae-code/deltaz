@@ -29,6 +29,7 @@ import Journal from './pages/Journal';
 import MissionPlanner from './pages/MissionPlanner';
 import SectorHeatmap from './pages/SectorHeatmap';
 import ResourceLedger from './pages/ResourceLedger';
+import ConflictTimeline from './pages/ConflictTimeline';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -71,6 +72,7 @@ const AuthenticatedApp = () => {
         <Route path="/planner" element={<MissionPlanner />} />
         <Route path="/heatmap" element={<SectorHeatmap />} />
         <Route path="/ledger" element={<ResourceLedger />} />
+        <Route path="/conflicts" element={<ConflictTimeline />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>
