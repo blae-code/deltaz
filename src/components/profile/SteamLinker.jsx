@@ -44,7 +44,8 @@ export default function SteamLinker() {
         action: "verify",
         openid_params: openidParams,
       });
-      toast({ title: "Steam Linked!", description: `Steam ID: ${res.data.steam_id}` });
+      const wlMsg = res.data.whitelisted ? 'You have been whitelisted on the game server.' : 'Steam linked. Whitelist will sync when server is online.';
+      toast({ title: "Steam Linked!", description: `${res.data.steam_id} — ${wlMsg}` });
       // Clean URL
       window.history.replaceState({}, document.title, window.location.pathname);
       loadStatus();

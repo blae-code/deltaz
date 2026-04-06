@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, Plus, Trash2, Send, Zap, Flag, Coins, Crosshair, ArrowLeftRight, Users, Server } from "lucide-react";
+import { Shield, Plus, Trash2, Send, Zap, Flag, Coins, Crosshair, ArrowLeftRight, Users, Server, ShieldCheck } from "lucide-react";
 import DispatchPanel from "../components/admin/DispatchPanel";
 import ServerDashboard from "../components/admin/ServerDashboard";
 import AutoAssignPanel from "../components/admin/AutoAssignPanel";
@@ -17,6 +17,7 @@ import MissionForgePanel from "../components/admin/MissionForgePanel";
 import TradePanel from "../components/admin/TradePanel";
 import DiplomacyPanel from "../components/admin/DiplomacyPanel";
 import SurvivorAdminPanel from "../components/admin/SurvivorAdminPanel";
+import WhitelistPanel from "../components/admin/WhitelistPanel";
 import { useToast } from "@/components/ui/use-toast";
 
 function CreateFactionForm({ onCreated }) {
@@ -217,6 +218,7 @@ export default function Admin() {
       <Tabs defaultValue="server" className="w-full">
         <TabsList className="bg-muted border border-border font-mono">
           <TabsTrigger value="server" className="text-xs font-mono">SERVER</TabsTrigger>
+          <TabsTrigger value="whitelist" className="text-xs font-mono">WHITELIST</TabsTrigger>
           <TabsTrigger value="dispatch" className="text-xs font-mono">DISPATCH</TabsTrigger>
           <TabsTrigger value="autoassign" className="text-xs font-mono">AUTO-ASSIGN</TabsTrigger>
           <TabsTrigger value="jobs" className="text-xs font-mono">JOBS</TabsTrigger>
@@ -239,6 +241,17 @@ export default function Admin() {
               </CardTitle>
             </CardHeader>
             <CardContent><ServerDashboard /></CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="whitelist">
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <CardTitle className="text-xs font-mono text-muted-foreground tracking-widest flex items-center gap-2">
+                <ShieldCheck className="h-3.5 w-3.5" /> SERVER WHITELIST
+              </CardTitle>
+            </CardHeader>
+            <CardContent><WhitelistPanel /></CardContent>
           </Card>
         </TabsContent>
 

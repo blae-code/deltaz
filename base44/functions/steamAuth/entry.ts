@@ -100,10 +100,27 @@ Deno.serve(async (req) => {
         steam_linked_at: new Date().toISOString(),
       });
 
+      // Auto-whitelist the player on the game server
+      let whitelistResult = null;
+      try {
+        const wlRes = await base44.asServiceRole.functions.invoke('whitelistPlayer', {
+          action: 'add',
+          steam_id: steamId,
+          callsign: userData.callsign || user.full_name || user.email,
+          actor_email: user.email,
+        });
+        whitelistResult = wlRes;
+        console.log('Auto-whitelist result:', JSON.stringify(wlRes));
+      } catch (wlErr) {
+        console.warn('Auto-whitelist failed (non-blocking):', wlErr.message);
+        whitelistResult = { error: wlErr.message };
+      }
+
       return Response.json({ 
         status: "ok", 
         steam_id: steamId,
-        message: "Steam account linked successfully!"
+        message: "Steam account linked successfully!",
+        whitelisted: !whitelistResult?.error,
       });
     }
 
