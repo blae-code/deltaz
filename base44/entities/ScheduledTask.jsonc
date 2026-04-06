@@ -1,0 +1,86 @@
+{
+  "name": "ScheduledTask",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Human-readable task name"
+    },
+    "task_type": {
+      "type": "string",
+      "enum": [
+        "restart",
+        "broadcast",
+        "rcon_command",
+        "event_start",
+        "event_end"
+      ],
+      "description": "What this task does"
+    },
+    "schedule_type": {
+      "type": "string",
+      "enum": [
+        "once",
+        "recurring"
+      ],
+      "default": "once"
+    },
+    "cron_expression": {
+      "type": "string",
+      "description": "Cron expression for recurring tasks (e.g. '0 4 * * *' = daily at 4am UTC)"
+    },
+    "run_at": {
+      "type": "string",
+      "description": "ISO datetime for one-time tasks"
+    },
+    "payload": {
+      "type": "string",
+      "description": "JSON string with task-specific config (message, command, event data, etc.)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "paused",
+        "completed",
+        "failed"
+      ],
+      "default": "active"
+    },
+    "last_run_at": {
+      "type": "string",
+      "description": "ISO datetime of last execution"
+    },
+    "last_run_result": {
+      "type": "string",
+      "description": "Result/error from last execution"
+    },
+    "run_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Total times this task has executed"
+    },
+    "max_runs": {
+      "type": "number",
+      "default": 0,
+      "description": "Max runs before auto-completing (0 = unlimited for recurring)"
+    },
+    "created_by_email": {
+      "type": "string",
+      "description": "Admin who created this task"
+    },
+    "warn_minutes_before": {
+      "type": "number",
+      "default": 0,
+      "description": "Minutes before execution to send a warning broadcast (0 = no warning)"
+    },
+    "warn_message": {
+      "type": "string",
+      "description": "Custom warning message (defaults to auto-generated)"
+    }
+  },
+  "required": [
+    "name",
+    "task_type"
+  ]
+}
