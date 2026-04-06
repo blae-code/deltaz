@@ -1,0 +1,90 @@
+{
+  "name": "JournalEntry",
+  "type": "object",
+  "properties": {
+    "player_email": {
+      "type": "string",
+      "description": "Email of the player"
+    },
+    "title": {
+      "type": "string",
+      "description": "Event title"
+    },
+    "narrative": {
+      "type": "string",
+      "description": "AI-generated narrative description of the event"
+    },
+    "choices": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "effect_description": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Available choices for this event"
+    },
+    "chosen": {
+      "type": "string",
+      "description": "ID of the choice the player made"
+    },
+    "chosen_label": {
+      "type": "string",
+      "description": "Label of the choice made"
+    },
+    "outcome": {
+      "type": "string",
+      "description": "AI-generated outcome narrative based on the choice"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "encounter",
+        "discovery",
+        "dilemma",
+        "crisis",
+        "opportunity"
+      ],
+      "default": "encounter"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "resolved"
+      ],
+      "default": "pending"
+    },
+    "reputation_effect": {
+      "type": "object",
+      "properties": {
+        "faction_id": {
+          "type": "string"
+        },
+        "delta": {
+          "type": "number"
+        }
+      },
+      "description": "Reputation change from this choice"
+    },
+    "related_territory_id": {
+      "type": "string"
+    },
+    "related_faction_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "player_email",
+    "title",
+    "category"
+  ]
+}

@@ -13,6 +13,8 @@ export default function Factions() {
   const [territories, setTerritories] = useState([]);
   const [users, setUsers] = useState([]);
   const [reputations, setReputations] = useState([]);
+  const [jobs, setJobs] = useState([]);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState(null);
 
@@ -24,14 +26,18 @@ export default function Factions() {
       base44.entities.Territory.list("-created_date", 100),
       base44.entities.User.list("-created_date", 200),
       base44.entities.Reputation.list("-created_date", 500),
+      base44.entities.Job.list("-created_date", 200),
+      base44.auth.me(),
     ])
-      .then(([f, d, e, t, u, r]) => {
+      .then(([f, d, e, t, u, r, j, me]) => {
         setFactions(f);
         setDiplomacy(d);
         setEconomies(e);
         setTerritories(t);
         setUsers(u);
         setReputations(r);
+        setJobs(j);
+        setUser(me);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -127,6 +133,8 @@ export default function Factions() {
               members={getFactionMembers(selectedId)}
               diplomacy={diplomacy}
               factions={factions}
+              jobs={jobs}
+              userEmail={user?.email}
             />
           </div>
         )}

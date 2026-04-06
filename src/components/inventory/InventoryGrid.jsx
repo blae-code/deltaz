@@ -1,17 +1,36 @@
 import { useState } from "react";
 import InventoryItemCard from "./InventoryItemCard";
+import InventorySorter, { sortItems } from "./InventorySorter";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 
 const CATEGORIES = ["all", "weapon", "armor", "tool", "consumable", "material", "ammo", "misc"];
 
-export default function InventoryGrid({ items, onUpdate }) {
+export default function InventoryGrid({ items, onUpdate, userEmail }) {
   const [filter, setFilter] = useState("all");
+  const [sortKey, setSortKey] = useState("name");
+  const [sortDir, setSortDir] = useState("asc");
+  const [search, setSearch] = useState("");
 
-  const filtered = filter === "all" ? items : items.filter(i => i.category === filter);
+  let filtered = filter === "all" ? items : items.filter(i => i.category === filter);
+  if (search) filtered = filtered.filter(i => i.name?.toLowerCase().includes(search.toLowerCase()));
+  filtered = sortItems(filtered, sortKey, sortDir);
   const equipped = filtered.filter(i => i.is_equipped);
   const unequipped = filtered.filter(i => !i.is_equipped);
 
   return (
     <div className="space-y-3">
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+        <Input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Search items..."
+          className="h-7 text-[10px] bg-secondary/50 border-border font-mono pl-7"
+        />
+      </div>
+
       {/* Category filter */}
       <div className="flex gap-1 flex-wrap">
         {CATEGORIES.map(cat => (
@@ -29,13 +48,16 @@ export default function InventoryGrid({ items, onUpdate }) {
         ))}
       </div>
 
+      {/* Sorting */}
+      <InventorySorter sortKey={sortKey} sortDir={sortDir} onSort={(k, d) => { setSortKey(k); setSortDir(d); }} />
+
       {/* Equipped section */}
       {equipped.length > 0 && (
         <div>
           <div className="text-[9px] text-primary tracking-widest uppercase mb-2">EQUIPPED ({equipped.length})</div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-2">
             {equipped.map(item => (
-              <InventoryItemCard key={item.id} item={item} onUpdate={onUpdate} />
+              <InventoryItemCard key={item.id} item={item} onUpdate={onUpdate} userEmail={userEmail} />
             ))}
           </div>
         </div>
@@ -51,7 +73,7 @@ export default function InventoryGrid({ items, onUpdate }) {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-2">
             {unequipped.map(item => (
-              <InventoryItemCard key={item.id} item={item} onUpdate={onUpdate} />
+              <InventoryItemCard key={item.id} item={item} onUpdate={onUpdate} userEmail={userEmail} />
             ))}
           </div>
         )}

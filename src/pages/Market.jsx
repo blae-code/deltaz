@@ -4,8 +4,10 @@ import DataCard from "../components/terminal/DataCard";
 import CommodityRow from "../components/market/CommodityRow";
 import ModifierBreakdown from "../components/market/ModifierBreakdown";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, RefreshCw, Info, ChevronDown, ChevronUp } from "lucide-react";
+import { TrendingUp, RefreshCw, Info, ArrowLeftRight } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+import PlayerTradeBoard from "../components/market/PlayerTradeBoard";
 
 const RESOURCE_ORDER = ["fuel", "metals", "tech", "food", "munitions"];
 
@@ -15,6 +17,8 @@ export default function Market() {
   const [factions, setFactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedRow, setExpandedRow] = useState(null);
+  const [user, setUser] = useState(null);
+  const [tab, setTab] = useState("commodities"); // commodities | player_trades
 
   const loadData = () => {
     setLoading(true);
@@ -22,13 +26,14 @@ export default function Market() {
       base44.entities.CommodityPrice.list("-updated_date", 20),
       base44.entities.Diplomacy.list("-created_date", 20),
       base44.entities.Faction.list("-created_date", 20),
+      base44.auth.me(),
     ])
-      .then(([c, d, f]) => {
-        // Sort commodities by resource order
+      .then(([c, d, f, u]) => {
         const sorted = RESOURCE_ORDER.map((rt) => c.find((x) => x.resource_type === rt)).filter(Boolean);
         setCommodities(sorted);
         setDiplomacy(d);
         setFactions(f);
+        setUser(u);
       })
       .finally(() => setLoading(false));
   };
@@ -66,17 +71,43 @@ export default function Market() {
     <TooltipProvider delayDuration={200}>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h2 className="text-lg font-bold font-display tracking-wider text-primary uppercase">
-            Commodity Exchange
-          </h2>
-          <p className="text-xs text-muted-foreground mt-1">
-            Live resource prices — affected by diplomacy, supply chains, and conflict
-          </p>
+        <div className="flex items-start justify-between flex-wrap gap-2">
+          <div>
+            <h2 className="text-lg font-bold font-display tracking-wider text-primary uppercase">
+              {tab === "commodities" ? "Commodity Exchange" : "Player Marketplace"}
+            </h2>
+            <p className="text-xs text-muted-foreground mt-1">
+              {tab === "commodities"
+                ? "Live resource prices — affected by diplomacy, supply chains, and conflict"
+                : "Player-to-player trading with sector-based availability"}
+            </p>
+          </div>
+          <div className="flex gap-1.5">
+            <Button
+              variant={tab === "commodities" ? "default" : "outline"}
+              size="sm"
+              className="h-7 text-[10px] uppercase tracking-wider"
+              onClick={() => setTab("commodities")}
+            >
+              <TrendingUp className="h-3 w-3 mr-1" /> COMMODITIES
+            </Button>
+            <Button
+              variant={tab === "player_trades" ? "default" : "outline"}
+              size="sm"
+              className="h-7 text-[10px] uppercase tracking-wider"
+              onClick={() => setTab("player_trades")}
+            >
+              <ArrowLeftRight className="h-3 w-3 mr-1" /> P2P MARKET
+            </Button>
+          </div>
         </div>
 
+        {tab === "player_trades" && (
+          <PlayerTradeBoard userEmail={user?.email} />
+        )}
+
         {/* Diplomatic Context Banner */}
-        {(tradeAgreements.length > 0 || wars.length > 0) && (
+        {tab === "commodities" && (tradeAgreements.length > 0 || wars.length > 0) && (
           <div className="flex flex-wrap gap-2">
             {tradeAgreements.map((d) => (
               <Badge
@@ -99,8 +130,7 @@ export default function Market() {
           </div>
         )}
 
-        {/* Price Board */}
-        <DataCard
+        {tab === "commodities" && <DataCard
           title="Market Board"
           headerRight={
             <div className="flex items-center gap-2">
@@ -168,9 +198,10 @@ export default function Market() {
               ))}
             </div>
           )}
-        </DataCard>
+        </DataCard>}
 
         {/* Legend */}
+        {tab === "commodities" && (
         <div className="border border-border bg-card rounded-sm p-4 space-y-2">
           <h4 className="text-[10px] font-mono tracking-widest text-muted-foreground">HOW PRICES WORK</h4>
           <div className="grid md:grid-cols-3 gap-3 text-[10px] text-muted-foreground">
@@ -188,6 +219,7 @@ export default function Market() {
             </div>
           </div>
         </div>
+        )}
       </div>
     </TooltipProvider>
   );

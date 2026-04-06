@@ -2,8 +2,10 @@ import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Shield, Sword, Wrench, Apple, Box, Zap, Trash2 } from "lucide-react";
+import { Shield, Sword, Wrench, Apple, Box, Zap, Trash2, Hammer, ArrowRight } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import DismantleDialog from "./DismantleDialog";
+import TransferDialog from "./TransferDialog";
 
 const catIcons = { weapon: Sword, armor: Shield, tool: Wrench, consumable: Apple, material: Box, ammo: Zap, misc: Box };
 
@@ -15,8 +17,10 @@ const rarityColors = {
   legendary: "text-accent border-accent/30",
 };
 
-export default function InventoryItemCard({ item, onUpdate }) {
+export default function InventoryItemCard({ item, onUpdate, userEmail }) {
   const [loading, setLoading] = useState(false);
+  const [showDismantle, setShowDismantle] = useState(false);
+  const [showTransfer, setShowTransfer] = useState(false);
   const { toast } = useToast();
   const Icon = catIcons[item.category] || Box;
 
@@ -68,25 +72,27 @@ export default function InventoryItemCard({ item, onUpdate }) {
 
       {/* Actions */}
       <div className="flex gap-1 mt-2">
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex-1 h-6 text-[9px] uppercase tracking-wider"
-          onClick={toggleEquip}
-          disabled={loading}
-        >
+        <Button variant="outline" size="sm" className="flex-1 h-6 text-[9px] uppercase tracking-wider" onClick={toggleEquip} disabled={loading}>
           {item.is_equipped ? "UNEQUIP" : "EQUIP"}
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-6 w-6 p-0 text-destructive border-destructive/20"
-          onClick={deleteItem}
-          disabled={loading}
-        >
+        <Button variant="outline" size="sm" className="h-6 w-6 p-0 text-accent/70 border-accent/20 hover:text-accent" onClick={() => setShowDismantle(!showDismantle)} disabled={loading} title="Dismantle">
+          <Hammer className="h-3 w-3" />
+        </Button>
+        <Button variant="outline" size="sm" className="h-6 w-6 p-0 text-primary/70 border-primary/20 hover:text-primary" onClick={() => setShowTransfer(!showTransfer)} disabled={loading} title="Transfer">
+          <ArrowRight className="h-3 w-3" />
+        </Button>
+        <Button variant="outline" size="sm" className="h-6 w-6 p-0 text-destructive border-destructive/20" onClick={deleteItem} disabled={loading}>
           <Trash2 className="h-3 w-3" />
         </Button>
       </div>
+
+      {showDismantle && (
+        <DismantleDialog item={item} userEmail={userEmail} onComplete={() => { setShowDismantle(false); onUpdate?.(); }} onCancel={() => setShowDismantle(false)} />
+      )}
+
+      {showTransfer && (
+        <TransferDialog item={item} userEmail={userEmail} onComplete={() => { setShowTransfer(false); onUpdate?.(); }} onCancel={() => setShowTransfer(false)} />
+      )}
 
       {item.source && <p className="text-[8px] text-muted-foreground mt-1.5 italic">Source: {item.source}</p>}
     </div>

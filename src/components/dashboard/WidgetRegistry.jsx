@@ -1,6 +1,6 @@
 import {
   Crosshair, AlertTriangle, Shield, Map, Radio, Activity,
-  Eye, TrendingUp, Home, Zap, Coins, ScrollText, Target, Swords,
+  Eye, TrendingUp, Home, Zap, Coins, ScrollText, Target, Swords, BookOpen,
 } from "lucide-react";
 
 import TacticalMapWidget from "./TacticalMapWidget";
@@ -12,6 +12,7 @@ import ColonyMonitor from "./ColonyMonitor";
 import FactionEconomyWidget from "./FactionEconomyWidget";
 import MissionForgeFeed from "./MissionForgeFeed";
 import ConflictLog from "./ConflictLog";
+import JournalWidget from "./JournalWidget";
 
 // Each widget definition
 // sizes: "sm" = 1 col, "md" = 1 col, "lg" = 2 col, "full" = full width
@@ -103,6 +104,14 @@ const WIDGET_REGISTRY = [
     defaultSize: "lg",
     sizes: ["md", "lg", "full"],
     component: ConflictLog,
+  },
+  {
+    id: "journal",
+    label: "Active Journal",
+    icon: BookOpen,
+    defaultSize: "md",
+    sizes: ["md", "lg", "full"],
+    component: JournalWidget,
   },
 ];
 

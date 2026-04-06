@@ -10,6 +10,7 @@ import MarkerPanel from "../components/map/MarkerPanel";
 import FactionFilter from "../components/map/FactionFilter";
 import MissionPlanOverlay from "../components/map/MissionPlanOverlay";
 import PlanRouteLines from "../components/map/PlanRouteLines";
+import SectorDetailPanel from "../components/map/SectorDetailPanel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, Layers, Flame, Loader2, Route } from "lucide-react";
@@ -34,6 +35,7 @@ export default function WorldMap() {
   const [planAnchor, setPlanAnchor] = useState(null);
   const [planJobs, setPlanJobs] = useState([]);
   const [availableJobs, setAvailableJobs] = useState([]);
+  const [events, setEvents] = useState([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -43,13 +45,15 @@ export default function WorldMap() {
       base44.entities.MapMarker.list("-created_date", 100),
       base44.auth.me(),
       base44.entities.Job.filter({ status: "available" }, "-created_date", 100),
+      base44.entities.Event.filter({ is_active: true }, "-created_date", 20),
     ])
-      .then(([t, f, m, u, j]) => {
+      .then(([t, f, m, u, j, e]) => {
         setTerritories(t);
         setFactions(f);
         setMarkers(m);
         setUser(u);
         setAvailableJobs(j);
+        setEvents(e || []);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -361,6 +365,18 @@ export default function WorldMap() {
             onSelectMarker={handleSelectMarker}
             onStartPlan={handleStartPlan}
           />
+
+          {/* Sector Detail Panel */}
+          {hoveredSector && !showPlanner && (
+            <SectorDetailPanel
+              sector={hoveredSector}
+              territories={territories}
+              markers={visibleMarkers}
+              events={events}
+              jobs={availableJobs}
+              factions={factions}
+            />
+          )}
 
           {/* Mission Planner Overlay */}
           {showPlanner && (

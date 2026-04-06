@@ -1,14 +1,15 @@
 import { Link } from "react-router-dom";
 import DataCard from "../terminal/DataCard";
 import FactionMemberList from "./FactionMemberList";
-import ModifierBreakdown from "../market/ModifierBreakdown";
+import FactionMissionsPanel from "./FactionMissionsPanel";
+import FactionContributePanel from "./FactionContributePanel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Shield, MapPin, Coins, TrendingUp, TrendingDown, Minus, FileSignature } from "lucide-react";
+import { Shield, MapPin, Coins, TrendingUp, TrendingDown, Minus, FileSignature, Crosshair, Package } from "lucide-react";
 
 const resourceIcons = { fuel: "⛽", metals: "⚙", tech: "💾", food: "🌾", munitions: "🔫" };
 
-export default function FactionDetailPanel({ faction, economy, territories, members, diplomacy, factions }) {
+export default function FactionDetailPanel({ faction, economy, territories, members, diplomacy, factions, jobs = [], userEmail }) {
   if (!faction) return null;
 
   const prod = economy?.resource_production || {};
@@ -161,6 +162,18 @@ export default function FactionDetailPanel({ faction, economy, territories, memb
               </div>
             ))}
           </div>
+        </DataCard>
+      )}
+
+      {/* Faction Missions */}
+      <DataCard title={`Faction Missions (${(jobs.filter(j => j.faction_id === faction.id)).length})`}>
+        <FactionMissionsPanel jobs={jobs.filter(j => j.faction_id === faction.id)} territories={territories} />
+      </DataCard>
+
+      {/* Resource Contribution */}
+      {userEmail && (
+        <DataCard title="Contribute Resources">
+          <FactionContributePanel faction={faction} economy={economy} userEmail={userEmail} />
         </DataCard>
       )}
 

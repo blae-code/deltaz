@@ -143,7 +143,7 @@ export default function Inventory() {
             </DataCard>
           )}
 
-          <InventoryGrid items={items} onUpdate={loadData} />
+          <InventoryGrid items={items} onUpdate={loadData} userEmail={user?.email} />
         </>
       )}
 

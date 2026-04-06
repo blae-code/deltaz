@@ -23,6 +23,7 @@ import {
   Hammer,
   Truck,
   LogOut,
+  BookOpen,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
@@ -45,6 +46,7 @@ const playerNav = [
   { path: "/mission-log", label: "MISSION LOG", icon: ScrollText },
   { path: "/workbench", label: "WORKBENCH", icon: Hammer },
   { path: "/logistics", label: "LOGISTICS", icon: Truck },
+  { path: "/journal", label: "JOURNAL", icon: BookOpen },
   { path: "/profile", label: "PROFILE", icon: User },
 ];
 
