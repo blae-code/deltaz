@@ -2,18 +2,32 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import StatusIndicator from "../terminal/StatusIndicator";
-import { Clock, Lock, Bell, User } from "lucide-react";
+import { Clock, Lock, User, Search } from "lucide-react";
+import GlobalSearchDialog from "../search/GlobalSearchDialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { getDisplayName } from "../../lib/displayName";
 
 export default function TopBar() {
   const [user, setUser] = useState(null);
   const [time, setTime] = useState(new Date());
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
     const interval = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(interval);
+  }, []);
+
+  // Ctrl+K / Cmd+K to open search
+  useEffect(() => {
+    const handler = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
   }, []);
 
   const formatTime = (d) => {
@@ -49,7 +63,16 @@ export default function TopBar() {
           </TooltipContent>
         </Tooltip>
       </div>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
+        {/* Search button */}
+        <button
+          onClick={() => setSearchOpen(true)}
+          className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-primary transition-colors font-mono border border-border rounded-sm px-2 py-1 hover:border-primary/30"
+        >
+          <Search className="h-3 w-3" />
+          <span className="hidden sm:inline tracking-wider">SEARCH</span>
+          <kbd className="hidden md:inline text-[8px] bg-secondary px-1 py-0.5 rounded text-muted-foreground/60 ml-1">⌘K</kbd>
+        </button>
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-mono cursor-help">
@@ -94,6 +117,7 @@ export default function TopBar() {
         )}
       </div>
     </header>
+    <GlobalSearchDialog open={searchOpen} onClose={() => setSearchOpen(false)} />
     </TooltipProvider>
   );
 }
