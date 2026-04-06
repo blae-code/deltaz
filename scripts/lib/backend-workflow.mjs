@@ -7,6 +7,9 @@ export const allowedFiles = new Set([
   'README.md',
   'package-lock.json',
   'package.json',
+  'src/components/crafting/TradeFromProject.jsx',
+  'src/components/trading/CreateTradeRequest.jsx',
+  'src/components/trading/TradeRequestCard.jsx',
   'src/pages/MissionPlanner.jsx',
 ]);
 

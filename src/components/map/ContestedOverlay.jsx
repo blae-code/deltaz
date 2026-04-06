@@ -28,11 +28,10 @@ export default function ContestedOverlay({ territories }) {
           >
             {/* Animated border for contested zones */}
             <div
-              className="absolute inset-0 border-2 animate-pulse"
+              className={`absolute inset-0 border-2 rounded-sm ${isHostile ? 'animate-glow-pulse-strong' : 'animate-glow-pulse-subtle'}`}
               style={{
-                borderColor: isHostile ? "rgba(197, 48, 48, 0.6)" : "rgba(212, 161, 58, 0.6)",
                 borderStyle: "dashed",
-                backgroundColor: isHostile ? "rgba(197, 48, 48, 0.08)" : "rgba(212, 161, 58, 0.06)",
+                backgroundColor: isHostile ? "hsl(var(--destructive) / 0.08)" : "hsl(var(--accent) / 0.06)",
               }}
             />
             {/* Status badge */}
@@ -40,8 +39,8 @@ export default function ContestedOverlay({ territories }) {
               <span
                 className="text-[7px] font-mono font-bold uppercase px-1 py-0.5 rounded-sm"
                 style={{
-                  backgroundColor: isHostile ? "rgba(197, 48, 48, 0.3)" : "rgba(212, 161, 58, 0.3)",
-                  color: isHostile ? "#c53030" : "#d4a13a",
+                  backgroundColor: isHostile ? "hsl(var(--destructive) / 0.3)" : "hsl(var(--accent) / 0.3)",
+                  color: isHostile ? "hsl(var(--destructive))" : "hsl(var(--accent))",
                 }}
               >
                 {t.status}

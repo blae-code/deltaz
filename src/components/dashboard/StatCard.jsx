@@ -1,10 +1,12 @@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Info } from "lucide-react";
+import { useCountUp } from "@/hooks/use-count-up";
 
 export default function StatCard({ label, value, icon: Icon, color, description, detail }) {
+  const animatedValue = useCountUp(value, 1500); // 1.5 second count-up animation
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="border border-border bg-card rounded-sm p-4 group hover:border-primary/30 transition-all hover:shadow-md hover:shadow-primary/5 relative">
+      <div className="border border-border bg-card rounded-sm p-4 group transition-all hover:border-primary/30 hover:shadow-md hover:shadow-primary/5 hover:scale-[1.02] relative">
         <div className="flex items-center gap-2 mb-2">
           <div className={`h-7 w-7 rounded-sm flex items-center justify-center bg-current/5 border border-current/20 ${color}`}>
             <Icon className="h-3.5 w-3.5" />
@@ -21,7 +23,7 @@ export default function StatCard({ label, value, icon: Icon, color, description,
             </Tooltip>
           )}
         </div>
-        <div className={`text-2xl font-bold font-display ${color}`}>{value}</div>
+        <div className={`text-2xl font-bold font-display ${color}`}>{animatedValue}</div>
         {detail && (
           <p className="text-[9px] text-muted-foreground mt-1.5 leading-relaxed">
             {detail}

@@ -61,9 +61,10 @@ Deno.serve(async (req) => {
       risk_score: assessment.risk_score,
       success_probability: assessment.success_probability,
       risk_factors: assessment.risk_factors,
-      status: 'deployed',
+      status: 'generated',
       planned_by: user.email,
-      deployed_at: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     });
 
     return Response.json({
@@ -76,7 +77,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: error.message }, { status: error.status });
     }
 
-    console.error('deployMissionPlan error:', error);
-    return Response.json({ error: error.message || 'Failed to deploy mission plan' }, { status: 500 });
+    console.error('generateMissionPlan error:', error);
+    return Response.json({ error: error.message || 'Failed to generate mission plan' }, { status: 500 });
   }
 });

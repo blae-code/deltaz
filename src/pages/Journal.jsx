@@ -8,6 +8,7 @@ import ConsequenceTagCloud from "../components/journal/ConsequenceTagCloud";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Loader2, GitBranch, Tag } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import TypewriterText from "@/components/ui/TypewriterText";
 
 export default function Journal() {
   const [user, setUser] = useState(null);
@@ -15,6 +16,7 @@ export default function Journal() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [tab, setTab] = useState("active"); // active | resolved | timeline
+  const [showCinematic, setShowCinematic] = useState(true); // Control cinematic overlay
   const { toast } = useToast();
 
   const loadData = async () => {
@@ -68,6 +70,25 @@ export default function Journal() {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-primary text-xs tracking-widest animate-pulse">LOADING JOURNAL...</div>
+      </div>
+    );
+  }
+
+  // Cinematic overlay
+  if (showCinematic) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background text-primary px-8 text-center transition-opacity duration-1000"
+        style={{ opacity: showCinematic ? 1 : 0 }}
+      >
+        <div className="max-w-2xl text-xl font-display leading-relaxed">
+          <TypewriterText
+            text="The wasteland whispers its tales to those who listen. Every choice, every action, every forgotten memory, is etched into the journal of fate. Uncover the echoes of the past, for in them lies the key to your future."
+            delay={30}
+            pause={2000}
+            onComplete={() => setShowCinematic(false)}
+            className="drop-shadow-lg"
+          />
+        </div>
       </div>
     );
   }

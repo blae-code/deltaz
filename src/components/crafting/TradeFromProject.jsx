@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Send, ArrowLeftRight, ShoppingCart } from "lucide-react";
+import { Send, ShoppingCart } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import DataCard from "../terminal/DataCard";
 
@@ -56,21 +56,26 @@ export default function TradeFromProject({ shortfalls, projectTitle, userEmail, 
     if (!receiver) return;
 
     setSaving(true);
-    await base44.entities.TradeRequest.create({
-      sender_email: userEmail,
-      sender_callsign: userCallsign,
-      receiver_email: receiver.email,
-      receiver_callsign: receiver.callsign || receiver.full_name || "Operative",
-      offer_items: offerItems.trim(),
-      offer_credits: offerCredits,
-      request_items: requestDescription,
-      message: message.trim() || `Need materials for crafting project "${projectTitle}"`,
-      status: "pending",
-      expires_at: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
-    });
-    toast({ title: "Trade Proposal Sent", description: `Sent to ${receiver.callsign || "Operative"}` });
-    setSaving(false);
-    onDone?.();
+    try {
+      const res = await base44.functions.invoke("tradeRequestOps", {
+        action: "create",
+        receiver_user_id: receiverId,
+        offer_items: offerItems.trim(),
+        offer_credits: offerCredits,
+        request_items: requestDescription,
+        message: message.trim() || `Need materials for crafting project "${projectTitle}"`,
+      });
+      if (res.data?.error) {
+        throw new Error(res.data.error);
+      }
+
+      toast({ title: "Trade Proposal Sent", description: `Sent to ${receiver.callsign || "Operative"}` });
+      onDone?.();
+    } catch (err) {
+      toast({ title: "Trade proposal failed", description: err.message, variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (

@@ -11,6 +11,7 @@ import StatCard from "../components/dashboard/StatCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Crosshair, Shield, Map, Settings, GripVertical } from "lucide-react";
+import DashboardSkeleton from '../components/dashboard/DashboardSkeleton';
 
 export default function Dashboard() {
   const [jobs, setJobs] = useState([]);
@@ -90,13 +91,7 @@ export default function Dashboard() {
   };
 
   if (loading || !layout) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-primary text-xs tracking-widest animate-pulse">
-          LOADING SITUATION REPORT...
-        </div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   const visibleWidgets = layout.filter((w) => w.visible);

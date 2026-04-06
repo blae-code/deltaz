@@ -28,26 +28,52 @@ export default function TradeRequestCard({ trade, userEmail, onUpdate }) {
 
   const respond = async (action) => {
     setResponding(true);
-    await base44.entities.TradeRequest.update(trade.id, {
-      status: action,
-      response_message: responseMsg.trim() || undefined,
-      resolved_at: new Date().toISOString(),
-    });
-    toast({ title: action === "accepted" ? "Trade Accepted!" : "Trade Rejected" });
-    onUpdate?.();
-    setResponding(false);
-    setShowResponse(false);
+    try {
+      const res = await base44.functions.invoke("tradeRequestOps", {
+        action: "respond",
+        trade_id: trade.id,
+        decision: action,
+        response_message: responseMsg.trim(),
+      });
+      if (res.data?.error) {
+        throw new Error(res.data.error);
+      }
+
+      toast({ title: action === "accepted" ? "Trade Accepted!" : "Trade Rejected" });
+      onUpdate?.();
+      setShowResponse(false);
+      setResponseMsg("");
+    } catch (err) {
+      toast({ title: "Trade response failed", description: err.message, variant: "destructive" });
+      if (err?.message?.toLowerCase().includes("expired")) {
+        onUpdate?.();
+      }
+    } finally {
+      setResponding(false);
+    }
   };
 
   const cancel = async () => {
     setResponding(true);
-    await base44.entities.TradeRequest.update(trade.id, {
-      status: "cancelled",
-      resolved_at: new Date().toISOString(),
-    });
-    toast({ title: "Trade Cancelled" });
-    onUpdate?.();
-    setResponding(false);
+    try {
+      const res = await base44.functions.invoke("tradeRequestOps", {
+        action: "cancel",
+        trade_id: trade.id,
+      });
+      if (res.data?.error) {
+        throw new Error(res.data.error);
+      }
+
+      toast({ title: "Trade Cancelled" });
+      onUpdate?.();
+    } catch (err) {
+      toast({ title: "Trade cancel failed", description: err.message, variant: "destructive" });
+      if (err?.message?.toLowerCase().includes("expired")) {
+        onUpdate?.();
+      }
+    } finally {
+      setResponding(false);
+    }
   };
 
   const displayStatus = isExpired ? "expired" : trade.status;

@@ -78,21 +78,53 @@
     "status": {
       "type": "string",
       "enum": [
-        "planning",
-        "deployed",
+        "generated",
+        "accepted",
+        "active",
         "completed",
         "failed",
         "aborted"
       ],
-      "default": "planning"
+      "default": "generated"
     },
     "planned_by": {
       "type": "string",
       "description": "Email of the planner"
     },
-    "deployed_at": {
+    "createdAt": {
       "type": "string",
-      "description": "ISO date when operation was deployed"
+      "format": "date-time",
+      "description": "ISO date when the mission was generated"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO date when the mission was last updated"
+    },
+    "acceptedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO date when the mission was accepted"
+    },
+    "activatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO date when the mission was activated"
+    },
+    "completedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO date when the mission was completed"
+    },
+    "failedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO date when the mission failed"
+    },
+    "abortedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO date when the mission was aborted"
     },
     "outcome": {
       "type": "string",

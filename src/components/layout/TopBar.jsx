@@ -2,13 +2,22 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import StatusIndicator from "../terminal/StatusIndicator";
-import { Clock, Lock, Bell, User } from "lucide-react";
+import { Clock, Lock, Bell, User, Volume2, VolumeX } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { getDisplayName } from "../../lib/displayName";
 
 export default function TopBar() {
   const [user, setUser] = useState(null);
   const [time, setTime] = useState(new Date());
+  const [muted, setMuted] = useState(() => {
+    try { return localStorage.getItem("sfx-muted") === "true"; } catch { return false; }
+  });
+
+  const toggleMute = () => {
+    const next = !muted;
+    setMuted(next);
+    try { localStorage.setItem("sfx-muted", String(next)); } catch {}
+  };
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
@@ -50,6 +59,20 @@ export default function TopBar() {
         </Tooltip>
       </div>
       <div className="flex items-center gap-4">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={toggleMute}
+              className="flex items-center justify-center h-6 w-6 text-muted-foreground hover:text-primary transition-colors"
+              aria-label={muted ? "Unmute audio" : "Mute audio"}
+            >
+              {muted ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="font-mono text-[11px] bg-card border-primary/30">
+            <p className="text-muted-foreground">{muted ? "Audio muted. Click to enable." : "Click to mute audio."}</p>
+          </TooltipContent>
+        </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-mono cursor-help">

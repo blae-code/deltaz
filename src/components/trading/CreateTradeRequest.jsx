@@ -5,10 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Send, ArrowRight } from "lucide-react";
+import { Send } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
-export default function CreateTradeRequest({ userEmail, userCallsign, onCreated }) {
+export default function CreateTradeRequest({ userEmail, onCreated }) {
   const [players, setPlayers] = useState([]);
   const [receiverId, setReceiverId] = useState("");
   const [offerItems, setOfferItems] = useState("");
@@ -40,26 +40,33 @@ export default function CreateTradeRequest({ userEmail, userCallsign, onCreated 
     }
 
     setSaving(true);
-    const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+    try {
+      const res = await base44.functions.invoke("tradeRequestOps", {
+        action: "create",
+        receiver_user_id: receiverId,
+        offer_items: offerItems.trim(),
+        offer_credits: offerCredits,
+        request_items: requestItems.trim(),
+        request_credits: requestCredits,
+        message: message.trim(),
+      });
+      if (res.data?.error) {
+        throw new Error(res.data.error);
+      }
 
-    await base44.entities.TradeRequest.create({
-      sender_email: userEmail,
-      sender_callsign: userCallsign,
-      receiver_email: receiver.email,
-      receiver_callsign: receiver.callsign || receiver.full_name || "Operative",
-      offer_items: offerItems.trim(),
-      offer_credits: offerCredits,
-      request_items: requestItems.trim(),
-      request_credits: requestCredits,
-      message: message.trim(),
-      status: "pending",
-      expires_at: expiresAt,
-    });
-
-    toast({ title: "Trade Proposal Sent", description: `Sent to ${receiver.callsign || "Operative"}` });
-    setOfferItems(""); setOfferCredits(0); setRequestItems(""); setRequestCredits(0); setMessage(""); setReceiverId("");
-    setSaving(false);
-    onCreated?.();
+      toast({ title: "Trade Proposal Sent", description: `Sent to ${receiver.callsign || "Operative"}` });
+      setOfferItems("");
+      setOfferCredits(0);
+      setRequestItems("");
+      setRequestCredits(0);
+      setMessage("");
+      setReceiverId("");
+      onCreated?.(res.data?.trade);
+    } catch (err) {
+      toast({ title: "Trade proposal failed", description: err.message, variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (

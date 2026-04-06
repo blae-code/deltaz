@@ -15,9 +15,9 @@ const opTypes = [
 export default function PlanSummary({
   title, setTitle, operationType, setOperationType,
   selectedTerritory, assignedCount, assessment,
-  onDeploy, deploying
+  onGeneratePlan, isGeneratingPlan
 }) {
-  const canDeploy = title && selectedTerritory && assignedCount > 0;
+  const canGenerate = title && selectedTerritory && assignedCount > 0;
   const isHighRisk = assessment && assessment.success_probability < 40;
 
   return (
@@ -77,16 +77,16 @@ export default function PlanSummary({
 
           <Button
             className="w-full h-9 text-[10px] uppercase tracking-widest font-mono"
-            disabled={!canDeploy || deploying}
-            onClick={onDeploy}
+            disabled={!canGenerate || isGeneratingPlan}
+            onClick={onGeneratePlan}
           >
-            {deploying ? (
-              <><Loader2 className="h-3 w-3 animate-spin mr-1.5" /> DEPLOYING...</>
+            {isGeneratingPlan ? (
+              <><Loader2 className="h-3 w-3 animate-spin mr-1.5" /> GENERATING...</>
             ) : (
-              <><Rocket className="h-3 w-3 mr-1.5" /> DEPLOY OPERATION</>
+              <><Rocket className="h-3 w-3 mr-1.5" /> GENERATE PLAN</>
             )}
           </Button>
-          {!canDeploy && (
+          {!canGenerate && (
             <p className="text-[8px] text-muted-foreground text-center font-mono">
               {!title ? "Name the operation" : !selectedTerritory ? "Select a target territory" : "Assign at least one operative"}
             </p>

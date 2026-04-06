@@ -47,6 +47,12 @@ export default function AppShell() {
   return (
     <div className="flex h-screen overflow-hidden terminal-flicker">
       <ScanlineOverlay />
+      <div className="pointer-events-none fixed inset-0 z-40 rounded-sm"
+        style={{
+          background: 'radial-gradient(ellipse at center, transparent 65%, hsl(var(--background)) 100%)',
+          opacity: 0.6
+        }}
+      />
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
         <TopBar />

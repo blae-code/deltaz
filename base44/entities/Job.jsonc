@@ -2,95 +2,51 @@
   "name": "Job",
   "type": "object",
   "properties": {
-    "title": {
-      "type": "string",
-      "description": "Mission title"
-    },
-    "description": {
-      "type": "string",
-      "description": "Mission briefing"
-    },
+    "title": { "type": "string", "description": "Mission title" },
+    "description": { "type": "string", "description": "Mission briefing" },
     "type": {
       "type": "string",
-      "enum": [
-        "recon",
-        "extraction",
-        "sabotage",
-        "escort",
-        "scavenge",
-        "elimination"
-      ],
+      "enum": ["recon", "extraction", "sabotage", "escort", "scavenge", "elimination"],
       "default": "recon"
     },
     "status": {
       "type": "string",
-      "enum": [
-        "available",
-        "in_progress",
-        "completed",
-        "failed",
-        "expired"
-      ],
-      "default": "available"
+      "enum": ["generated", "available", "accepted", "in_progress", "completed", "failed", "expired", "abandoned"],
+      "default": "generated"
     },
     "difficulty": {
       "type": "string",
-      "enum": [
-        "routine",
-        "hazardous",
-        "critical",
-        "suicide"
-      ],
+      "enum": ["routine", "hazardous", "critical", "suicide"],
       "default": "routine"
     },
-    "territory_id": {
-      "type": "string",
-      "description": "Territory where the job takes place"
+    "territory_id": { "type": "string", "description": "Territory where the job takes place" },
+    "faction_id": { "type": "string", "description": "Faction issuing the job" },
+    "assignees": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Emails of assigned players"
     },
-    "faction_id": {
-      "type": "string",
-      "description": "Faction issuing the job"
+    "generation_meta": {
+      "type": "object",
+      "properties": {
+        "generator": { "type": "string" },
+        "version": { "type": "string" },
+        "params": { "type": "object", "additionalProperties": true }
+      },
+      "description": "Metadata about how the mission was generated"
     },
-    "assigned_to": {
-      "type": "string",
-      "description": "Email of assigned player"
-    },
-    "accepted_at": {
-      "type": "string",
-      "description": "ISO date when the mission was accepted"
-    },
-    "completed_at": {
-      "type": "string",
-      "description": "ISO date when the mission was completed or failed"
-    },
-    "reward_reputation": {
-      "type": "number",
-      "default": 0
-    },
-    "reward_credits": {
-      "type": "number",
-      "default": 0,
-      "description": "Credit payout on completion"
-    },
-    "reward_description": {
-      "type": "string"
-    },
-    "completion_notes": {
-      "type": "string",
-      "description": "AI-generated or admin notes on mission outcome"
-    },
-    "expires_at": {
-      "type": "string",
-      "description": "ISO date when mission expires"
-    },
-    "max_slots": {
-      "type": "number",
-      "default": 1,
-      "description": "Max players that can accept this mission"
-    }
+    "created_at": { "type": "string", "format": "date-time", "description": "ISO date when the mission was generated" },
+    "published_at": { "type": "string", "format": "date-time", "description": "ISO date when the mission was made available" },
+    "accepted_at": { "type": "string", "format": "date-time", "description": "ISO date when the mission was accepted" },
+    "completed_at": { "type": "string", "format": "date-time", "description": "ISO date when the mission was completed" },
+    "failed_at": { "type": "string", "format": "date-time", "description": "ISO date when the mission was failed" },
+    "expired_at": { "type": "string", "format": "date-time", "description": "ISO date when the mission expires" },
+    "abandoned_at": { "type": "string", "format": "date-time", "description": "ISO date when the mission was abandoned" },
+    "reward_reputation": { "type": "number", "default": 0 },
+    "reward_credits": { "type": "number", "default": 0, "description": "Credit payout on completion" },
+    "reward_description": { "type": "string" },
+    "completion_notes": { "type": "string", "description": "AI-generated or admin notes on mission outcome" },
+    "max_slots": { "type": "number", "default": 1, "description": "Max players that can accept this mission" }
   },
-  "required": [
-    "title",
-    "type"
-  ]
+  "required": ["title", "type", "status", "difficulty"]
 }

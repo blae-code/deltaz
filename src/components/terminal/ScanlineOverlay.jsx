@@ -1,12 +1,14 @@
-export default function ScanlineOverlay() {
+import React from 'react';
+import { cn } from "@/lib/utils";
+
+export default function ScanlineOverlay({ className }) {
   return (
-    <div className="pointer-events-none fixed inset-0 z-50 overflow-hidden">
-      <div
-        className="absolute inset-0 opacity-[0.03]"
-        style={{
-          backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,128,0.03) 2px, rgba(0,255,128,0.03) 4px)',
-        }}
-      />
-    </div>
+    <div
+      className={cn(
+        "pointer-events-none fixed inset-0 z-50 opacity-10",
+        "bg-[repeating-linear-gradient(transparent_0px,transparent_1px,white_1px,white_2px)]",
+        className
+      )}
+    />
   );
 }

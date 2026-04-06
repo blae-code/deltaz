@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { successTone, alertTone, tickClick } from "@/lib/sfx";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import StatusIndicator from "../terminal/StatusIndicator";
 import {
   Crosshair, Clock, Award, MapPin, Shield, Loader2,
-  CheckCircle, XCircle, LogOut, Coins
+  CheckCircle, XCircle, LogOut, Coins, BookOpen
 } from "lucide-react";
 import moment from "moment";
+import MissionBriefingModal from "./MissionBriefingModal";
 
 const difficultyColor = {
   routine: "text-primary border-primary/30",
@@ -35,6 +37,7 @@ const statusMap = {
 export default function MissionCard({ job, faction, territory, userEmail, isAdmin, onUpdate }) {
   const [acting, setActing] = useState(null);
   const [expanded, setExpanded] = useState(false);
+  const [showBriefingModal, setShowBriefingModal] = useState(false);
   const { toast } = useToast();
 
   const isMine = job.assigned_to === userEmail;
@@ -49,17 +52,21 @@ export default function MissionCard({ job, faction, territory, userEmail, isAdmi
       const res = await base44.functions.invoke("missionOps", { action, job_id: job.id });
       const data = res.data;
       if (action === "accept") {
+        successTone();
         toast({ title: "Mission Accepted", description: `You are now assigned to: ${job.title}` });
       } else if (action === "complete") {
+        successTone();
         const parts = [];
         if (data.reputation) parts.push(`+${data.reputation.delta} REP`);
         if (data.credits) parts.push(`+${data.credits} CR`);
         toast({ title: "Mission Complete!", description: parts.join(" · ") || "Good work, operative." });
       } else if (action === "abandon") {
+        alertTone();
         toast({ title: "Mission Abandoned", description: "Reputation penalty applied.", variant: "destructive" });
       }
       onUpdate?.();
     } catch (err) {
+      alertTone();
       toast({ title: "Action Failed", description: err.response?.data?.error || err.message, variant: "destructive" });
     } finally {
       setActing(null);
@@ -69,10 +76,9 @@ export default function MissionCard({ job, faction, territory, userEmail, isAdmi
   return (
     <div
       className={`border border-border bg-card rounded-sm overflow-hidden transition-colors hover:border-primary/30 ${difficultyBg[job.difficulty] || ""}`}
-      onClick={() => setExpanded(!expanded)}
     >
       {/* Header row */}
-      <div className="px-4 py-3 cursor-pointer">
+      <div className="px-4 py-3 cursor-pointer" onClick={() => { tickClick(); setExpanded(!expanded); }}>
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
@@ -80,6 +86,20 @@ export default function MissionCard({ job, faction, territory, userEmail, isAdmi
               <h3 className="text-sm font-semibold text-foreground truncate">{job.title}</h3>
               {isMine && job.status === "in_progress" && (
                 <Badge className="text-[8px] bg-accent/20 text-accent border-accent/30 shrink-0">YOUR MISSION</Badge>
+              )}
+              {job.status === "available" && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 text-muted-foreground hover:text-primary"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    tickClick();
+                    setShowBriefingModal(true);
+                  }}
+                >
+                  <BookOpen className="h-3.5 w-3.5" />
+                </Button>
               )}
             </div>
             <div className="flex items-center gap-3 flex-wrap">
@@ -174,6 +194,17 @@ export default function MissionCard({ job, faction, territory, userEmail, isAdmi
           </div>
         </div>
       )}
+
+      <MissionBriefingModal
+        mission={job}
+        isOpen={showBriefingModal}
+        onClose={() => setShowBriefingModal(false)}
+        onAccept={async () => {
+          await doAction("accept");
+          setShowBriefingModal(false);
+        }}
+        onDecline={() => setShowBriefingModal(false)}
+      />
     </div>
   );
 }

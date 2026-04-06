@@ -26,7 +26,7 @@ export default function MissionPlanner() {
   const [operationType, setOperationType] = useState("recon");
   const [assessment, setAssessment] = useState(null);
   const [assessLoading, setAssessLoading] = useState(false);
-  const [deploying, setDeploying] = useState(false);
+  const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -162,11 +162,11 @@ export default function MissionPlanner() {
     setAssessment(null);
   };
 
-  const handleDeploy = async () => {
+  const handleGeneratePlan = async () => {
     if (!selectedTerritory || currentAssigned.length === 0 || !title) return;
-    setDeploying(true);
+    setIsGeneratingPlan(true);
     try {
-      const res = await base44.functions.invoke("deployMissionPlan", {
+      const res = await base44.functions.invoke("generateMissionPlan", {
         title,
         territory_id: selectedTerritory.id,
         operation_type: operationType,
@@ -177,7 +177,7 @@ export default function MissionPlanner() {
       }
       const createdPlan = res.data?.plan;
 
-      toast({ title: "Operation Deployed", description: `${title} — ${currentAssigned.length} operatives en route to ${selectedTerritory.name}` });
+      toast({ title: "Plan Generated", description: `${title} — ${currentAssigned.length} operatives are ready for assignment.` });
 
       setTitle("");
       setAssignments((prev) => ({ ...prev, [selectedTerritory.id]: [] }));
@@ -189,10 +189,10 @@ export default function MissionPlanner() {
         base44.entities.MissionPlan.filter({ planned_by: user.email }, "-created_date", 10)
           .then(setRecentPlans);
       }
-    } catch (err) {
-      toast({ title: "Deployment failed", description: err.message, variant: "destructive" });
+    } catch (err) => {
+      toast({ title: "Generation failed", description: err.message, variant: "destructive" });
     } finally {
-      setDeploying(false);
+      setIsGeneratingPlan(false);
     }
   };
 
@@ -246,8 +246,8 @@ export default function MissionPlanner() {
               selectedTerritory={selectedTerritory}
               assignedCount={currentAssigned.length}
               assessment={assessment}
-              onDeploy={handleDeploy}
-              deploying={deploying}
+              onGeneratePlan={handleGeneratePlan}
+              deploying={isGeneratingPlan}
             />
             <RiskGauge assessment={assessment} loading={assessLoading} />
           </div>
@@ -282,7 +282,7 @@ export default function MissionPlanner() {
                     ) : (
                       <Badge variant="outline" className="text-[7px] uppercase">{plan.status}</Badge>
                     )}
-                    <span className="text-[8px] text-muted-foreground">{moment(plan.deployed_at || plan.created_date).fromNow()}</span>
+                    <span className="text-[8px] text-muted-foreground">{moment(plan.createdAt || plan.created_date).fromNow()}</span>
                   </div>
                 </div>
               ))}
