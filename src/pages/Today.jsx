@@ -92,6 +92,13 @@ export default function Today() {
   );
   const { data: worldConditions } = worldQuery;
 
+  const survivorsQuery = useEntityQuery(
+    "today-survivors",
+    () => base44.entities.Survivor.list("-created_date", 200),
+    { subscribeEntities: ["Survivor"] }
+  );
+  const { data: survivors = [] } = survivorsQuery;
+
   // Register primary sync
   useRegisterSync("today", jobsQuery);
 
@@ -173,7 +180,7 @@ export default function Today() {
           </DataCard>
 
           <DataCard title="Colony Vitals" subtitle="Settlement status at a glance">
-            <TodayColony colony={colony} />
+            <TodayColony colony={colony} survivors={survivors} />
           </DataCard>
         </div>
       </div>

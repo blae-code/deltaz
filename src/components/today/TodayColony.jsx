@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Home, ChevronRight } from "lucide-react";
+import SupplyForecast from "../colony/SupplyForecast";
 
 const gaugeColor = (val) => {
   if (val >= 70) return "bg-status-ok";
@@ -14,7 +15,7 @@ const gaugeLabel = (val) => {
   return "text-destructive";
 };
 
-export default function TodayColony({ colony }) {
+export default function TodayColony({ colony, survivors }) {
   if (!colony) {
     return (
       <div className="text-center py-4">
@@ -63,6 +64,9 @@ export default function TodayColony({ colony }) {
           </span>
         </div>
       )}
+
+      {/* Supply Forecast */}
+      <SupplyForecast colony={colony} survivors={survivors} compact />
 
       <Link to="/colony">
         <Button variant="outline" size="sm" className="w-full text-[10px] uppercase tracking-wider h-8">

@@ -4,6 +4,7 @@ import {
 } from "lucide-react";
 import ColonyVitalGauge from "./ColonyVitalGauge";
 import ResourceAllocationPanel from "./ResourceAllocationPanel";
+import SupplyForecast from "./SupplyForecast";
 import { Badge } from "@/components/ui/badge";
 
 const THREAT_COLORS = {
@@ -122,6 +123,9 @@ export default function ColonyVitalsPanel({ colony, isAdmin, survivors, onTaskAs
           </div>
         </div>
       )}
+
+      {/* Supply Forecast */}
+      <SupplyForecast colony={colony} survivors={survivors} />
 
       {/* Inline resource allocation panel */}
       {allocatingResource && isAdmin && (
