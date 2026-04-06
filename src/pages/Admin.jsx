@@ -81,7 +81,7 @@ export default function Admin() {
       subtitle={`Logged in as ${user.full_name || user.email} — Full GM access`}
     >
       {/* Section selector — cleaner command grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
         {SECTIONS.map((s) => {
           const Icon = s.icon;
           const active = section === s.key;
@@ -89,7 +89,7 @@ export default function Admin() {
             <button
               key={s.key}
               onClick={() => setSection(s.key)}
-              className={`group relative flex flex-col items-start gap-1.5 border rounded-sm px-3 py-3 transition-all text-left ${
+              className={`group relative flex flex-col items-start gap-2 border rounded-sm px-3 py-3.5 transition-all text-left ${
                 active
                   ? "border-primary bg-primary/10 text-primary"
                   : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-primary/30"
@@ -97,7 +97,7 @@ export default function Admin() {
             >
               <div className="flex items-center gap-2 w-full">
                 <Icon className={`h-4 w-4 shrink-0 ${active ? "text-primary" : ""}`} />
-                <span className="text-[10px] font-mono font-semibold tracking-wider uppercase flex-1">
+                <span className="text-[11px] font-mono font-semibold tracking-wider uppercase flex-1">
                   {s.label}
                 </span>
                 {s.risk === "high" && (
@@ -107,7 +107,7 @@ export default function Admin() {
                   <ChevronRight className="h-3 w-3 text-primary shrink-0" />
                 )}
               </div>
-              <span className="text-[8px] text-muted-foreground leading-tight">
+              <span className="text-[10px] text-muted-foreground leading-snug">
                 {s.description}
               </span>
             </button>
@@ -117,7 +117,7 @@ export default function Admin() {
 
       {/* Active section context bar */}
       {activeSection?.risk && (
-        <div className={`flex items-center gap-2 px-3 py-2 rounded-sm border text-[9px] font-mono ${
+        <div className={`flex items-center gap-2 px-3 py-2.5 rounded-sm border text-[10px] font-mono leading-snug ${
           activeSection.risk === "high"
             ? "border-destructive/30 bg-destructive/5 text-destructive"
             : "border-accent/30 bg-accent/5 text-accent"

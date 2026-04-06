@@ -72,14 +72,14 @@ export default function InventoryItemCard({ item, userEmail }) {
   const condColor = (item.condition ?? 100) < 25 ? "text-status-danger" : (item.condition ?? 100) < 50 ? "text-accent" : "text-primary";
 
   return (
-    <div className={`border rounded-sm p-2.5 bg-card ${item.is_equipped ? "border-primary/40 bg-primary/5" : "border-border"}`}>
-      <div className="flex items-start gap-2">
-        <div className={`p-1.5 rounded-sm border ${rarityColors[item.rarity] || rarityColors.common}`}>
-          <Icon className="h-3.5 w-3.5" />
+    <div className={`border rounded-sm p-3 bg-card ${item.is_equipped ? "border-primary/40 bg-primary/5" : "border-border"}`}>
+      <div className="flex items-start gap-2.5">
+        <div className={`p-2 rounded-sm border ${rarityColors[item.rarity] || rarityColors.common}`}>
+          <Icon className="h-4 w-4" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className="text-xs font-semibold text-foreground truncate">{item.name}</span>
+            <span className="text-[13px] font-semibold text-foreground truncate leading-snug">{item.name}</span>
             {item.quantity > 1 && <span className="text-[10px] text-muted-foreground">x{item.quantity}</span>}
           </div>
           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
@@ -101,18 +101,18 @@ export default function InventoryItemCard({ item, userEmail }) {
       </div>
 
       {/* Actions */}
-      <div className="flex gap-1 mt-2">
-        <Button variant="outline" size="sm" className="flex-1 h-7 text-[10px] uppercase tracking-wider" onClick={toggleEquip} disabled={loading}>
+      <div className="flex gap-1.5 mt-2.5">
+        <Button variant="outline" size="sm" className="flex-1 h-8 text-[10px] uppercase tracking-wider" onClick={toggleEquip} disabled={loading}>
           {item.is_equipped ? "UNEQUIP" : "EQUIP"}
         </Button>
-        <Button variant="outline" size="sm" className="h-6 w-6 p-0 text-accent/70 border-accent/20 hover:text-accent" onClick={() => setShowDismantle(!showDismantle)} disabled={loading} title="Dismantle">
-          <Hammer className="h-3 w-3" />
+        <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-accent/70 border-accent/20 hover:text-accent" onClick={() => setShowDismantle(!showDismantle)} disabled={loading} title="Dismantle">
+          <Hammer className="h-3.5 w-3.5" />
         </Button>
-        <Button variant="outline" size="sm" className="h-6 w-6 p-0 text-primary/70 border-primary/20 hover:text-primary" onClick={() => setShowTransfer(!showTransfer)} disabled={loading} title="Transfer">
-          <ArrowRight className="h-3 w-3" />
+        <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-primary/70 border-primary/20 hover:text-primary" onClick={() => setShowTransfer(!showTransfer)} disabled={loading} title="Transfer">
+          <ArrowRight className="h-3.5 w-3.5" />
         </Button>
-        <Button variant="outline" size="sm" className="h-6 w-6 p-0 text-destructive border-destructive/20" onClick={deleteItem} disabled={loading}>
-          <Trash2 className="h-3 w-3" />
+        <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-destructive border-destructive/20" onClick={deleteItem} disabled={loading}>
+          <Trash2 className="h-3.5 w-3.5" />
         </Button>
       </div>
 

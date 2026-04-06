@@ -149,7 +149,7 @@ export default function Today() {
       <TodayActions />
 
       {/* Main two-column layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
         {/* Left column — missions & gear */}
         <div className="space-y-4">
           <DataCard title="Active Ops" headerRight={<span className="text-[9px] text-muted-foreground font-mono">Your missions & available contracts</span>}>

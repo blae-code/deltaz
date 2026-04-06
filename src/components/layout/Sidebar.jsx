@@ -105,7 +105,8 @@ export default function Sidebar({ user: propUser }) {
       {/* Mobile hamburger button */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="fixed top-3 left-3 z-50 md:hidden p-2 rounded-sm bg-card border border-border text-muted-foreground hover:text-foreground"
+        className="fixed top-3 left-3 z-50 md:hidden p-2.5 rounded-sm bg-card border border-border text-muted-foreground hover:text-foreground shadow-lg"
+        aria-label="Open navigation"
       >
         <Menu className="h-5 w-5" />
       </button>
@@ -155,7 +156,7 @@ export default function Sidebar({ user: propUser }) {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 py-2 px-2 overflow-y-auto space-y-3">
+      <nav className="flex-1 py-2 px-2 overflow-y-auto space-y-4">
         {navGroups.map((group, gi) => (
           <div key={gi}>
             {group.label && !collapsed && (
@@ -177,7 +178,7 @@ export default function Sidebar({ user: propUser }) {
                       to={item.path}
                       onClick={() => setMobileOpen(false)}
                       className={cn(
-                        "flex items-center gap-3 rounded-sm px-3 py-2 text-xs font-medium tracking-wider transition-colors",
+                        "flex items-center gap-3 rounded-sm px-3 py-2.5 text-[11px] font-medium tracking-wider transition-colors",
                         isActive
                           ? "bg-primary/10 text-primary border border-primary/30"
                           : "text-muted-foreground hover:text-foreground hover:bg-secondary/50 border border-transparent"

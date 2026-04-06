@@ -54,10 +54,12 @@ export default function AppShell() {
       <Sidebar user={user} />
       <div className="flex flex-1 flex-col overflow-hidden">
         <TopBar user={user} />
-        <main className="flex-1 overflow-auto p-4 md:p-6 pt-14 md:pt-6">
-          <Outlet context={{ user, isAdmin }} />
+        <main className="flex-1 overflow-auto px-3 py-4 sm:px-4 sm:py-5 md:px-6 md:py-6 pt-14 md:pt-6">
+          <div className="max-w-[1400px] mx-auto">
+            <Outlet context={{ user, isAdmin }} />
+          </div>
         </main>
-        <footer className="border-t border-border/30 px-4 py-1.5 flex items-center justify-between bg-card/50">
+        <footer className="border-t border-border/30 px-4 py-1.5 flex items-center justify-between bg-card/50 shrink-0">
           <span className="text-[10px] text-muted-foreground/50 font-mono tracking-widest">DEAD SIGNAL v2.1.7b</span>
           <SyncStatusFooter />
         </footer>

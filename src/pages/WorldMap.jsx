@@ -200,9 +200,9 @@ export default function WorldMap() {
       <div className="border border-border rounded-sm bg-card overflow-hidden">
         <button
           onClick={() => setLayersOpen(!layersOpen)}
-          className="w-full flex items-center justify-between px-3 py-2 hover:bg-secondary/30 transition-colors"
+          className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-secondary/30 transition-colors"
         >
-          <span className="text-[10px] font-mono text-muted-foreground tracking-widest uppercase">MAP LAYERS & OVERLAYS</span>
+          <span className="text-[11px] font-mono text-muted-foreground tracking-widest uppercase">MAP LAYERS & OVERLAYS</span>
           {layersOpen ? <ChevronUp className="h-3 w-3 text-muted-foreground" /> : <ChevronDown className="h-3 w-3 text-muted-foreground" />}
         </button>
         {layersOpen && (
@@ -229,8 +229,8 @@ export default function WorldMap() {
       </div>
 
       {/* Main map + side panels */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-        <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 lg:gap-4">
+        <div className="lg:col-span-2 min-w-0">
           <GridMap
             onGridClick={handleGridClick}
             selectedSector={selectedSector}
@@ -290,7 +290,7 @@ export default function WorldMap() {
         </div>
 
         {/* Side panel */}
-        <div className="space-y-3">
+        <div className="space-y-3 min-w-0 overflow-hidden">
           {/* Mission detail */}
           {selectedMission && (
             <MissionDetailPopup

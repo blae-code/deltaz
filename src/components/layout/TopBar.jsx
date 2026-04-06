@@ -45,7 +45,7 @@ export default function TopBar({ user: propUser }) {
 
   return (
     <TooltipProvider delayDuration={200}>
-    <header className="flex items-center justify-between border-b border-border bg-card px-4 py-2">
+    <header className="flex items-center justify-between border-b border-border bg-card px-3 sm:px-4 py-2.5">
       <div className="flex items-center gap-4">
         <Tooltip>
           <TooltipTrigger asChild>
@@ -69,7 +69,7 @@ export default function TopBar({ user: propUser }) {
           </TooltipContent>
         </Tooltip>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
         {/* Notifications */}
         {user?.email && <NotificationDropdown userEmail={user.email} />}
         {/* Search button */}
@@ -83,7 +83,7 @@ export default function TopBar({ user: propUser }) {
         </button>
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-mono cursor-help">
+            <div className="hidden sm:flex items-center gap-1.5 text-[11px] text-muted-foreground font-mono cursor-help">
              <Clock className="h-3.5 w-3.5" />
              <span>{formatTime(time)}</span>
             </div>

@@ -5,11 +5,11 @@
 export default function StatusStrip({ items }) {
   if (!items || items.length === 0) return null;
   return (
-    <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${Math.min(items.length, 6)}, minmax(0, 1fr))` }}>
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
       {items.map((item, i) => (
-        <div key={i} className="border border-border bg-card rounded-sm p-3">
-          <div className="text-[10px] text-muted-foreground tracking-widest uppercase">{item.label}</div>
-          <div className={`text-lg font-bold font-display ${item.color || "text-foreground"}`}>
+        <div key={i} className="border border-border bg-card rounded-sm px-3 py-2.5 sm:p-3">
+          <div className="text-[10px] text-muted-foreground tracking-widest uppercase leading-tight">{item.label}</div>
+          <div className={`text-base sm:text-lg font-bold font-display mt-0.5 ${item.color || "text-foreground"}`}>
             {item.value}
           </div>
         </div>

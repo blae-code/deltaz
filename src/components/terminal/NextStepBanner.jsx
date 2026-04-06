@@ -21,14 +21,14 @@ export default function NextStepBanner({ to, icon: Icon, label, hint, color = "p
   return (
     <Link
       to={to}
-      className={`flex items-center gap-2.5 rounded-sm px-3 py-2 border transition-colors group ${colors[color] || colors.primary}`}
+      className={`flex items-center gap-3 rounded-sm px-3 py-2.5 border transition-colors group ${colors[color] || colors.primary}`}
     >
-      {Icon && <Icon className="h-3.5 w-3.5 shrink-0" />}
+      {Icon && <Icon className="h-4 w-4 shrink-0" />}
       <div className="flex-1 min-w-0">
-        <span className="text-[11px] font-semibold tracking-wider uppercase">{label}</span>
-        {hint && <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">{hint}</p>}
+        <span className="text-[11px] font-semibold tracking-wider uppercase leading-snug">{label}</span>
+        {hint && <p className="text-[10px] text-muted-foreground leading-snug mt-0.5">{hint}</p>}
       </div>
-      <ChevronRight className="h-3 w-3 shrink-0 opacity-50 group-hover:opacity-100 transition-opacity" />
+      <ChevronRight className="h-3.5 w-3.5 shrink-0 opacity-50 group-hover:opacity-100 transition-opacity" />
     </Link>
   );
 }

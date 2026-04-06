@@ -11,16 +11,16 @@ import QueryErrorBanner from "../terminal/QueryErrorBanner";
  */
 export default function PageShell({ title, subtitle, actions, statusStrip, actionRail, syncMeta, onRetry, children }) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 sm:space-y-5">
       {/* 1. Header */}
       <div className="flex items-start justify-between flex-wrap gap-2">
-        <div className="flex items-center gap-3">
-          <div>
-            <h2 className="text-lg font-bold font-display tracking-wider text-primary uppercase">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="min-w-0">
+            <h2 className="text-base sm:text-lg font-bold font-display tracking-wider text-primary uppercase truncate">
               {title}
             </h2>
             {subtitle && (
-              <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
+              <p className="text-[11px] sm:text-xs text-muted-foreground mt-1 line-clamp-2">{subtitle}</p>
             )}
           </div>
           {syncMeta && (
@@ -32,7 +32,7 @@ export default function PageShell({ title, subtitle, actions, statusStrip, actio
             />
           )}
         </div>
-        {actions && <div className="flex gap-1.5 flex-wrap">{actions}</div>}
+        {actions && <div className="flex gap-1.5 flex-wrap shrink-0">{actions}</div>}
       </div>
 
       {/* 2. Error banner — only if syncMeta reports error */}

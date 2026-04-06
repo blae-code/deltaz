@@ -123,7 +123,7 @@ export default function Jobs() {
           />
         )
       ) : (
-        <div className="grid gap-2">
+        <div className="grid gap-2.5">
           {filtered.map(job => (
             <MissionCard
               key={job.id}

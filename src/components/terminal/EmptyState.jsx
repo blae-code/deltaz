@@ -16,17 +16,17 @@ import { CircleOff } from "lucide-react";
 export default function EmptyState({ icon: Icon = CircleOff, title, why, action, cta, className }) {
   return (
     <div className={cn(
-      "border border-border border-dashed rounded-sm py-8 px-6 flex flex-col items-center text-center space-y-2.5",
+      "border border-border border-dashed rounded-sm py-6 sm:py-8 px-4 sm:px-6 flex flex-col items-center text-center space-y-2.5",
       className
     )}>
       <div className="h-8 w-8 rounded-sm bg-secondary/60 flex items-center justify-center">
         <Icon className="h-4 w-4 text-muted-foreground" />
       </div>
       {title && (
-        <p className="text-xs font-semibold text-foreground font-mono tracking-wide">{title}</p>
+        <p className="text-xs sm:text-sm font-semibold text-foreground font-mono tracking-wide">{title}</p>
       )}
       {why && (
-        <p className="text-[10px] text-muted-foreground leading-relaxed max-w-xs">{why}</p>
+        <p className="text-[11px] text-muted-foreground leading-relaxed max-w-sm">{why}</p>
       )}
       {action && (
         <p className="text-[10px] text-primary/80 leading-relaxed max-w-xs">{action}</p>

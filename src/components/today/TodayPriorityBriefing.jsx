@@ -106,8 +106,8 @@ export default function TodayPriorityBriefing({ jobs, userEmail, inventory, craf
   };
 
   return (
-    <div className="space-y-1">
-      <h3 className="text-[10px] text-muted-foreground tracking-widest uppercase font-mono mb-1.5">
+    <div className="space-y-1.5">
+      <h3 className="text-[11px] text-muted-foreground tracking-widest uppercase font-mono font-semibold mb-2">
         PRIORITY BRIEFING
       </h3>
       {items.slice(0, 5).map((item, idx) => {
@@ -116,11 +116,11 @@ export default function TodayPriorityBriefing({ jobs, userEmail, inventory, craf
           <Link
             key={idx}
             to={item.to}
-            className={`flex items-center gap-2.5 rounded-sm px-3 py-2 border transition-colors hover:opacity-90 ${urgencyStyles[item.urgency]}`}
+            className={`flex items-center gap-2.5 rounded-sm px-3 py-2.5 border transition-colors hover:opacity-90 ${urgencyStyles[item.urgency]}`}
           >
             <div className={`h-1.5 w-1.5 rounded-full shrink-0 ${urgencyDot[item.urgency]}`} />
             <Icon className="h-3.5 w-3.5 shrink-0" />
-            <span className="text-[11px] font-mono flex-1">{item.label}</span>
+            <span className="text-[11px] sm:text-xs font-mono flex-1 leading-snug">{item.label}</span>
           </Link>
         );
       })}

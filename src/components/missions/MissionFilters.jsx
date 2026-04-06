@@ -6,7 +6,7 @@ const TYPE_FILTERS = ["all", "recon", "extraction", "sabotage", "escort", "scave
 
 export default function MissionFilters({ statusFilter, typeFilter, factionFilter, factions, onStatusChange, onTypeChange, onFactionChange }) {
   return (
-    <div className="flex gap-2 flex-wrap items-end">
+    <div className="flex gap-2 sm:gap-3 flex-wrap items-end">
       {/* Status */}
       <div className="flex gap-1 flex-wrap">
         {STATUS_FILTERS.map(f => (
@@ -14,7 +14,7 @@ export default function MissionFilters({ statusFilter, typeFilter, factionFilter
             key={f}
             variant={statusFilter === f ? "default" : "outline"}
             size="sm"
-            className="text-[10px] uppercase tracking-wider h-7"
+            className="text-[10px] uppercase tracking-wider h-8 px-2.5 sm:px-3"
             onClick={() => onStatusChange(f)}
           >
             {f.replace("_", " ")}
@@ -24,7 +24,7 @@ export default function MissionFilters({ statusFilter, typeFilter, factionFilter
 
       {/* Type */}
       <Select value={typeFilter} onValueChange={onTypeChange}>
-        <SelectTrigger className="h-7 w-32 text-[10px] bg-muted">
+        <SelectTrigger className="h-8 w-32 text-[11px] bg-muted">
           <SelectValue placeholder="Type..." />
         </SelectTrigger>
         <SelectContent>
@@ -39,7 +39,7 @@ export default function MissionFilters({ statusFilter, typeFilter, factionFilter
       {/* Faction */}
       {factions.length > 0 && (
         <Select value={factionFilter} onValueChange={onFactionChange}>
-          <SelectTrigger className="h-7 w-36 text-[10px] bg-muted">
+          <SelectTrigger className="h-8 w-36 text-[11px] bg-muted">
             <SelectValue placeholder="Faction..." />
           </SelectTrigger>
           <SelectContent>

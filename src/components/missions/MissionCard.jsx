@@ -95,17 +95,17 @@ export default function MissionCard({ job, faction, territory, userEmail, isAdmi
       onClick={() => setExpanded(!expanded)}
     >
       {/* Header row */}
-      <div className="px-4 py-3 cursor-pointer">
-        <div className="flex items-start justify-between gap-3">
+      <div className="px-3 sm:px-4 py-3 cursor-pointer">
+        <div className="flex items-start justify-between gap-2 sm:gap-3">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <Crosshair className="h-3.5 w-3.5 text-primary shrink-0" />
-              <h3 className="text-sm font-semibold text-foreground truncate">{job.title}</h3>
+            <div className="flex items-center gap-2 mb-1.5">
+              <Crosshair className="h-4 w-4 text-primary shrink-0" />
+              <h3 className="text-sm font-semibold text-foreground truncate leading-snug">{job.title}</h3>
               {isMine && job.status === "in_progress" && (
                 <Badge className="text-[10px] bg-accent/20 text-accent border-accent/30 shrink-0">YOUR MISSION</Badge>
               )}
             </div>
-            <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
               <Badge variant="outline" className="text-[10px] uppercase">{job.type}</Badge>
               <span className={`text-[11px] font-semibold uppercase tracking-wider ${difficultyColor[job.difficulty]?.split(" ")[0] || "text-muted-foreground"}`}>
                 {job.difficulty}
@@ -141,7 +141,7 @@ export default function MissionCard({ job, faction, territory, userEmail, isAdmi
 
       {/* Expanded detail */}
       {expanded && (
-        <div className="px-4 pb-3 border-t border-border/50 pt-2 space-y-2">
+        <div className="px-3 sm:px-4 pb-3 border-t border-border/50 pt-3 space-y-3">
           {job.description && (
             <p className="text-xs text-muted-foreground">{job.description}</p>
           )}
@@ -169,15 +169,15 @@ export default function MissionCard({ job, faction, territory, userEmail, isAdmi
           </div>
 
           {/* Action buttons */}
-          <div className="flex gap-2 pt-1" onClick={e => e.stopPropagation()} role="group" aria-label="Mission actions">
+          <div className="flex gap-2 pt-1 flex-wrap" onClick={e => e.stopPropagation()} role="group" aria-label="Mission actions">
             {canAccept && !isExpired && (
-              <Button size="sm" className="text-[10px] h-7 flex-1 uppercase tracking-wider" onClick={() => doAction("accept")} disabled={!!acting}>
+              <Button size="sm" className="text-[10px] h-8 flex-1 min-w-[120px] uppercase tracking-wider" onClick={() => doAction("accept")} disabled={!!acting}>
                 {acting === "accept" ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <CheckCircle className="h-3 w-3 mr-1" />}
                 ACCEPT MISSION
               </Button>
             )}
             {canComplete && (
-              <Button size="sm" className="text-[10px] h-7 flex-1 uppercase tracking-wider" onClick={() => doAction("complete")} disabled={!!acting}>
+              <Button size="sm" className="text-[10px] h-8 flex-1 min-w-[120px] uppercase tracking-wider" onClick={() => doAction("complete")} disabled={!!acting}>
                 {acting === "complete" ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <CheckCircle className="h-3 w-3 mr-1" />}
                 REPORT COMPLETE
               </Button>

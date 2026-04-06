@@ -85,6 +85,10 @@
   }
   body {
     @apply bg-background text-foreground font-mono;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   /* Accessibility: global focus-visible ring for all interactive elements */
@@ -132,6 +136,13 @@
 @media (prefers-contrast: more) {
   :root {
     --muted-foreground: 210 8% 55%;
+  }
+}
+
+/* Smaller screens: prevent horizontal overflow */
+@media (max-width: 640px) {
+  .truncate {
+    max-width: 100%;
   }
 }
 

@@ -232,14 +232,14 @@ export default function MissionPlanner() {
         )}
 
         {/* Main planning grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 lg:gap-4">
           {/* Left: Squad pool */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-3 min-w-0">
             <SquadPool survivors={survivors} assignedIds={allAssignedIds} />
           </div>
 
           {/* Center: Territory selection & assignment */}
-          <div className="lg:col-span-5 space-y-3">
+          <div className="lg:col-span-5 space-y-3 min-w-0">
             <TerritorySelector
               territories={territories}
               factions={factions}
@@ -258,7 +258,7 @@ export default function MissionPlanner() {
           </div>
 
           {/* Right: Config, risk, deploy */}
-          <div className="lg:col-span-4 space-y-3">
+          <div className="lg:col-span-4 space-y-3 min-w-0">
             <PlanSummary
               title={title} setTitle={setTitle}
               operationType={operationType} setOperationType={setOperationType}
@@ -275,7 +275,7 @@ export default function MissionPlanner() {
         {/* Recent operations log */}
         {recentPlans.length > 0 && (
           <div className="border border-border bg-card rounded-sm overflow-hidden">
-            <div className="border-b border-border px-3 py-2 bg-secondary/50 flex items-center gap-2">
+            <div className="border-b border-border px-3 py-2.5 bg-secondary/50 flex items-center gap-2">
               <History className="h-3 w-3 text-primary" />
               <h3 className="text-[10px] font-semibold uppercase tracking-widest text-primary font-display">
                 Recent Operations
@@ -286,12 +286,12 @@ export default function MissionPlanner() {
             </div>
             <div className="p-2 space-y-1">
               {recentPlans.map((plan) => (
-                <div key={plan.id} className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-sm bg-secondary/20 border border-border/50">
+                <div key={plan.id} className="flex items-center justify-between gap-2 px-2.5 py-2 rounded-sm bg-secondary/20 border border-border/50">
                   <div className="flex items-center gap-2 min-w-0">
                     <Crosshair className="h-3 w-3 text-muted-foreground shrink-0" />
                     <div className="min-w-0">
-                      <p className="text-[10px] font-mono font-semibold text-foreground truncate">{plan.title}</p>
-                      <p className="text-[8px] text-muted-foreground">
+                      <p className="text-[11px] font-mono font-semibold text-foreground truncate">{plan.title}</p>
+                      <p className="text-[9px] text-muted-foreground">
                         {plan.territory_name} · {plan.operation_type} · {plan.assigned_survivors?.length || 0} ops
                       </p>
                     </div>

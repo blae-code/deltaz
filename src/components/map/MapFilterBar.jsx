@@ -26,20 +26,20 @@ export default function MapFilterBar({
   ];
 
   return (
-    <div className="flex gap-1 flex-wrap">
+    <div className="flex gap-1.5 flex-wrap">
       {filters.map(f => (
         <Button
           key={f.key}
           variant={f.active ? "default" : "outline"}
           size="sm"
-          className="h-7 text-[8px] tracking-wider gap-1 px-2"
+          className="h-8 text-[10px] tracking-wider gap-1.5 px-2.5"
           onClick={f.onClick}
           disabled={f.loading}
         >
-          <f.icon className="h-3 w-3" />
+          <f.icon className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">{f.label}</span>
           {f.count > 0 && (
-            <Badge variant="secondary" className="h-3.5 px-1 text-[7px] ml-0.5">{f.count}</Badge>
+            <Badge variant="secondary" className="h-4 px-1.5 text-[8px] ml-0.5">{f.count}</Badge>
           )}
         </Button>
       ))}
