@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Zap, Check, User, Crosshair, RefreshCw, AlertTriangle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { getDisplayName } from "../../lib/displayName";
+import ConfirmDialog from "./ConfirmDialog";
 
 const difficultyColor = {
   routine: "text-primary",
@@ -82,6 +83,7 @@ export default function AutoAssignPanel() {
   const [dispatching, setDispatching] = useState(false);
   const [computed, setComputed] = useState(false);
   const [rawData, setRawData] = useState(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const { toast } = useToast();
 
   const computeMatches = async () => {
@@ -210,15 +212,26 @@ export default function AutoAssignPanel() {
           </div>
 
           <Button
-            onClick={dispatchAll}
+            onClick={() => setConfirmOpen(true)}
             disabled={dispatching || assignments.length === 0}
             className="w-full font-mono text-xs uppercase tracking-wider"
           >
             <Zap className="h-3.5 w-3.5 mr-2" />
             {dispatching
               ? "DISPATCHING..."
-              : `CONFIRM & DISPATCH ALL (${assignments.length})`}
+              : `DISPATCH ALL (${assignments.length})`}
           </Button>
+
+          <ConfirmDialog
+            open={confirmOpen}
+            onOpenChange={setConfirmOpen}
+            title="BULK DISPATCH CONFIRMATION"
+            description={`You are about to assign ${assignments.length} operative(s) to missions. Each will receive a notification and their mission status will change to in-progress.`}
+            impact={`${assignments.length} operatives will be committed to active duty. They cannot accept other missions until these are resolved.`}
+            severity="warning"
+            confirmLabel={`DISPATCH ${assignments.length} OPERATIVE(S)`}
+            onConfirm={() => { setConfirmOpen(false); dispatchAll(); }}
+          />
         </>
       )}
     </div>

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { MapPin, ArrowRight, Flag, Shield, AlertTriangle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import TerritoryCard from "./TerritoryCard";
+import ConfirmDialog from "./ConfirmDialog";
 
 const statusColors = {
   secured: "text-primary",
@@ -23,6 +24,7 @@ export default function TerritoryOpsPanel() {
   const [newStatus, setNewStatus] = useState("");
   const [processing, setProcessing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const { toast } = useToast();
 
   const loadData = () => {
@@ -200,7 +202,7 @@ export default function TerritoryOpsPanel() {
 
       {/* Execute button */}
       <Button
-        onClick={handleTransfer}
+        onClick={() => setConfirmOpen(true)}
         disabled={!selectedTerritory || !targetFaction || processing}
         className="w-full font-mono text-xs uppercase tracking-wider"
       >
@@ -211,6 +213,17 @@ export default function TerritoryOpsPanel() {
           ? "EXECUTE TRANSFER"
           : "CLAIM TERRITORY"}
       </Button>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={currentFaction ? "CONFIRM TERRITORY TRANSFER" : "CONFIRM TERRITORY CLAIM"}
+        description={`${currentFaction ? `Transfer control of ${territory?.name || "territory"} (${territory?.sector}) from ${currentFaction?.name} to ${target?.name}.` : `Claim ${territory?.name || "territory"} (${territory?.sector}) for ${target?.name}.`} This change is broadcast to all operatives in real-time.`}
+        impact={currentFaction ? `${currentFaction.name} loses control and influence over this sector. Map, missions, and resource calculations will update immediately.` : `${target?.name} gains a new territory. Faction economy and defense profiles will recalculate.`}
+        severity="warning"
+        confirmLabel={currentFaction ? "EXECUTE TRANSFER" : "CLAIM TERRITORY"}
+        onConfirm={() => { setConfirmOpen(false); handleTransfer(); }}
+      />
     </div>
   );
 }

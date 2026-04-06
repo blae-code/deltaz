@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import ConfirmDialog from "./ConfirmDialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Handshake, Swords, ArrowRight, Shield } from "lucide-react";
@@ -21,18 +22,29 @@ export default function DiplomacyForm({ factions, getRelation, onSubmit }) {
   const [status, setStatus] = useState("");
   const [terms, setTerms] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const existing = factionA && factionB ? getRelation(factionA, factionB) : null;
   const fA = factions.find((f) => f.id === factionA);
   const fB = factions.find((f) => f.id === factionB);
 
-  const handleSubmit = async () => {
-    if (!factionA || !factionB || !status) return;
+  const isHighStakes = status === "war" || status === "hostile";
+
+  const executeSubmit = async () => {
     setSubmitting(true);
     await onSubmit({ factionAId: factionA, factionBId: factionB, status, terms });
     setTerms("");
     setStatus("");
     setSubmitting(false);
+  };
+
+  const handleSubmit = () => {
+    if (!factionA || !factionB || !status) return;
+    if (isHighStakes) {
+      setConfirmOpen(true);
+    } else {
+      executeSubmit();
+    }
   };
 
   return (
@@ -133,15 +145,28 @@ export default function DiplomacyForm({ factions, getRelation, onSubmit }) {
         <Button
           onClick={handleSubmit}
           disabled={!factionA || !factionB || !status || factionA === factionB || submitting}
-          className="w-full font-mono text-xs uppercase tracking-wider"
+          className={`w-full font-mono text-xs uppercase tracking-wider ${
+            isHighStakes ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""
+          }`}
         >
-          {status === "war" || status === "hostile" ? (
+          {isHighStakes ? (
             <Swords className="h-3.5 w-3.5 mr-2" />
           ) : (
             <Handshake className="h-3.5 w-3.5 mr-2" />
           )}
           {submitting ? "TRANSMITTING..." : "SET DIPLOMATIC STATUS"}
         </Button>
+
+        <ConfirmDialog
+          open={confirmOpen}
+          onOpenChange={setConfirmOpen}
+          title={status === "war" ? "DECLARE WAR" : "SET HOSTILE STATUS"}
+          description={`You are about to ${status === "war" ? "declare war between" : "set hostile relations between"} ${fA?.name || "Faction A"} and ${fB?.name || "Faction B"}. This will be broadcast to all operatives immediately.`}
+          impact={status === "war" ? "Triggers elimination missions, blocks trade routes, and escalates all faction interactions. This cannot be quietly undone." : "Raids become likely, trade may be disrupted, and faction tensions will escalate server-wide."}
+          severity="danger"
+          confirmLabel={status === "war" ? "DECLARE WAR" : "CONFIRM HOSTILE"}
+          onConfirm={executeSubmit}
+        />
       </div>
     </div>
   );

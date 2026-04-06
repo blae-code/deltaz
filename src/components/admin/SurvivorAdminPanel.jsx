@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Users, Zap } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import ConfirmDialog from "./ConfirmDialog";
 
 export default function SurvivorAdminPanel() {
   const [bases, setBases] = useState([]);
@@ -13,6 +14,7 @@ export default function SurvivorAdminPanel() {
   const [count, setCount] = useState(1);
   const [assigning, setAssigning] = useState(false);
   const [cycling, setCycling] = useState(false);
+  const [confirmCycle, setConfirmCycle] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -47,10 +49,21 @@ export default function SurvivorAdminPanel() {
         <p className="text-[9px] text-muted-foreground">
           Evaluates all active bases and spawns survivors based on reputation, territory safety, wars, and events.
         </p>
-        <Button size="sm" onClick={handleCycle} disabled={cycling} className="text-[10px] font-mono h-7">
+        <Button size="sm" onClick={() => setConfirmCycle(true)} disabled={cycling} className="text-[10px] font-mono h-7">
           {cycling ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Zap className="h-3 w-3 mr-1" />}
           {cycling ? "RUNNING..." : "RUN SURVIVOR CYCLE"}
         </Button>
+
+        <ConfirmDialog
+          open={confirmCycle}
+          onOpenChange={setConfirmCycle}
+          title="RUN SURVIVOR CYCLE"
+          description="This will evaluate all active bases and spawn new survivors based on reputation, territory safety, active wars, and world events."
+          impact="New NPC survivors will appear at player bases. Colony stats, food consumption, and defense ratings will change."
+          severity="warning"
+          confirmLabel="RUN CYCLE"
+          onConfirm={() => { setConfirmCycle(false); handleCycle(); }}
+        />
       </div>
 
       {/* Manual Assign */}
