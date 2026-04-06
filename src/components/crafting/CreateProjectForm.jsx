@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +13,7 @@ const CATEGORIES = ["weapon", "armor", "tool", "consumable", "upgrade", "trade_g
 const PRIORITIES = ["low", "normal", "high", "urgent"];
 
 export default function CreateProjectForm({ userEmail, recipes, onCreated }) {
+  const queryClient = useQueryClient();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("custom");
@@ -72,6 +74,7 @@ export default function CreateProjectForm({ userEmail, recipes, onCreated }) {
     });
 
     toast({ title: "Project Created", description: `"${title}" added to workbench` });
+    queryClient.invalidateQueries({ queryKey: ["craftingProjects"] });
     setSaving(false);
     onCreated?.();
   };

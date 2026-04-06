@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import useEntityQuery from "../hooks/useEntityQuery";
 import DataCard from "../components/terminal/DataCard";
 import PageShell from "../components/layout/PageShell";
 import StatusStrip from "../components/layout/StatusStrip";
@@ -13,37 +14,30 @@ import RecipeBrowser from "../components/crafting/RecipeBrowser";
 
 export default function CraftingTracker() {
   const [user, setUser] = useState(null);
-  const [projects, setProjects] = useState([]);
-  const [inventory, setInventory] = useState([]);
-  const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [showRecipes, setShowRecipes] = useState(false);
-  const [filter, setFilter] = useState("active"); // active | completed | all
-
-  const loadData = async () => {
-    const u = await base44.auth.me();
-    setUser(u);
-    const [proj, inv, rec] = await Promise.all([
-      base44.entities.CraftingProject.filter({ owner_email: u.email }, "-created_date", 100),
-      base44.entities.InventoryItem.filter({ owner_email: u.email }, "-created_date", 200),
-      base44.entities.Recipe.filter({ is_available: true }, "name", 100),
-    ]);
-    setProjects(proj);
-    setInventory(inv);
-    setRecipes(rec);
-    setLoading(false);
-  };
+  const [filter, setFilter] = useState("active");
 
   useEffect(() => {
-    loadData();
-    const unsub = base44.entities.CraftingProject.subscribe((event) => {
-      if (event.type === "create") setProjects(prev => [event.data, ...prev]);
-      else if (event.type === "update") setProjects(prev => prev.map(p => p.id === event.id ? event.data : p));
-      else if (event.type === "delete") setProjects(prev => prev.filter(p => p.id !== event.id));
-    });
-    return unsub;
+    base44.auth.me().then((u) => { setUser(u); setLoading(false); }).catch(() => setLoading(false));
   }, []);
+
+  const { data: projects = [] } = useEntityQuery(
+    ["craftingProjects", user?.email],
+    () => user ? base44.entities.CraftingProject.filter({ owner_email: user.email }, "-created_date", 100) : Promise.resolve([]),
+    { subscribeEntities: ["CraftingProject"], queryOpts: { enabled: !!user?.email } }
+  );
+  const { data: inventory = [] } = useEntityQuery(
+    ["inventory", user?.email],
+    () => user ? base44.entities.InventoryItem.filter({ owner_email: user.email }, "-created_date", 200) : Promise.resolve([]),
+    { subscribeEntities: ["InventoryItem"], queryOpts: { enabled: !!user?.email } }
+  );
+  const { data: recipes = [] } = useEntityQuery(
+    "recipes",
+    () => base44.entities.Recipe.filter({ is_available: true }, "name", 100),
+    { subscribeEntities: ["Recipe"] }
+  );
 
   if (loading) {
     return (
@@ -98,7 +92,7 @@ export default function CraftingTracker() {
           recipes={recipes}
           inventory={inventory}
           userEmail={user?.email}
-          onProjectCreated={() => { loadData(); setShowRecipes(false); }}
+          onProjectCreated={() => setShowRecipes(false)}
         />
       )}
 
@@ -108,18 +102,17 @@ export default function CraftingTracker() {
           <CreateProjectForm
             userEmail={user?.email}
             recipes={recipes}
-            onCreated={() => { loadData(); setShowCreate(false); }}
+            onCreated={() => setShowCreate(false)}
           />
         </DataCard>
       )}
 
-      {/* Project list */
+      {/* Project list */}
       <ProjectList
         projects={filteredProjects}
         inventory={inventory}
         userEmail={user?.email}
         userCallsign={user?.callsign || user?.full_name}
-        onUpdate={loadData}
       />
     </PageShell>
   );

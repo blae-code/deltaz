@@ -1,6 +1,6 @@
 import MissionCard from "./MissionCard";
 
-export default function MyMissionsPanel({ jobs, factions, territories, userEmail, isAdmin, onUpdate }) {
+export default function MyMissionsPanel({ jobs, factions, territories, userEmail, isAdmin }) {
   const myJobs = jobs.filter(j => j.assigned_to === userEmail && j.status === "in_progress");
 
   if (myJobs.length === 0) {
@@ -24,7 +24,7 @@ export default function MyMissionsPanel({ jobs, factions, territories, userEmail
           territory={territories.find(t => t.id === job.territory_id)}
           userEmail={userEmail}
           isAdmin={isAdmin}
-          onUpdate={onUpdate}
+
         />
       ))}
     </div>

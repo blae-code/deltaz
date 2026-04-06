@@ -89,7 +89,7 @@ export default function MissionLog() {
       }
       statusStrip={<StatusStrip items={statusItems} />}
     >
-      {/* Filters */
+      {/* Filters */}
       <LogFilters
         category={category}
         onCategoryChange={setCategory}

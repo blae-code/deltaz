@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -32,10 +33,11 @@ const statusMap = {
   expired: "offline",
 };
 
-export default function MissionCard({ job, faction, territory, userEmail, isAdmin, onUpdate }) {
+export default function MissionCard({ job, faction, territory, userEmail, isAdmin }) {
   const [acting, setActing] = useState(null);
   const [expanded, setExpanded] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const isMine = job.assigned_to === userEmail;
   const canAccept = job.status === "available" && !job.assigned_to;
@@ -58,7 +60,7 @@ export default function MissionCard({ job, faction, territory, userEmail, isAdmi
       } else if (action === "abandon") {
         toast({ title: "Mission Abandoned", description: "Reputation penalty applied.", variant: "destructive" });
       }
-      onUpdate?.();
+      queryClient.invalidateQueries({ queryKey: ["jobs"] });
     } catch (err) {
       toast({ title: "Action Failed", description: err.response?.data?.error || err.message, variant: "destructive" });
     } finally {

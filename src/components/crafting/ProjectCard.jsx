@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,13 +32,15 @@ const statusStyle = {
   abandoned: "bg-muted text-muted-foreground",
 };
 
-export default function ProjectCard({ project, inventory, userEmail, userCallsign, onUpdate }) {
+export default function ProjectCard({ project, inventory, userEmail, userCallsign }) {
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
   const [materials, setMaterials] = useState(project.materials || []);
   const [showTrade, setShowTrade] = useState(false);
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["craftingProjects"] });
 
   const totalNeeded = materials.length;
   const totalComplete = materials.filter(m => (m.have || 0) >= (m.needed || 1)).length;
@@ -59,7 +62,7 @@ export default function ProjectCard({ project, inventory, userEmail, userCallsig
     setEditing(false);
     setSaving(false);
     toast({ title: "Updated", description: "Material progress saved" });
-    onUpdate?.();
+    invalidate();
   };
 
   const markComplete = async () => {
@@ -68,19 +71,19 @@ export default function ProjectCard({ project, inventory, userEmail, userCallsig
       completed_at: new Date().toISOString(),
     });
     toast({ title: "Project Completed!", description: `"${project.title}" marked as built` });
-    onUpdate?.();
+    invalidate();
   };
 
   const abandon = async () => {
     await base44.entities.CraftingProject.update(project.id, { status: "abandoned" });
     toast({ title: "Project Abandoned", description: `"${project.title}" shelved` });
-    onUpdate?.();
+    invalidate();
   };
 
   const deleteProject = async () => {
     await base44.entities.CraftingProject.delete(project.id);
     toast({ title: "Deleted", description: `"${project.title}" removed` });
-    onUpdate?.();
+    invalidate();
   };
 
   // Check inventory for auto-detection

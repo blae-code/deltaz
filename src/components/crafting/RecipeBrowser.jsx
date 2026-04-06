@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useQueryClient } from "@tanstack/react-query";
 import DataCard from "../terminal/DataCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ export default function RecipeBrowser({ recipes, inventory, userEmail, onProject
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("all");
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const categories = ["all", ...new Set(recipes.map(r => r.category))];
 
@@ -50,6 +52,7 @@ export default function RecipeBrowser({ recipes, inventory, userEmail, onProject
       })),
     });
     toast({ title: "Project Created", description: `"${recipe.name}" added to workbench` });
+    queryClient.invalidateQueries({ queryKey: ["craftingProjects"] });
     onProjectCreated?.();
   };
 

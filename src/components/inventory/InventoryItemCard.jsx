@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Shield, Sword, Wrench, Apple, Box, Zap, Trash2, Hammer, ArrowRight } from "lucide-react";
@@ -17,18 +18,20 @@ const rarityColors = {
   legendary: "text-accent border-accent/30",
 };
 
-export default function InventoryItemCard({ item, onUpdate, userEmail }) {
+export default function InventoryItemCard({ item, userEmail }) {
   const [loading, setLoading] = useState(false);
   const [showDismantle, setShowDismantle] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["inventory"] });
   const Icon = catIcons[item.category] || Box;
 
   const toggleEquip = async () => {
     setLoading(true);
     await base44.entities.InventoryItem.update(item.id, { is_equipped: !item.is_equipped });
     toast({ title: item.is_equipped ? "Unequipped" : "Equipped", description: item.name });
-    onUpdate?.();
+    invalidate();
     setLoading(false);
   };
 
@@ -36,7 +39,7 @@ export default function InventoryItemCard({ item, onUpdate, userEmail }) {
     setLoading(true);
     await base44.entities.InventoryItem.delete(item.id);
     toast({ title: "Discarded", description: item.name });
-    onUpdate?.();
+    invalidate();
   };
 
   const condColor = (item.condition ?? 100) < 25 ? "text-status-danger" : (item.condition ?? 100) < 50 ? "text-accent" : "text-primary";
@@ -87,11 +90,11 @@ export default function InventoryItemCard({ item, onUpdate, userEmail }) {
       </div>
 
       {showDismantle && (
-        <DismantleDialog item={item} userEmail={userEmail} onComplete={() => { setShowDismantle(false); onUpdate?.(); }} onCancel={() => setShowDismantle(false)} />
+        <DismantleDialog item={item} userEmail={userEmail} onComplete={() => { setShowDismantle(false); invalidate(); }} onCancel={() => setShowDismantle(false)} />
       )}
 
       {showTransfer && (
-        <TransferDialog item={item} userEmail={userEmail} onComplete={() => { setShowTransfer(false); onUpdate?.(); }} onCancel={() => setShowTransfer(false)} />
+        <TransferDialog item={item} userEmail={userEmail} onComplete={() => { setShowTransfer(false); invalidate(); }} onCancel={() => setShowTransfer(false)} />
       )}
 
       {item.source && <p className="text-[8px] text-muted-foreground mt-1.5 italic">Source: {item.source}</p>}

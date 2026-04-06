@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +20,7 @@ export default function AddItemForm({ userEmail, onAdded }) {
   const [source, setSource] = useState("");
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const submit = async (e) => {
     e.preventDefault();
@@ -35,6 +37,7 @@ export default function AddItemForm({ userEmail, onAdded }) {
       condition: 100,
     });
     toast({ title: "Item Added", description: name });
+    queryClient.invalidateQueries({ queryKey: ["inventory"] });
     onAdded?.();
     setSaving(false);
   };

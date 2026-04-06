@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import useEntityQuery from "../hooks/useEntityQuery";
 import DataCard from "../components/terminal/DataCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,8 +21,6 @@ import ActionRail from "../components/layout/ActionRail";
 
 export default function Inventory() {
   const [user, setUser] = useState(null);
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("inventory");
   const [showAddItem, setShowAddItem] = useState(false);
   const [showScreenshotScan, setShowScreenshotScan] = useState(false);
@@ -30,27 +29,16 @@ export default function Inventory() {
   const [showCreateDeal, setShowCreateDeal] = useState(false);
   const [showStats, setShowStats] = useState(false);
 
-  const loadData = async () => {
-    const u = await base44.auth.me();
-    setUser(u);
-    const inv = await base44.entities.InventoryItem.filter({ owner_email: u.email }, "-created_date", 200);
-    setItems(inv);
-    setLoading(false);
-  };
+  useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); }, []);
 
-  useEffect(() => {
-    loadData();
-    const unsub = base44.entities.InventoryItem.subscribe((event) => {
-      if (event.type === "create" && event.data.owner_email === user?.email) {
-        setItems(prev => [event.data, ...prev]);
-      } else if (event.type === "update") {
-        setItems(prev => prev.map(i => i.id === event.id ? event.data : i));
-      } else if (event.type === "delete") {
-        setItems(prev => prev.filter(i => i.id !== event.id));
-      }
-    });
-    return unsub;
-  }, []);
+  const { data: items = [], isLoading: loading } = useEntityQuery(
+    ["inventory", user?.email],
+    () => user ? base44.entities.InventoryItem.filter({ owner_email: user.email }, "-created_date", 200) : Promise.resolve([]),
+    {
+      subscribeEntities: ["InventoryItem"],
+      queryOpts: { enabled: !!user?.email },
+    }
+  );
 
   if (loading) {
     return (
@@ -121,23 +109,23 @@ export default function Inventory() {
 
           {showScreenshotScan && (
             <DataCard title="Screenshot Inventory Scan">
-              <ScreenshotIngestion userEmail={user?.email} onComplete={() => { loadData(); setShowScreenshotScan(false); }} />
+              <ScreenshotIngestion userEmail={user?.email} onComplete={() => setShowScreenshotScan(false)} />
             </DataCard>
           )}
 
           {showBulkAdd && (
             <DataCard title="Bulk Add Items">
-              <BulkAddForm userEmail={user?.email} onComplete={() => { loadData(); setShowBulkAdd(false); }} />
+              <BulkAddForm userEmail={user?.email} onComplete={() => setShowBulkAdd(false)} />
             </DataCard>
           )}
 
           {showAddItem && (
             <DataCard title="Log New Item">
-              <AddItemForm userEmail={user?.email} onAdded={() => { loadData(); setShowAddItem(false); }} />
+              <AddItemForm userEmail={user?.email} onAdded={() => setShowAddItem(false)} />
             </DataCard>
           )}
 
-          <InventoryGrid items={items} onUpdate={loadData} userEmail={user?.email} />
+          <InventoryGrid items={items} userEmail={user?.email} />
         </>
       )}
 

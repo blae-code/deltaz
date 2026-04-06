@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { base44 } from "@/api/base44Client";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Camera, Upload, Loader2, Check, X, Trash2 } from "lucide-react";
@@ -15,6 +16,7 @@ export default function ScreenshotIngestion({ userEmail, onComplete }) {
   const [saving, setSaving] = useState(false);
   const fileRef = useRef(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const handleFile = (e) => {
     const f = e.target.files?.[0];
@@ -90,6 +92,7 @@ Be thorough — extract ALL visible items even if partially obscured.`,
     }));
     await base44.entities.InventoryItem.bulkCreate(records);
     toast({ title: "Inventory Imported", description: `${records.length} items added from screenshot` });
+    queryClient.invalidateQueries({ queryKey: ["inventory"] });
     setSaving(false);
     setParsedItems(null);
     setFile(null);

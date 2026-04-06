@@ -1,6 +1,6 @@
 import ProjectCard from "./ProjectCard";
 
-export default function ProjectList({ projects, inventory, userEmail, userCallsign, onUpdate }) {
+export default function ProjectList({ projects, inventory, userEmail, userCallsign }) {
   if (projects.length === 0) {
     return (
       <div className="border border-border border-dashed rounded-sm p-8 text-center space-y-2">
@@ -22,7 +22,7 @@ export default function ProjectList({ projects, inventory, userEmail, userCallsi
           inventory={inventory}
           userEmail={userEmail}
           userCallsign={userCallsign}
-          onUpdate={onUpdate}
+
         />
       ))}
     </div>

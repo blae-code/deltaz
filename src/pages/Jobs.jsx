@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import useEntityQuery from "../hooks/useEntityQuery";
 import DataCard from "../components/terminal/DataCard";
 import PageShell from "../components/layout/PageShell";
 import StatusStrip from "../components/layout/StatusStrip";
 import { Button } from "@/components/ui/button";
-import { Search, Sparkles } from "lucide-react";
+import { Search, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import ScavengeDeployPanel from "../components/scavenge/ScavengeDeployPanel";
 import ScavengeHistory from "../components/scavenge/ScavengeHistory";
 import MissionStats from "../components/missions/MissionStats";
@@ -12,50 +13,37 @@ import MissionFilters from "../components/missions/MissionFilters";
 import MyMissionsPanel from "../components/missions/MyMissionsPanel";
 import MissionCard from "../components/missions/MissionCard";
 import MissionGenerator from "../components/missions/MissionGenerator";
-import { ChevronDown, ChevronUp } from "lucide-react";
 
 export default function Jobs() {
-  const [jobs, setJobs] = useState([]);
-  const [territories, setTerritories] = useState([]);
-  const [factions, setFactions] = useState([]);
   const [user, setUser] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [factionFilter, setFactionFilter] = useState("all");
-  const [loading, setLoading] = useState(true);
   const [showScavenge, setShowScavenge] = useState(false);
   const [showGenerator, setShowGenerator] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [scavengeKey, setScavengeKey] = useState(0);
 
-  const loadData = async () => {
-    const [j, t, f, u] = await Promise.all([
-      base44.entities.Job.list("-created_date", 100),
-      base44.entities.Territory.list("-created_date", 100),
-      base44.entities.Faction.list("-created_date", 50),
-      base44.auth.me(),
-    ]);
-    setJobs(j);
-    setTerritories(t);
-    setFactions(f);
-    setUser(u);
-    setLoading(false);
-  };
+  useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); }, []);
 
-  useEffect(() => {
-    loadData();
+  const { data: jobsData, isLoading: jobsLoading } = useEntityQuery(
+    "jobs",
+    () => base44.entities.Job.list("-created_date", 100),
+    { subscribeEntities: ["Job"] }
+  );
+  const { data: territories } = useEntityQuery(
+    "territories",
+    () => base44.entities.Territory.list("-created_date", 100),
+    { subscribeEntities: ["Territory"] }
+  );
+  const { data: factions } = useEntityQuery(
+    "factions",
+    () => base44.entities.Faction.list("-created_date", 50),
+    { subscribeEntities: ["Faction"] }
+  );
 
-    const unsub = base44.entities.Job.subscribe((event) => {
-      if (event.type === "create") {
-        setJobs(prev => [event.data, ...prev]);
-      } else if (event.type === "update") {
-        setJobs(prev => prev.map(j => j.id === event.id ? event.data : j));
-      } else if (event.type === "delete") {
-        setJobs(prev => prev.filter(j => j.id !== event.id));
-      }
-    });
-    return unsub;
-  }, []);
+  const jobs = jobsData || [];
+  const loading = jobsLoading && jobs.length === 0;
 
   const filtered = jobs.filter(j => {
     if (statusFilter !== "all" && j.status !== statusFilter) return false;
@@ -100,7 +88,7 @@ export default function Jobs() {
       {/* Mission Generator */}
       {showGenerator && (
         <DataCard title="Mission Generator">
-          <MissionGenerator onGenerated={loadData} />
+          <MissionGenerator />
         </DataCard>
       )}
 
@@ -109,8 +97,8 @@ export default function Jobs() {
         <div className="grid md:grid-cols-2 gap-4">
           <DataCard title="Deploy Scout">
             <ScavengeDeployPanel
-              territories={territories}
-              factions={factions}
+              territories={territories || []}
+              factions={factions || []}
               onDeployed={() => setScavengeKey(k => k + 1)}
             />
           </DataCard>
@@ -133,11 +121,10 @@ export default function Jobs() {
       {/* My Active Missions */}
       <MyMissionsPanel
         jobs={jobs}
-        factions={factions}
-        territories={territories}
+        factions={factions || []}
+        territories={territories || []}
         userEmail={user?.email}
         isAdmin={isAdmin}
-        onUpdate={loadData}
       />
 
       {/* Filters */}
@@ -145,7 +132,7 @@ export default function Jobs() {
         statusFilter={statusFilter}
         typeFilter={typeFilter}
         factionFilter={factionFilter}
-        factions={factions}
+        factions={factions || []}
         onStatusChange={setStatusFilter}
         onTypeChange={setTypeFilter}
         onFactionChange={setFactionFilter}
@@ -168,11 +155,10 @@ export default function Jobs() {
             <MissionCard
               key={job.id}
               job={job}
-              faction={factions.find(f => f.id === job.faction_id)}
-              territory={territories.find(t => t.id === job.territory_id)}
+              faction={(factions || []).find(f => f.id === job.faction_id)}
+              territory={(territories || []).find(t => t.id === job.territory_id)}
               userEmail={user?.email}
               isAdmin={isAdmin}
-              onUpdate={loadData}
             />
           ))}
         </div>

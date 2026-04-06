@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,7 @@ function emptyRow() {
 }
 
 export default function BulkAddForm({ userEmail, onComplete }) {
+  const queryClient = useQueryClient();
   const [mode, setMode] = useState("rows"); // rows | paste
   const [rows, setRows] = useState([emptyRow(), emptyRow(), emptyRow()]);
   const [pasteText, setPasteText] = useState("");
@@ -58,6 +60,7 @@ export default function BulkAddForm({ userEmail, onComplete }) {
     }));
     await base44.entities.InventoryItem.bulkCreate(records);
     toast({ title: "Bulk Add Complete", description: `${records.length} items added` });
+    queryClient.invalidateQueries({ queryKey: ["inventory"] });
     setSaving(false);
     setRows([emptyRow(), emptyRow(), emptyRow()]);
     onComplete?.();

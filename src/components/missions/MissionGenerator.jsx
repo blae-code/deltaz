@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -17,12 +18,13 @@ const MISSION_TYPES = [
   { value: "elimination", label: "ELIMINATION" },
 ];
 
-export default function MissionGenerator({ onGenerated }) {
+export default function MissionGenerator() {
   const [generating, setGenerating] = useState(false);
   const [preferredType, setPreferredType] = useState("any");
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const generate = async () => {
     setGenerating(true);
@@ -38,7 +40,7 @@ export default function MissionGenerator({ onGenerated }) {
       } else {
         setResult(res.data.mission);
         toast({ title: "Mission Generated", description: res.data.mission.title });
-        onGenerated?.();
+        queryClient.invalidateQueries({ queryKey: ["jobs"] });
       }
     } catch (err) {
       setError(err.message);
