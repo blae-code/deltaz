@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Bell, Check, Crosshair, Swords, AlertTriangle, Radio } from "lucide-react";
+import { Bell, Check, X, Crosshair, Swords, AlertTriangle, Radio } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import moment from "moment";
 import { cn } from "@/lib/utils";
@@ -29,17 +29,17 @@ export default function NotificationDropdown({ userEmail }) {
     if (!userEmail) return;
 
     Promise.all([
-      base44.entities.Notification.filter({ player_email: userEmail, is_read: false }, "-created_date", 20),
-      base44.entities.Notification.filter({ player_email: "broadcast", is_read: false }, "-created_date", 10),
+      base44.entities.Notification.filter({ player_email: userEmail, is_read: false }, "-created_date", 15),
+      base44.entities.Notification.filter({ player_email: "broadcast", is_read: false }, "-created_date", 5),
     ]).then(([personal, broadcasts]) => {
       const all = [...personal, ...broadcasts].sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
-      setNotifications(all);
+      setNotifications(all.slice(0, 15));
     }).catch(() => {});
 
     const unsub = base44.entities.Notification.subscribe((event) => {
       if (event.type === "create" && !event.data.is_read &&
         (event.data.player_email === userEmail || event.data.player_email === "broadcast")) {
-        setNotifications((prev) => [event.data, ...prev].slice(0, 30));
+        setNotifications((prev) => [event.data, ...prev].slice(0, 15));
       }
     });
     return unsub;
@@ -90,18 +90,26 @@ export default function NotificationDropdown({ userEmail }) {
       {open && (
         <div className="absolute right-0 top-full mt-1.5 w-80 max-h-[420px] overflow-y-auto border border-border bg-card rounded-sm shadow-lg z-50">
           {/* Header */}
-          <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-secondary/30 sticky top-0">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-secondary/30 sticky top-0 z-10">
             <span className="text-[10px] font-semibold font-display tracking-widest text-primary uppercase">
               Transmissions {count > 0 && `(${count})`}
             </span>
-            {count > 1 && (
+            <div className="flex items-center gap-2">
+              {count > 0 && (
+                <button
+                  onClick={markAllRead}
+                  className="text-[9px] text-muted-foreground hover:text-primary tracking-wider uppercase flex items-center gap-1 px-1.5 py-0.5 rounded-sm hover:bg-primary/10 transition-colors"
+                >
+                  <Check className="h-3 w-3" /> CLEAR ALL
+                </button>
+              )}
               <button
-                onClick={markAllRead}
-                className="text-[9px] text-muted-foreground hover:text-foreground tracking-wider uppercase flex items-center gap-1"
+                onClick={() => setOpen(false)}
+                className="text-muted-foreground hover:text-foreground p-0.5"
               >
-                <Check className="h-3 w-3" /> ALL READ
+                <X className="h-3.5 w-3.5" />
               </button>
-            )}
+            </div>
           </div>
 
           {/* Entries */}
@@ -116,7 +124,7 @@ export default function NotificationDropdown({ userEmail }) {
                 const Icon = TYPE_ICON[n.type] || AlertTriangle;
                 const priority = n.priority || "normal";
                 return (
-                  <div key={n.id} className="flex items-start gap-2.5 px-3 py-2.5 hover:bg-secondary/20 transition-colors group">
+                  <div key={n.id} className="flex items-start gap-2.5 px-3 py-2.5 hover:bg-secondary/20 transition-colors">
                     <div className="mt-0.5 shrink-0 relative">
                       <Icon className="h-3.5 w-3.5 text-muted-foreground" />
                       {priority !== "normal" && (
@@ -132,10 +140,10 @@ export default function NotificationDropdown({ userEmail }) {
                     </div>
                     <button
                       onClick={(e) => { e.stopPropagation(); markRead(n.id); }}
-                      className="text-muted-foreground/40 hover:text-foreground shrink-0 p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="text-muted-foreground/60 hover:text-foreground shrink-0 p-1.5 rounded-sm hover:bg-secondary/50 transition-colors"
                       title="Dismiss"
                     >
-                      <Check className="h-3 w-3" />
+                      <X className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 );
