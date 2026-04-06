@@ -45,7 +45,7 @@ export default function TodayAlerts({ events, intel, broadcasts }) {
   if (display.length === 0) {
     return (
       <div className="text-center py-4">
-        <p className="text-xs text-muted-foreground/60 italic">No active alerts — the wasteland is quiet... for now.</p>
+        <p className="text-xs text-muted-foreground/60 italic">All quiet on the wire. No active threats, comms, or intel reports at this time.</p>
       </div>
     );
   }

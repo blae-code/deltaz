@@ -8,6 +8,16 @@ export default function TodayInventory({ inventory, craftingProjects }) {
   const totalItems = inventory.length;
   const lowCondition = inventory.filter(i => (i.condition ?? 100) < 30);
 
+  if (totalItems === 0 && (!craftingProjects || craftingProjects.length === 0)) {
+    return (
+      <div className="text-center py-4">
+        <Package className="h-5 w-5 text-muted-foreground/30 mx-auto mb-2" />
+        <p className="text-xs text-muted-foreground/60 italic">No gear logged yet.</p>
+        <p className="text-[10px] text-muted-foreground/40 mt-1">Head to the Gear Locker to add items manually, scan a screenshot, or paste a list.</p>
+      </div>
+    );
+  }
+
   const activeProjects = (craftingProjects || []).filter(p => p.status === "gathering" || p.status === "ready");
   const readyProjects = activeProjects.filter(p => p.status === "ready");
 

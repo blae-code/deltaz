@@ -18,7 +18,7 @@ export default function TodayColony({ colony }) {
   if (!colony) {
     return (
       <div className="text-center py-3">
-        <p className="text-xs text-muted-foreground/60 italic">No colony data available.</p>
+        <p className="text-xs text-muted-foreground/60 italic">No settlement data yet. Colony metrics appear here once a GM initializes the colony status.</p>
         <Link to="/colony">
           <Button variant="outline" size="sm" className="text-[10px] uppercase tracking-wider h-8 mt-2">
             <Home className="h-3 w-3 mr-1" /> Go to Colony

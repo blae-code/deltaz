@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Shield, Radio, Globe, Coins, Server } from "lucide-react";
+import PageShell from "../components/layout/PageShell";
 import AdminLiveOps from "../components/admin/AdminLiveOps";
 import AdminWorldMgmt from "../components/admin/AdminWorldMgmt";
 import AdminEconomy from "../components/admin/AdminEconomy";
@@ -23,25 +24,24 @@ export default function Admin() {
 
   if (user && user.role !== "admin") {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <Shield className="w-12 h-12 text-destructive mx-auto mb-3" />
-          <div className="font-mono text-sm text-destructive">ACCESS DENIED</div>
-          <div className="font-mono text-xs text-muted-foreground mt-1">COMMAND CLEARANCE REQUIRED</div>
+      <PageShell title="Command Center" subtitle="Game Master Operations">
+        <div className="flex items-center justify-center py-16">
+          <div className="text-center">
+            <Shield className="w-12 h-12 text-destructive mx-auto mb-3" />
+            <div className="font-mono text-sm text-destructive">ACCESS DENIED</div>
+            <div className="font-mono text-xs text-muted-foreground mt-1">COMMAND CLEARANCE REQUIRED</div>
+          </div>
         </div>
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div>
-        <h1 className="text-lg font-mono font-bold text-primary terminal-glow tracking-widest">COMMAND CENTER</h1>
-        <p className="text-xs font-mono text-muted-foreground mt-1">GAME MASTER OPERATIONS</p>
-      </div>
-
-      {/* Section selector — big clear buttons */}
+    <PageShell
+      title="Command Center"
+      subtitle="Dispatch missions, manage the world, tune the economy, and control the server"
+    >
+      {/* Section selector — primary control strip */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
         {SECTIONS.map((s) => {
           const Icon = s.icon;
@@ -69,6 +69,6 @@ export default function Admin() {
       {section === "world" && <AdminWorldMgmt />}
       {section === "economy" && <AdminEconomy />}
       {section === "server" && <AdminServerPanel />}
-    </div>
+    </PageShell>
   );
 }

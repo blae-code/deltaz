@@ -6,6 +6,8 @@ import TerritorySlot from "../components/planner/TerritorySlot";
 import TerritorySelector from "../components/planner/TerritorySelector";
 import RiskGauge from "../components/planner/RiskGauge";
 import PlanSummary from "../components/planner/PlanSummary";
+import PageShell from "../components/layout/PageShell";
+import StatusStrip from "../components/layout/StatusStrip";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Crosshair, History, CheckCircle, XCircle } from "lucide-react";
@@ -196,26 +198,30 @@ export default function MissionPlanner() {
     }
   };
 
+  const statusItems = [
+    { label: "AVAILABLE OPS", value: survivors.length - allAssignedIds.length, color: "text-primary" },
+    { label: "ASSIGNED", value: allAssignedIds.length, color: "text-accent" },
+    { label: "TERRITORIES", value: territories.length, color: "text-foreground" },
+    { label: "RECENT PLANS", value: recentPlans.length, color: "text-foreground" },
+  ];
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-primary text-xs tracking-widest animate-pulse">INITIALIZING PLANNING TABLE...</div>
-      </div>
+      <PageShell title="Mission Planner" subtitle="Drag operatives onto territories, assess risk, then deploy">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-primary text-xs tracking-widest animate-pulse">INITIALIZING PLANNING TABLE...</div>
+        </div>
+      </PageShell>
     );
   }
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="space-y-4">
-        <div>
-          <h2 className="text-lg font-bold font-display tracking-wider text-primary uppercase">
-            Mission Planner
-          </h2>
-          <p className="text-xs text-muted-foreground mt-1">
-            Drag operatives onto territories, configure operations, and assess risk before deployment
-          </p>
-        </div>
-
+      <PageShell
+        title="Mission Planner"
+        subtitle="Drag operatives onto territories, assess risk, then deploy"
+        statusStrip={<StatusStrip items={statusItems} />}
+      >
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
           <div className="lg:col-span-3">
             <SquadPool survivors={survivors} assignedIds={allAssignedIds} />
@@ -260,6 +266,7 @@ export default function MissionPlanner() {
               <h3 className="text-[10px] font-semibold uppercase tracking-widest text-primary font-display">
                 Recent Operations
               </h3>
+              <span className="text-[9px] text-muted-foreground ml-auto">Showing last {recentPlans.length} plans</span>
             </div>
             <div className="p-2 space-y-1">
               {recentPlans.map((plan) => (
@@ -289,7 +296,7 @@ export default function MissionPlanner() {
             </div>
           </div>
         )}
-      </div>
+      </PageShell>
     </DragDropContext>
   );
 }

@@ -55,7 +55,7 @@ export default function InventoryGrid({ items, onUpdate, userEmail }) {
       {/* Equipped section */}
       {equipped.length > 0 && (
         <div>
-          <div className="text-[9px] text-primary tracking-widest uppercase mb-2">EQUIPPED ({equipped.length})</div>
+          <div className="text-[9px] text-primary tracking-widest uppercase mb-2 font-mono">EQUIPPED — gear currently on your person ({equipped.length})</div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-2">
             {equipped.map(item => (
               <InventoryItemCard key={item.id} item={item} onUpdate={onUpdate} userEmail={userEmail} />
@@ -67,15 +67,15 @@ export default function InventoryGrid({ items, onUpdate, userEmail }) {
       {/* Stash */}
       <div>
         {equipped.length > 0 && (
-          <div className="text-[9px] text-muted-foreground tracking-widest uppercase mb-2">STASH ({unequipped.length})</div>
+          <div className="text-[9px] text-muted-foreground tracking-widest uppercase mb-2 font-mono">STASH — stored items not in loadout ({unequipped.length})</div>
         )}
         {filtered.length === 0 ? (
           items.length === 0 ? (
             <EmptyState
               icon={Package}
-              title="Inventory Empty"
-              why="You haven't logged any gear yet. Your weapons, armor, materials, and supplies will be tracked here."
-              action='Use the ADD ITEM button to log a single item, BULK ADD for a list, or SCAN to upload a screenshot of your in-game inventory.'
+              title="Gear Locker Empty"
+              why="No items registered. Your weapons, armor, consumables, and materials will appear here once you log them."
+              action='Hit ADD GEAR above to register a single item, paste a bulk list, or upload a screenshot of your in-game inventory for automatic scanning.'
             />
           ) : (
             <EmptyState

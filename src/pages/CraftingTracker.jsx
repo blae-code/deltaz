@@ -78,7 +78,7 @@ export default function CraftingTracker() {
   return (
     <PageShell
       title="Workbench"
-      subtitle="Track materials, plan builds, and source what you need"
+      subtitle="Plan builds, track gathered materials, and know when you're ready to craft"
       syncMeta={craftingSyncMeta}
       actions={
         <>

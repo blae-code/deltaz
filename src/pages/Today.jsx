@@ -123,22 +123,22 @@ export default function Today() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Left column — missions & alerts */}
         <div className="space-y-4">
-          <DataCard title="Missions">
+          <DataCard title="Missions" headerRight={<span className="text-[9px] text-muted-foreground font-mono">Your active ops & available contracts</span>}>
             <TodayMissions jobs={jobs} userEmail={user?.email} />
           </DataCard>
 
-          <DataCard title="Situation Feed">
+          <DataCard title="Situation Feed" headerRight={<span className="text-[9px] text-muted-foreground font-mono">Recent threats, intel, and comms</span>}>
             <TodayAlerts events={events} intel={intel} broadcasts={broadcasts} />
           </DataCard>
         </div>
 
         {/* Right column — gear & colony */}
         <div className="space-y-4">
-          <DataCard title="Gear & Crafting">
+          <DataCard title="Gear & Crafting" headerRight={<span className="text-[9px] text-muted-foreground font-mono">Equipment status & active builds</span>}>
             <TodayInventory inventory={inventory} craftingProjects={craftingProjects} />
           </DataCard>
 
-          <DataCard title="Colony Status">
+          <DataCard title="Colony Status" headerRight={<span className="text-[9px] text-muted-foreground font-mono">Settlement vitals at a glance</span>}>
             <TodayColony colony={colony} />
           </DataCard>
         </div>

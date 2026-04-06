@@ -25,8 +25,7 @@ export default function TodayMissions({ jobs, userEmail }) {
         </h4>
         {myActive.length === 0 ? (
           <p className="text-xs text-muted-foreground/60 italic py-2">
-            No active assignments — pick one below or visit the{" "}
-            <Link to="/jobs" className="text-primary hover:underline">Mission Board</Link>.
+            No active ops. Accept a contract from the board below to earn credits and rep for your clan.
           </p>
         ) : (
           <div className="space-y-1.5">

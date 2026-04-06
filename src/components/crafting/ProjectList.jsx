@@ -8,9 +8,9 @@ export default function ProjectList({ projects: rawProjects, inventory, userEmai
     return (
       <EmptyState
         icon={Hammer}
-        title="No Crafting Projects"
-        why="You haven't started tracking any builds yet. Projects let you plan what to craft and check off materials as you scavenge them."
-        action='Open the RECIPES browser above to pick a blueprint, or hit NEW PROJECT to define a custom build from scratch.'
+        title="No Active Builds"
+        why="The workbench is clear. Crafting projects let you track which materials you still need and when a build is ready to assemble."
+        action='Browse RECIPES above to start from a known blueprint, or hit NEW PROJECT to plan a custom build. Materials check off automatically as you scavenge.'
       />
     );
   }

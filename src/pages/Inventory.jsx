@@ -5,8 +5,8 @@ import { useRegisterSync } from "../hooks/useSyncRegistry";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import PageShell from "../components/layout/PageShell";
+import StatusStrip from "../components/layout/StatusStrip";
 import SkeletonGrid from "../components/terminal/SkeletonGrid";
-import QuickStats from "../components/inventory/QuickStats";
 import InventoryGrid from "../components/inventory/InventoryGrid";
 import AddGearDrawer from "../components/inventory/AddGearDrawer";
 
@@ -28,9 +28,20 @@ export default function Inventory() {
 
   useRegisterSync("inventory", inventoryQuery);
 
+  const equipped = items.filter(i => i.is_equipped).length;
+  const totalValue = items.reduce((s, i) => s + (i.value || 0) * (i.quantity || 1), 0);
+  const lowCondition = items.filter(i => (i.condition ?? 100) < 30).length;
+
+  const statusItems = [
+    { label: "TOTAL ITEMS", value: items.length, color: "text-primary" },
+    { label: "EQUIPPED", value: equipped, color: "text-accent" },
+    { label: "DEGRADED", value: lowCondition, color: lowCondition > 0 ? "text-destructive" : "text-foreground" },
+    { label: "VALUE", value: `${totalValue}c`, color: "text-foreground" },
+  ];
+
   if (loading) {
     return (
-      <PageShell title="Gear Locker" subtitle="Manage your weapons, armor, and supplies">
+      <PageShell title="Gear Locker" subtitle="Your weapons, armor, and supplies — add gear to start tracking">
         <SkeletonGrid count={6} variant="inventory" />
       </PageShell>
     );
@@ -39,8 +50,9 @@ export default function Inventory() {
   return (
     <PageShell
       title="Gear Locker"
-      subtitle="Manage your weapons, armor, and supplies"
+      subtitle="Your weapons, armor, and supplies — add gear to start tracking"
       syncMeta={inventorySyncMeta}
+      statusStrip={<StatusStrip items={statusItems} />}
       actions={
         <Button
           variant={showAdd ? "default" : "outline"}
@@ -53,9 +65,6 @@ export default function Inventory() {
         </Button>
       }
     >
-      {/* Inline stats */}
-      <QuickStats items={items} />
-
       {/* Add gear drawer — progressive disclosure */}
       {showAdd && (
         <AddGearDrawer userEmail={user?.email} onClose={() => setShowAdd(false)} />
