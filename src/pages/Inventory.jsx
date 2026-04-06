@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import DataCard from "../components/terminal/DataCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Package, ArrowLeftRight, Plus, Handshake, ScrollText, Camera, List } from "lucide-react";
+import { Package, ArrowLeftRight, Plus, Handshake, ScrollText, Camera, List, ChevronDown, ChevronUp } from "lucide-react";
 import InventoryGrid from "../components/inventory/InventoryGrid";
 import InventoryStats from "../components/inventory/InventoryStats";
 import AddItemForm from "../components/inventory/AddItemForm";
@@ -25,6 +25,7 @@ export default function Inventory() {
   const [showBulkAdd, setShowBulkAdd] = useState(false);
   const [showCreateTrade, setShowCreateTrade] = useState(false);
   const [showCreateDeal, setShowCreateDeal] = useState(false);
+  const [showStats, setShowStats] = useState(false);
 
   const loadData = async () => {
     const u = await base44.auth.me();
@@ -91,12 +92,19 @@ export default function Inventory() {
 
       {tab === "inventory" && (
         <>
-          <InventoryStats items={items} />
-
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <span className="text-[9px] text-muted-foreground tracking-widest uppercase">
-              {items.length} ITEMS
+          {/* Stats — collapsible */}
+          <button
+            onClick={() => setShowStats(!showStats)}
+            className="w-full flex items-center justify-between border border-border rounded-sm px-3 py-2 bg-card hover:bg-secondary/30 transition-colors"
+          >
+            <span className="text-[9px] font-mono text-muted-foreground tracking-widest uppercase">
+              INVENTORY OVERVIEW · {items.length} ITEMS
             </span>
+            {showStats ? <ChevronUp className="h-3 w-3 text-muted-foreground" /> : <ChevronDown className="h-3 w-3 text-muted-foreground" />}
+          </button>
+          {showStats && <InventoryStats items={items} />}
+
+          <div className="flex items-center justify-end flex-wrap gap-1.5">
             <div className="flex gap-1.5">
               <Button
                 variant={showScreenshotScan ? "default" : "outline"}

@@ -17,7 +17,8 @@ import MissionPlanOverlay from "../components/map/MissionPlanOverlay";
 import PlanRouteLines from "../components/map/PlanRouteLines";
 import SectorDetailPanel from "../components/map/SectorDetailPanel";
 import { Badge } from "@/components/ui/badge";
-import { Flame, Layers, MapPin } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Flame, Layers, MapPin, PanelRightOpen, PanelRightClose } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function WorldMap() {
@@ -43,6 +44,9 @@ export default function WorldMap() {
   // Heatmap
   const [heatmapData, setHeatmapData] = useState(null);
   const [heatmapLoading, setHeatmapLoading] = useState(false);
+
+  // Side panel
+  const [sidePanelOpen, setSidePanelOpen] = useState(false);
 
   // Planner
   const [showPlanner, setShowPlanner] = useState(false);
@@ -122,6 +126,7 @@ export default function WorldMap() {
     setSelectedMarker(null);
     setSelectedMission(null);
     setPendingPosition({ x, y, sector });
+    setSidePanelOpen(true);
   };
 
   const handleCreateMarker = async (data) => {
@@ -140,12 +145,14 @@ export default function WorldMap() {
     setPendingPosition(null);
     setSelectedMission(null);
     setSelectedMarker(marker);
+    setSidePanelOpen(true);
   };
 
   const handleSelectMission = (mission) => {
     setSelectedMarker(null);
     setPendingPosition(null);
     setSelectedMission(mission);
+    setSidePanelOpen(true);
   };
 
   const handleStartPlan = (marker) => {
@@ -153,6 +160,7 @@ export default function WorldMap() {
     setPlanJobs([]);
     setShowPlanner(true);
     setSelectedMarker(null);
+    setSidePanelOpen(true);
   };
 
   const loadHeatmap = useCallback(async () => {
@@ -206,8 +214,19 @@ export default function WorldMap() {
         </p>
       </div>
 
-      {/* Faction Filter */}
-      <FactionFilter factions={factions} selectedFactionId={selectedFaction} onSelect={setSelectedFaction} />
+      {/* Faction Filter + Side Panel Toggle */}
+      <div className="flex items-center justify-between gap-2">
+        <FactionFilter factions={factions} selectedFactionId={selectedFaction} onSelect={setSelectedFaction} />
+        <Button
+          variant={sidePanelOpen ? "default" : "outline"}
+          size="sm"
+          className="text-[10px] uppercase tracking-wider h-7 shrink-0"
+          onClick={() => setSidePanelOpen(!sidePanelOpen)}
+        >
+          {sidePanelOpen ? <PanelRightClose className="h-3 w-3 mr-1" /> : <PanelRightOpen className="h-3 w-3 mr-1" />}
+          {sidePanelOpen ? "CLOSE PANEL" : "SIDE PANEL"}
+        </Button>
+      </div>
 
       {/* Layer Filter Bar */}
       <MapFilterBar
@@ -223,9 +242,9 @@ export default function WorldMap() {
       />
 
       {/* Map + Side Panel */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className={`grid grid-cols-1 ${sidePanelOpen ? "lg:grid-cols-3" : ""} gap-4`}>
         {/* Grid Map */}
-        <div className="lg:col-span-2">
+        <div className={sidePanelOpen ? "lg:col-span-2" : ""}>
           <GridMap
             onGridClick={handleGridClick}
             selectedSector={selectedMarker?.sector || pendingPosition?.sector}
@@ -319,7 +338,8 @@ export default function WorldMap() {
           </div>
         </div>
 
-        {/* Side Panel */}
+        {/* Side Panel — progressive disclosure */}
+        {sidePanelOpen && (
         <div className="space-y-3">
           {/* Threat Predictions */}
           {showHeatmap && heatmapData?.predictions && (
@@ -396,6 +416,7 @@ export default function WorldMap() {
             </div>
           )}
         </div>
+        )}
       </div>
     </div>
   );

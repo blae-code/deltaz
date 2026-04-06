@@ -10,6 +10,7 @@ import MissionFilters from "../components/missions/MissionFilters";
 import MyMissionsPanel from "../components/missions/MyMissionsPanel";
 import MissionCard from "../components/missions/MissionCard";
 import MissionGenerator from "../components/missions/MissionGenerator";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 export default function Jobs() {
   const [jobs, setJobs] = useState([]);
@@ -22,6 +23,7 @@ export default function Jobs() {
   const [loading, setLoading] = useState(true);
   const [showScavenge, setShowScavenge] = useState(false);
   const [showGenerator, setShowGenerator] = useState(false);
+  const [showStats, setShowStats] = useState(false);
   const [scavengeKey, setScavengeKey] = useState(0);
 
   const loadData = async () => {
@@ -122,8 +124,15 @@ export default function Jobs() {
         </div>
       )}
 
-      {/* Stats */}
-      <MissionStats jobs={jobs} userEmail={user?.email} />
+      {/* Stats — collapsible */}
+      <button
+        onClick={() => setShowStats(!showStats)}
+        className="w-full flex items-center justify-between border border-border rounded-sm px-3 py-2 bg-card hover:bg-secondary/30 transition-colors"
+      >
+        <span className="text-[9px] font-mono text-muted-foreground tracking-widest uppercase">MISSION STATISTICS</span>
+        {showStats ? <ChevronUp className="h-3 w-3 text-muted-foreground" /> : <ChevronDown className="h-3 w-3 text-muted-foreground" />}
+      </button>
+      {showStats && <MissionStats jobs={jobs} userEmail={user?.email} />}
 
       {/* My Active Missions */}
       <MyMissionsPanel
