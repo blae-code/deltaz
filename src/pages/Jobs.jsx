@@ -107,7 +107,7 @@ export default function Jobs() {
             icon={Sparkles}
             title="No Active Contracts"
             why="The board is empty. Missions appear here when faction leaders post contracts or when the AI war engine detects activity worth investigating."
-            action='If you have GM access, use the tools below to forge a mission. Otherwise, check back — the wasteland doesn\'t stay quiet for long.'
+            action="If you have GM access, use the tools below to forge a mission. Otherwise, check back — the wasteland doesn't stay quiet for long."
           />
         ) : (
           <EmptyState
