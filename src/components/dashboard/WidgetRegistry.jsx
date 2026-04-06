@@ -1,6 +1,6 @@
 import {
   Crosshair, AlertTriangle, Shield, Map, Radio, Activity,
-  Eye, TrendingUp, Home, Zap, Coins, ScrollText, Target, Swords, BookOpen,
+  Eye, TrendingUp, Home, Zap, Coins, ScrollText, Target, Swords, BookOpen, Cloud,
 } from "lucide-react";
 
 import TacticalMapWidget from "./TacticalMapWidget";
@@ -13,6 +13,7 @@ import FactionEconomyWidget from "./FactionEconomyWidget";
 import MissionForgeFeed from "./MissionForgeFeed";
 import ConflictLog from "./ConflictLog";
 import JournalWidget from "./JournalWidget";
+import SectorEventWidget from "./SectorEventWidget";
 
 // Each widget definition
 // sizes: "sm" = 1 col, "md" = 1 col, "lg" = 2 col, "full" = full width
@@ -112,6 +113,14 @@ const WIDGET_REGISTRY = [
     defaultSize: "md",
     sizes: ["md", "lg", "full"],
     component: JournalWidget,
+  },
+  {
+    id: "sector_events",
+    label: "Sector Events",
+    icon: Cloud,
+    defaultSize: "md",
+    sizes: ["md", "lg", "full"],
+    component: SectorEventWidget,
   },
 ];
 

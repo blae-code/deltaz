@@ -261,6 +261,9 @@ export default function Dashboard() {
                 if (item.id === "colony_monitor") {
                   widgetProps.isAdmin = user?.role === "admin" || user?.role === "game_master";
                 }
+                if (item.id === "sector_events") {
+                  widgetProps.isAdmin = user?.role === "admin" || user?.role === "game_master";
+                }
 
                 const spanClass = item.size === "full" ? "col-span-full" : item.size === "lg" ? "md:col-span-2" : "col-span-1";
 
