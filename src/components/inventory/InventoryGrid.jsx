@@ -9,7 +9,9 @@ import { Search, Package, ArrowLeftRight } from "lucide-react";
 
 const CATEGORIES = ["all", "weapon", "armor", "tool", "consumable", "material", "ammo", "misc"];
 
-export default function InventoryGrid({ items, onUpdate, userEmail }) {
+// SAFETY: Receives InventoryItem[]. Guards against missing/malformed records.
+export default function InventoryGrid({ items: rawItems, onUpdate, userEmail }) {
+  const items = Array.isArray(rawItems) ? rawItems.filter(i => i?.id && i?.name) : [];
   const [filter, setFilter] = useState("all");
   const [sortKey, setSortKey] = useState("name");
   const [sortDir, setSortDir] = useState("asc");

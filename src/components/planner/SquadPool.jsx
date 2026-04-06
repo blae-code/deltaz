@@ -13,7 +13,11 @@ const moraleColors = {
   anxious: "text-status-warn", desperate: "text-status-danger",
 };
 
-export default function SquadPool({ survivors, assignedIds }) {
+// SAFETY: Reads Survivor entity. Fields: name, skill, skill_level, health, morale, combat_rating, status.
+// All access below uses defensive defaults for missing fields.
+export default function SquadPool({ survivors: rawSurvivors, assignedIds: rawIds }) {
+  const survivors = Array.isArray(rawSurvivors) ? rawSurvivors : [];
+  const assignedIds = Array.isArray(rawIds) ? rawIds : [];
   const [search, setSearch] = useState("");
 
   const available = survivors

@@ -7,7 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeftRight } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
-export default function CreateTradeForm({ items, userEmail, userCallsign, onCreated }) {
+// SAFETY: Creates TradeOffer records.
+// Schema requires: seller_email, item_name, sector.
+// Optional: seller_callsign, item_id, item_category, quantity, asking_price, asking_items, status.
+// TODO(schema-audit): TradeOffer has no "seller_callsign" in required but it is in schema — safe to send.
+export default function CreateTradeForm({ items: rawItems, userEmail, userCallsign, onCreated }) {
+  const items = Array.isArray(rawItems) ? rawItems : [];
   const [selectedItemId, setSelectedItemId] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [askingPrice, setAskingPrice] = useState(0);
@@ -16,7 +21,7 @@ export default function CreateTradeForm({ items, userEmail, userCallsign, onCrea
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
-  const tradableItems = items.filter(i => !i.is_equipped && (i.quantity || 1) > 0);
+  const tradableItems = items.filter(i => i?.name && !i.is_equipped && (i.quantity || 1) > 0);
   const selectedItem = items.find(i => i.id === selectedItemId);
 
   const submit = async (e) => {

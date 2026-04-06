@@ -85,7 +85,7 @@ export default function MissionPlanner() {
     return () => { cancelled = true; };
   }, [toast]);
 
-  const allAssignedIds = Object.values(assignments).flat().map((s) => s.id);
+  const allAssignedIds = Object.values(assignments).flat().map((s) => s?.id).filter(Boolean);
   const currentAssigned = selectedTerritory ? (assignments[selectedTerritory.id] || []) : [];
   const currentAssignedSignature = currentAssigned.map((s) => s.id).sort().join("|");
 

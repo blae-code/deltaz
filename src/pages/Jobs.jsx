@@ -48,6 +48,7 @@ export default function Jobs() {
   useRegisterSync("jobs", jobsQuery);
 
   const filtered = jobs.filter(j => {
+    if (!j?.id) return false; // Defensive: skip malformed records
     if (statusFilter !== "all" && j.status !== statusFilter) return false;
     if (typeFilter !== "all" && j.type !== typeFilter) return false;
     if (factionFilter !== "all" && j.faction_id !== factionFilter) return false;

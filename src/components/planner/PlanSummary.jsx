@@ -3,6 +3,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Rocket, AlertTriangle, Loader2 } from "lucide-react";
 import InlineConfirm from "../terminal/InlineConfirm";
 
+// SAFETY: MissionPlan.operation_type enum: assault|recon|defense|sabotage|scavenge|escort.
+// These must match the backend entity schema. If the schema changes, update this list.
 const opTypes = [
   { value: "recon", label: "Recon", desc: "Scout the area for intel" },
   { value: "assault", label: "Assault", desc: "Direct engagement — high risk" },
@@ -18,8 +20,10 @@ export default function PlanSummary({
   onDeploy, deploying
 }) {
   const canDeploy = title && selectedTerritory && assignedCount > 0;
-  const isHighRisk = assessment && assessment.success_probability < 40;
-  const isSuicidal = assessment && assessment.success_probability < 20;
+  // Defensive: assessment may be null or have unexpected shape from riskAssessment function
+  const successProb = assessment?.success_probability ?? null;
+  const isHighRisk = successProb !== null && successProb < 40;
+  const isSuicidal = successProb !== null && successProb < 20;
 
   // Build deployment warning based on context
   const getDeployWarning = () => {
@@ -82,7 +86,7 @@ export default function PlanSummary({
               <ReadinessItem
                 label="Risk assessed"
                 ok={!isSuicidal}
-                value={`${assessment.success_probability}% success`}
+                value={successProb !== null ? `${successProb}% success` : "calculating..."}
                 warn={isHighRisk}
               />
             )}

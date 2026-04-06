@@ -16,8 +16,10 @@ const statusColors = {
   hostile: "border-status-danger/20 bg-status-danger/5",
 };
 
-export default function TerritorySlot({ territory, faction, assignedSurvivors, onRemoveSurvivor }) {
+// SAFETY: Reads Territory and Survivor entities. Defensive against missing/incomplete data.
+export default function TerritorySlot({ territory, faction, assignedSurvivors: rawSurvivors, onRemoveSurvivor }) {
   if (!territory) return null;
+  const assignedSurvivors = Array.isArray(rawSurvivors) ? rawSurvivors : [];
 
   return (
     <div className={`border rounded-sm overflow-hidden ${statusColors[territory.status] || "border-border"}`}>
@@ -26,10 +28,10 @@ export default function TerritorySlot({ territory, faction, assignedSurvivors, o
         <div className="flex items-center gap-2 min-w-0">
           <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
           <div className="min-w-0">
-            <p className="text-[11px] font-mono font-semibold text-foreground truncate">{territory.name}</p>
+            <p className="text-[11px] font-mono font-semibold text-foreground truncate">{territory.name || "Unnamed"}</p>
             <p className="text-[8px] text-muted-foreground">
-              Sector {territory.sector} · {territory.status}
-              {faction && <> · <span style={{ color: faction.color }}>[{faction.tag}]</span></>}
+              Sector {territory.sector || "??"} · {territory.status || "unknown"}
+              {faction && <> · <span style={{ color: faction.color || "inherit" }}>[{faction.tag || "?"}]</span></>}
             </p>
           </div>
         </div>
@@ -94,13 +96,13 @@ export default function TerritorySlot({ territory, faction, assignedSurvivors, o
         )}
       </Droppable>
 
-      {/* Resources summary */}
-      {territory.resources?.length > 0 && (
+      {/* Resources summary — territory.resources is an array of strings, may be absent */}
+      {Array.isArray(territory.resources) && territory.resources.length > 0 && (
         <div className="px-3 py-1.5 border-t border-border/30 bg-secondary/10">
           <div className="flex items-center gap-1 flex-wrap">
             <span className="text-[7px] text-muted-foreground uppercase tracking-wider">Resources:</span>
-            {territory.resources.map(r => (
-              <Badge key={r} variant="outline" className="text-[7px]">{r}</Badge>
+            {territory.resources.map((r, i) => (
+              <Badge key={r || i} variant="outline" className="text-[7px]">{r || "unknown"}</Badge>
             ))}
           </div>
         </div>

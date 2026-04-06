@@ -33,8 +33,12 @@ const statusStyle = {
   abandoned: "bg-muted text-muted-foreground",
 };
 
+// SAFETY: Reads CraftingProject entity. Materials is an array of {resource, needed, have}.
+// All array/object access below uses defensive defaults.
 export default function ProjectCard({ project, inventory: rawInventory, userEmail, userCallsign }) {
   const inventory = Array.isArray(rawInventory) ? rawInventory : [];
+  // Defensive: bail on missing project
+  if (!project) return null;
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
   const [materials, setMaterials] = useState(Array.isArray(project.materials) ? project.materials : []);

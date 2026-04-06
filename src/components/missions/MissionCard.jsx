@@ -34,9 +34,14 @@ const statusMap = {
   expired: "offline",
 };
 
+// SAFETY: Reads from Job entity. Known enums: type (recon|extraction|sabotage|escort|scavenge|elimination),
+// status (available|in_progress|pending_verification|completed|failed|expired),
+// difficulty (routine|hazardous|critical|suicide). All field access uses defensive defaults.
 export default function MissionCard({ job, faction, territory, userEmail, isAdmin }) {
   const [acting, setActing] = useState(null);
   const [expanded, setExpanded] = useState(false);
+  // Defensive: bail on missing job record
+  if (!job) return null;
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -106,11 +111,11 @@ export default function MissionCard({ job, faction, territory, userEmail, isAdmi
               )}
             </div>
             <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-              <Badge variant="outline" className="text-[10px] uppercase">{job.type}</Badge>
+              <Badge variant="outline" className="text-[10px] uppercase">{job.type || "unknown"}</Badge>
               <span className={`text-[11px] font-semibold uppercase tracking-wider ${difficultyColor[job.difficulty]?.split(" ")[0] || "text-muted-foreground"}`}>
-                {job.difficulty}
+                {job.difficulty || "unknown"}
               </span>
-              <StatusIndicator status={statusMap[job.status] || "offline"} label={job.status?.replace("_", " ")} />
+              <StatusIndicator status={statusMap[job.status] || "offline"} label={(job.status || "unknown").replace("_", " ")} />
               {faction && (
                 <span className="flex items-center gap-1 text-[10px]">
                   <Shield className="h-3 w-3" style={{ color: faction.color }} />

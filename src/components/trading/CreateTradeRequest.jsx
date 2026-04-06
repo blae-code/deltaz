@@ -9,6 +9,11 @@ import { Send, ArrowRight, Handshake } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import GuidanceBox from "../terminal/GuidanceBox";
 
+// SAFETY: Creates TradeRequest records.
+// Schema requires: sender_email, receiver_email, status.
+// Optional: sender_callsign, receiver_callsign, offer_items, offer_credits, request_items,
+//   request_credits, message, expires_at.
+// User.list() may return records missing callsign — defensive fallback used below.
 export default function CreateTradeRequest({ userEmail, userCallsign, onCreated }) {
   const [players, setPlayers] = useState([]);
   const [receiverId, setReceiverId] = useState("");
@@ -21,9 +26,12 @@ export default function CreateTradeRequest({ userEmail, userCallsign, onCreated 
   const { toast } = useToast();
 
   useEffect(() => {
-    base44.entities.User.list("-created_date", 100).then(users => {
-      setPlayers(users.filter(u => u.email !== userEmail));
-    });
+    base44.entities.User.list("-created_date", 100)
+      .then(users => {
+        // Defensive: filter out records without email and self
+        setPlayers((users || []).filter(u => u?.email && u.email !== userEmail));
+      })
+      .catch(() => setPlayers([]));
   }, [userEmail]);
 
   const submit = async (e) => {

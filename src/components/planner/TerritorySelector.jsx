@@ -14,11 +14,15 @@ const statusStyles = {
   hostile: "border-status-danger/30 hover:border-status-danger/50",
 };
 
-export default function TerritorySelector({ territories, factions, selectedId, onSelect }) {
+// SAFETY: Territory entity fields used: name, sector, status, threat_level, controlling_faction_id, resources.
+// Faction entity fields used: id, name, tag, color. All access uses defensive fallbacks.
+export default function TerritorySelector({ territories: rawTerritories, factions: rawFactions, selectedId, onSelect }) {
+  const territories = Array.isArray(rawTerritories) ? rawTerritories : [];
+  const factions = Array.isArray(rawFactions) ? rawFactions : [];
   const [search, setSearch] = useState("");
 
   const filtered = territories.filter(t =>
-    !search || t.name?.toLowerCase().includes(search.toLowerCase()) || t.sector?.toLowerCase().includes(search.toLowerCase())
+    t?.id && (!search || (t.name || "").toLowerCase().includes(search.toLowerCase()) || (t.sector || "").toLowerCase().includes(search.toLowerCase()))
   );
 
   const getFaction = (id) => factions.find(f => f.id === id);
@@ -56,10 +60,10 @@ export default function TerritorySelector({ territories, factions, selectedId, o
                 <div className="flex items-center gap-2 min-w-0">
                   <MapPin className={`h-3 w-3 shrink-0 ${isSelected ? "text-primary" : "text-muted-foreground"}`} />
                   <div className="min-w-0">
-                    <p className="text-[10px] font-mono font-semibold text-foreground truncate">{t.name}</p>
+                    <p className="text-[10px] font-mono font-semibold text-foreground truncate">{t.name || "Unnamed"}</p>
                     <p className="text-[8px] text-muted-foreground">
-                      {t.sector} · {t.status}
-                      {faction && <> · <span style={{ color: faction.color }}>[{faction.tag}]</span></>}
+                      {t.sector || "??"} · {t.status || "unknown"}
+                      {faction && <> · <span style={{ color: faction.color || "inherit" }}>[{faction.tag || "?"}]</span></>}
                     </p>
                   </div>
                 </div>

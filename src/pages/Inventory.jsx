@@ -31,12 +31,14 @@ export default function Inventory() {
 
   useRegisterSync("inventory", inventoryQuery);
 
-  const equipped = items.filter(i => i.is_equipped).length;
-  const totalValue = items.reduce((s, i) => s + (i.value || 0) * (i.quantity || 1), 0);
-  const lowCondition = items.filter(i => (i.condition ?? 100) < 30).length;
+  // Defensive: guard against malformed items in the list
+  const safeItems = items.filter(i => i?.id && i?.name);
+  const equipped = safeItems.filter(i => i.is_equipped).length;
+  const totalValue = safeItems.reduce((s, i) => s + (i.value || 0) * (i.quantity || 1), 0);
+  const lowCondition = safeItems.filter(i => (i.condition ?? 100) < 30).length;
 
   const statusItems = [
-    { label: "TOTAL ITEMS", value: items.length, color: "text-primary" },
+    { label: "TOTAL ITEMS", value: safeItems.length, color: "text-primary" },
     { label: "EQUIPPED", value: equipped, color: "text-accent" },
     { label: "DEGRADED", value: lowCondition, color: lowCondition > 0 ? "text-destructive" : "text-foreground" },
     { label: "VALUE", value: `${totalValue}c`, color: "text-foreground" },

@@ -13,6 +13,13 @@ import { useToast } from "@/components/ui/use-toast";
 const CATEGORIES = ["weapon", "armor", "tool", "consumable", "upgrade", "trade_good", "building", "custom"];
 const PRIORITIES = ["low", "normal", "high", "urgent"];
 
+// SAFETY: Creates CraftingProject records.
+// Schema requires: owner_email, title, materials (array of {resource, needed, have}).
+// Category enum: weapon|armor|tool|consumable|upgrade|trade_good|building|custom.
+// Priority enum: low|normal|high|urgent. Status enum: gathering|ready|completed|abandoned.
+// TODO(schema-audit): Recipe.category includes "building" and "custom" only in CraftingProject, not in Recipe.
+//   Recipe uses: weapon|armor|tool|consumable|upgrade|trade_good. The form CATEGORIES below include extras
+//   that only CraftingProject supports. This is intentional — custom/building are project-only types.
 export default function CreateProjectForm({ userEmail, recipes: rawRecipes, onCreated }) {
   const recipes = Array.isArray(rawRecipes) ? rawRecipes : [];
   const queryClient = useQueryClient();
@@ -29,13 +36,15 @@ export default function CreateProjectForm({ userEmail, recipes: rawRecipes, onCr
     setRecipeId(id);
     const recipe = recipes.find(r => r.id === id);
     if (!recipe) return;
-    setTitle(recipe.name);
+    setTitle(recipe.name || "");
     setDescription(recipe.description || "");
-    setCategory(recipe.category || "custom");
+    // Recipe.category may not include all CraftingProject categories — fallback to "custom"
+    setCategory(CATEGORIES.includes(recipe.category) ? recipe.category : "custom");
+    const ingredients = Array.isArray(recipe.ingredients) ? recipe.ingredients : [];
     setMaterials(
-      (recipe.ingredients || []).map(ing => ({
-        resource: ing.resource,
-        needed: ing.amount,
+      ingredients.map(ing => ({
+        resource: ing?.resource || "",
+        needed: ing?.amount || 1,
         have: 0,
       }))
     );
