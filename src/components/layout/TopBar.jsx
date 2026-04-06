@@ -57,8 +57,8 @@ export default function TopBar({ user: propUser }) {
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground cursor-help">
-              <Lock className="h-3 w-3" />
+            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground cursor-help">
+              <Lock className="h-3.5 w-3.5" />
               <span className="tracking-wider">ENCRYPTED</span>
             </div>
           </TooltipTrigger>
@@ -72,17 +72,17 @@ export default function TopBar({ user: propUser }) {
         {/* Search button */}
         <button
           onClick={() => setSearchOpen(true)}
-          className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-primary transition-colors font-mono border border-border rounded-sm px-2 py-1 hover:border-primary/30"
+          className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-primary transition-colors font-mono border border-border rounded-sm px-2.5 py-1.5 hover:border-primary/30 focus-visible:ring-2 focus-visible:ring-primary/60"
         >
           <Search className="h-3 w-3" />
           <span className="hidden sm:inline tracking-wider">SEARCH</span>
-          <kbd className="hidden md:inline text-[8px] bg-secondary px-1 py-0.5 rounded text-muted-foreground/60 ml-1">⌘K</kbd>
+          <kbd className="hidden md:inline text-[10px] bg-secondary px-1.5 py-0.5 rounded text-muted-foreground/60 ml-1">⌘K</kbd>
         </button>
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-mono cursor-help">
-              <Clock className="h-3 w-3" />
-              <span>{formatTime(time)}</span>
+            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-mono cursor-help">
+             <Clock className="h-3.5 w-3.5" />
+             <span>{formatTime(time)}</span>
             </div>
           </TooltipTrigger>
           <TooltipContent side="bottom" className="font-mono text-[11px] bg-card border-primary/30">
@@ -106,7 +106,7 @@ export default function TopBar({ user: propUser }) {
                         {getDisplayName(user)}
                       </span>
                       <span className={cn(
-                        "text-[8px] uppercase tracking-widest leading-tight",
+                        "text-[10px] uppercase tracking-widest leading-tight",
                         isAdminOrGM(user) ? "text-accent" : "text-muted-foreground"
                       )}>
                         {isAdminOrGM(user) ? "GM" : "OPERATIVE"}
@@ -114,10 +114,10 @@ export default function TopBar({ user: propUser }) {
                     </div>
                   </div>
                 </TooltipTrigger>
-                <TooltipContent side="bottom" className="font-mono text-[11px] bg-card border-primary/30 max-w-[220px]">
-                  <p className="text-primary font-semibold text-[10px] mb-0.5">OPERATIVE DOSSIER</p>
-                  <p className="text-muted-foreground text-[10px]">Click to view your profile, reputation, and mission stats.</p>
-                  {user.discord_username && <p className="text-muted-foreground text-[10px]">Discord: {user.discord_username}</p>}
+                <TooltipContent side="bottom" className="font-mono text-xs bg-card border-primary/30 max-w-[220px]">
+                  <p className="text-primary font-semibold text-[11px] mb-0.5">OPERATIVE DOSSIER</p>
+                  <p className="text-muted-foreground text-[11px]">Click to view your profile, reputation, and mission stats.</p>
+                  {user.discord_username && <p className="text-muted-foreground text-[11px]">Discord: {user.discord_username}</p>}
                 </TooltipContent>
               </Tooltip>
             </Link>

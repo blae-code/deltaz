@@ -22,8 +22,8 @@ export default function SyncStatusFooter() {
   if (list.length === 0) {
     return (
       <div className="flex items-center gap-1.5">
-        <div className="h-1 w-1 rounded-full bg-muted-foreground/40" />
-        <span className="text-[7px] text-muted-foreground/40 font-mono tracking-widest">STANDBY</span>
+        <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" />
+        <span className="text-[10px] text-muted-foreground/50 font-mono tracking-widest">STANDBY</span>
       </div>
     );
   }
@@ -59,16 +59,16 @@ export default function SyncStatusFooter() {
     <div className="flex items-center gap-2">
       <div className={cn("h-1.5 w-1.5 rounded-full", dotColor, anyFetching && "animate-pulse")} />
       <Icon className={cn("h-2.5 w-2.5 text-muted-foreground/50", anyFetching && "animate-spin")} />
-      <span className="text-[7px] text-muted-foreground/50 font-mono tracking-widest">
+      <span className="text-[10px] text-muted-foreground/60 font-mono tracking-widest">
         {label}
       </span>
       {activeCount > 0 && (
-        <span className="text-[7px] text-muted-foreground/30 font-mono">
+        <span className="text-[10px] text-muted-foreground/40 font-mono">
           · {activeCount} {activeCount === 1 ? "FEED" : "FEEDS"}
         </span>
       )}
       {ageStr && !anyFetching && (
-        <span className="text-[7px] text-muted-foreground/30 font-mono">
+        <span className="text-[10px] text-muted-foreground/40 font-mono">
           · {ageStr}
         </span>
       )}

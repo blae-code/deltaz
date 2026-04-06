@@ -69,14 +69,14 @@ export default function InventoryItemCard({ item, userEmail }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
             <span className="text-xs font-semibold text-foreground truncate">{item.name}</span>
-            {item.quantity > 1 && <span className="text-[9px] text-muted-foreground">x{item.quantity}</span>}
+            {item.quantity > 1 && <span className="text-[10px] text-muted-foreground">x{item.quantity}</span>}
           </div>
           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-            <Badge variant="outline" className={`text-[8px] uppercase ${rarityColors[item.rarity] || ""}`}>
+            <Badge variant="outline" className={`text-[10px] uppercase ${rarityColors[item.rarity] || ""}`}>
               {item.rarity}
             </Badge>
-            {item.is_equipped && <Badge className="text-[8px] bg-primary/20 text-primary border-0">EQUIPPED</Badge>}
-            {item.value > 0 && <span className="text-[9px] text-accent">{item.value}c</span>}
+            {item.is_equipped && <Badge className="text-[10px] bg-primary/20 text-primary border-0">EQUIPPED</Badge>}
+            {item.value > 0 && <span className="text-[10px] text-accent">{item.value}c</span>}
           </div>
         </div>
       </div>
@@ -86,12 +86,12 @@ export default function InventoryItemCard({ item, userEmail }) {
         <div className="flex-1 h-1 bg-secondary rounded-full overflow-hidden">
           <div className="h-full bg-primary transition-all" style={{ width: `${item.condition ?? 100}%` }} />
         </div>
-        <span className={`text-[8px] font-mono ${condColor}`}>{item.condition ?? 100}%</span>
+        <span className={`text-[10px] font-mono ${condColor}`}>{item.condition ?? 100}%</span>
       </div>
 
       {/* Actions */}
       <div className="flex gap-1 mt-2">
-        <Button variant="outline" size="sm" className="flex-1 h-6 text-[9px] uppercase tracking-wider" onClick={toggleEquip} disabled={loading}>
+        <Button variant="outline" size="sm" className="flex-1 h-7 text-[10px] uppercase tracking-wider" onClick={toggleEquip} disabled={loading}>
           {item.is_equipped ? "UNEQUIP" : "EQUIP"}
         </Button>
         <Button variant="outline" size="sm" className="h-6 w-6 p-0 text-accent/70 border-accent/20 hover:text-accent" onClick={() => setShowDismantle(!showDismantle)} disabled={loading} title="Dismantle">
@@ -113,7 +113,7 @@ export default function InventoryItemCard({ item, userEmail }) {
         <TransferDialog item={item} userEmail={userEmail} onComplete={() => { setShowTransfer(false); invalidate(); }} onCancel={() => setShowTransfer(false)} />
       )}
 
-      {item.source && <p className="text-[8px] text-muted-foreground mt-1.5 italic">Source: {item.source}</p>}
+      {item.source && <p className="text-[10px] text-muted-foreground mt-1.5 italic">Source: {item.source}</p>}
     </div>
   );
 }

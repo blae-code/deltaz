@@ -8,7 +8,7 @@ export default function StatusStrip({ items }) {
     <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${Math.min(items.length, 6)}, minmax(0, 1fr))` }}>
       {items.map((item, i) => (
         <div key={i} className="border border-border bg-card rounded-sm p-3">
-          <div className="text-[9px] text-muted-foreground tracking-widest uppercase">{item.label}</div>
+          <div className="text-[10px] text-muted-foreground tracking-widest uppercase">{item.label}</div>
           <div className={`text-lg font-bold font-display ${item.color || "text-foreground"}`}>
             {item.value}
           </div>

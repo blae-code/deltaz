@@ -48,18 +48,18 @@ export default function LiveSyncBadge({ dataUpdatedAt, isFetching, isStale, isEr
         <TooltipTrigger asChild>
           <div className={cn("flex items-center gap-1.5 cursor-help", statusColor)}>
             <StatusIcon className={cn("h-3 w-3 shrink-0", isFetching && "animate-spin")} />
-            <span className="text-[9px] font-mono tracking-widest uppercase">
+            <span className="text-[10px] font-mono tracking-widest uppercase">
               {statusLabel}
             </span>
             {label && (
-              <span className="text-[8px] font-mono text-muted-foreground/60 tracking-wider">
+              <span className="text-[10px] font-mono text-muted-foreground/60 tracking-wider">
                 · {label}
               </span>
             )}
           </div>
         </TooltipTrigger>
-        <TooltipContent side="bottom" className="font-mono text-[10px] bg-card border-primary/30 max-w-[240px]">
-          <p className={cn("font-semibold text-[9px] mb-0.5", statusColor)}>{statusLabel}</p>
+        <TooltipContent side="bottom" className="font-mono text-xs bg-card border-primary/30 max-w-[240px]">
+          <p className={cn("font-semibold text-[10px] mb-0.5", statusColor)}>{statusLabel}</p>
           <p className="text-muted-foreground">{tooltip}</p>
           {age !== null && !isFetching && (
             <p className="text-muted-foreground/60 mt-0.5">Last update: {formatAge(age)} ago</p>

@@ -101,12 +101,12 @@ export default function MissionCard({ job, faction, territory, userEmail, isAdmi
               <Crosshair className="h-3.5 w-3.5 text-primary shrink-0" />
               <h3 className="text-sm font-semibold text-foreground truncate">{job.title}</h3>
               {isMine && job.status === "in_progress" && (
-                <Badge className="text-[8px] bg-accent/20 text-accent border-accent/30 shrink-0">YOUR MISSION</Badge>
+                <Badge className="text-[10px] bg-accent/20 text-accent border-accent/30 shrink-0">YOUR MISSION</Badge>
               )}
             </div>
             <div className="flex items-center gap-3 flex-wrap">
               <Badge variant="outline" className="text-[10px] uppercase">{job.type}</Badge>
-              <span className={`text-[10px] font-semibold uppercase tracking-wider ${difficultyColor[job.difficulty]?.split(" ")[0] || "text-muted-foreground"}`}>
+              <span className={`text-[11px] font-semibold uppercase tracking-wider ${difficultyColor[job.difficulty]?.split(" ")[0] || "text-muted-foreground"}`}>
                 {job.difficulty}
               </span>
               <StatusIndicator status={statusMap[job.status] || "offline"} label={job.status?.replace("_", " ")} />
@@ -155,7 +155,7 @@ export default function MissionCard({ job, faction, territory, userEmail, isAdmi
           )}
 
           {/* Meta */}
-          <div className="flex items-center gap-3 text-[9px] text-muted-foreground flex-wrap">
+          <div className="flex items-center gap-3 text-[10px] text-muted-foreground flex-wrap">
             {job.assigned_to && <span>Assigned: {job.assigned_to}</span>}
             {job.accepted_at && <span><Clock className="inline h-3 w-3 mr-0.5" />Accepted {moment(job.accepted_at).fromNow()}</span>}
             {job.completed_at && <span>Completed {moment(job.completed_at).fromNow()}</span>}
@@ -168,7 +168,7 @@ export default function MissionCard({ job, faction, territory, userEmail, isAdmi
           </div>
 
           {/* Action buttons */}
-          <div className="flex gap-2 pt-1" onClick={e => e.stopPropagation()}>
+          <div className="flex gap-2 pt-1" onClick={e => e.stopPropagation()} role="group" aria-label="Mission actions">
             {canAccept && !isExpired && (
               <Button size="sm" className="text-[10px] h-7 flex-1 uppercase tracking-wider" onClick={() => doAction("accept")} disabled={!!acting}>
                 {acting === "accept" ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <CheckCircle className="h-3 w-3 mr-1" />}

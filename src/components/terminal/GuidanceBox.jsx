@@ -11,12 +11,12 @@ export default function GuidanceBox({ icon: Icon = Info, title, children, color 
 
   return (
     <div className={`flex items-start gap-2.5 rounded-sm p-3 border ${cls}`}>
-      <Icon className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+      <Icon className="h-4 w-4 shrink-0 mt-0.5" />
       <div>
         {title && (
-          <p className="text-[10px] font-semibold tracking-wider uppercase">{title}</p>
+          <p className="text-[11px] font-semibold tracking-wider uppercase">{title}</p>
         )}
-        <p className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed">{children}</p>
+        <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">{children}</p>
       </div>
     </div>
   );

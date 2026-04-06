@@ -86,6 +86,21 @@
   body {
     @apply bg-background text-foreground font-mono;
   }
+
+  /* Accessibility: global focus-visible ring for all interactive elements */
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [tabindex]:focus-visible {
+    @apply outline-none ring-2 ring-primary/60 ring-offset-1 ring-offset-background;
+  }
+
+  /* Accessibility: minimum touch target for small interactive elements */
+  button, a, [role="button"] {
+    min-height: 28px;
+  }
 }
 
 /* Terminal scanline effect */
@@ -111,6 +126,13 @@
 
 .pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Accessibility: boost muted foreground contrast */
+@media (prefers-contrast: more) {
+  :root {
+    --muted-foreground: 210 8% 55%;
+  }
 }
 
 /* Scrollbar styling */

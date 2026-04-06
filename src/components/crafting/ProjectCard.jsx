@@ -131,13 +131,13 @@ export default function ProjectCard({ project, inventory, userEmail, userCallsig
             <span className="text-xs font-semibold text-foreground font-mono truncate">
               {project.title}
             </span>
-            <Badge variant="outline" className={`text-[8px] px-1.5 py-0 ${statusStyle[project.status] || ""}`}>
+            <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${statusStyle[project.status] || ""}`}>
               {project.status?.toUpperCase()}
             </Badge>
-            <Badge variant="outline" className={`text-[8px] px-1.5 py-0 ${priorityStyle[project.priority] || ""}`}>
+            <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${priorityStyle[project.priority] || ""}`}>
               {project.priority?.toUpperCase()}
             </Badge>
-            <span className="text-[9px] text-muted-foreground uppercase">{project.category}</span>
+            <span className="text-[10px] text-muted-foreground uppercase">{project.category}</span>
           </div>
           {/* Progress bar */}
           <div className="flex items-center gap-2 mt-1.5">
@@ -149,7 +149,7 @@ export default function ProjectCard({ project, inventory, userEmail, userCallsig
                 style={{ width: `${progress}%` }}
               />
             </div>
-            <span className="text-[9px] font-mono text-muted-foreground shrink-0">
+            <span className="text-[10px] font-mono text-muted-foreground shrink-0">
               {totalComplete}/{totalNeeded}
             </span>
           </div>
@@ -166,7 +166,7 @@ export default function ProjectCard({ project, inventory, userEmail, userCallsig
 
           {/* Material checklist */}
           <div className="space-y-1">
-            <div className="grid grid-cols-[1fr_60px_60px_50px] gap-1.5 text-[8px] text-muted-foreground/60 uppercase tracking-wider font-mono px-0.5 mb-1">
+            <div className="grid grid-cols-[1fr_60px_60px_50px] gap-1.5 text-[10px] text-muted-foreground/60 uppercase tracking-wider font-mono px-0.5 mb-1">
               <span>Material</span><span>Need</span><span>Have</span><span>Inv.</span>
             </div>
             {materials.map((mat, idx) => (
@@ -187,21 +187,21 @@ export default function ProjectCard({ project, inventory, userEmail, userCallsig
               <>
                 {editing ? (
                   <>
-                    <Button size="sm" onClick={saveMaterials} disabled={saving} className="h-6 text-[9px] font-mono uppercase tracking-wider">
+                    <Button size="sm" onClick={saveMaterials} disabled={saving} className="h-7 text-[10px] font-mono uppercase tracking-wider">
                       <Check className="h-3 w-3 mr-0.5" /> {saving ? "SAVING..." : "SAVE"}
                     </Button>
-                    <Button size="sm" variant="ghost" onClick={() => { setMaterials(project.materials || []); setEditing(false); }} className="h-6 text-[9px] font-mono uppercase tracking-wider">
+                    <Button size="sm" variant="ghost" onClick={() => { setMaterials(project.materials || []); setEditing(false); }} className="h-7 text-[10px] font-mono uppercase tracking-wider">
                       <X className="h-3 w-3 mr-0.5" /> CANCEL
                     </Button>
                   </>
                 ) : (
-                  <Button size="sm" variant="outline" onClick={() => setEditing(true)} className="h-6 text-[9px] font-mono uppercase tracking-wider">
+                  <Button size="sm" variant="outline" onClick={() => setEditing(true)} className="h-7 text-[10px] font-mono uppercase tracking-wider">
                     <Pencil className="h-3 w-3 mr-0.5" /> UPDATE QTY
                   </Button>
                 )}
 
                 {isReady && (
-                  <Button size="sm" variant="default" onClick={markComplete} className="h-6 text-[9px] font-mono uppercase tracking-wider bg-status-ok hover:bg-status-ok/80 text-background">
+                  <Button size="sm" variant="default" onClick={markComplete} className="h-7 text-[10px] font-mono uppercase tracking-wider bg-status-ok hover:bg-status-ok/80 text-background">
                     <Check className="h-3 w-3 mr-0.5" /> MARK BUILT
                   </Button>
                 )}
@@ -211,20 +211,20 @@ export default function ProjectCard({ project, inventory, userEmail, userCallsig
                     size="sm"
                     variant="outline"
                     onClick={() => setShowTrade(!showTrade)}
-                    className="h-6 text-[9px] font-mono uppercase tracking-wider border-accent/40 text-accent hover:bg-accent/10"
+                    className="h-7 text-[10px] font-mono uppercase tracking-wider border-accent/40 text-accent hover:bg-accent/10"
                   >
                     <ShoppingCart className="h-3 w-3 mr-0.5" /> SOURCE ({shortfalls.length})
                   </Button>
                 )}
 
-                <Button size="sm" variant="ghost" onClick={abandon} className="h-6 text-[9px] font-mono uppercase tracking-wider text-muted-foreground hover:text-status-warn ml-auto">
+                <Button size="sm" variant="ghost" onClick={abandon} className="h-7 text-[10px] font-mono uppercase tracking-wider text-muted-foreground hover:text-status-warn ml-auto">
                   SHELVE
                 </Button>
               </>
             )}
 
             {isFinished && (
-              <Button size="sm" variant="ghost" onClick={deleteProject} className="h-6 text-[9px] font-mono uppercase tracking-wider text-destructive/60 hover:text-destructive">
+              <Button size="sm" variant="ghost" onClick={deleteProject} className="h-7 text-[10px] font-mono uppercase tracking-wider text-destructive/60 hover:text-destructive">
                 <Trash2 className="h-3 w-3 mr-0.5" /> DELETE
               </Button>
             )}

@@ -58,7 +58,7 @@ export default function AppShell() {
           <Outlet context={{ user, isAdmin }} />
         </main>
         <footer className="border-t border-border/30 px-4 py-1.5 flex items-center justify-between bg-card/50">
-          <span className="text-[7px] text-muted-foreground/40 font-mono tracking-[0.3em]">DEAD SIGNAL FIELD TERMINAL v2.1.7b</span>
+          <span className="text-[10px] text-muted-foreground/50 font-mono tracking-widest">DEAD SIGNAL v2.1.7b</span>
           <SyncStatusFooter />
         </footer>
       </div>
