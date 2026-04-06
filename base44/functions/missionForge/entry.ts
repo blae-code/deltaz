@@ -14,14 +14,16 @@ Deno.serve(async (req) => {
     // Scheduled automation — no user context, proceed with service role
   }
 
-  let factions, territories, jobs, economies, diplomacy;
+  let factions, territories, jobs, economies, diplomacy, charProfiles, users;
   try {
-    [factions, territories, jobs, economies, diplomacy] = await Promise.all([
+    [factions, territories, jobs, economies, diplomacy, charProfiles, users] = await Promise.all([
       base44.asServiceRole.entities.Faction.filter({}),
       base44.asServiceRole.entities.Territory.filter({}),
       base44.asServiceRole.entities.Job.filter({}),
       base44.asServiceRole.entities.FactionEconomy.filter({}),
       base44.asServiceRole.entities.Diplomacy.filter({}),
+      base44.asServiceRole.entities.CharacterProfile.filter({}, '-created_date', 30),
+      base44.asServiceRole.entities.User.filter({}),
     ]);
   } catch (err) {
     console.error('Data fetch error:', err.message);
@@ -83,6 +85,16 @@ Deno.serve(async (req) => {
   const avgWealth = economies.length > 0 ? Math.round(totalWealth / economies.length) : 1000;
   const wealthTier = avgWealth < 500 ? 'scarce' : avgWealth < 1500 ? 'moderate' : 'abundant';
 
+  // Build operative roster with origin data for personalized missions
+  const operativeRoster = charProfiles
+    .filter(cp => cp.backstory || cp.origin)
+    .slice(0, 15)
+    .map(cp => {
+      const u = users.find(u => u.email === cp.player_email);
+      const originData = u?.origin_compiled || {};
+      return `- ${u?.callsign || cp.character_name || 'Unknown'}: origin=${cp.origin || 'unknown'}, primary_skill=${cp.primary_skill || 'general'}, combat=${cp.combat_rating || 2}, faction_loyalty="${cp.faction_loyalty || 'unaligned'}", goal="${cp.goals?.substring(0, 80) || 'survival'}", personality="${cp.personality?.substring(0, 80) || 'unknown'}"${originData.stat_modifiers ? `, strengths=[${Object.entries(originData.stat_modifiers).filter(([,v]) => v > 5).map(([k,v]) => `${k}:+${v}`).join(',')}]` : ''}`;
+    }).join('\n');
+
   const prompt = `You are MISSION FORGE, the tactical operations AI for DEAD SIGNAL — a post-apocalyptic survival game.
 
 === FACTION ECONOMICS ===
@@ -96,6 +108,9 @@ ${factionNeeds}
 
 === TERRITORY INTEL ===
 ${territoryDetail}
+
+=== ACTIVE OPERATIVES ===
+${operativeRoster || 'No operatives registered.'}
 
 === OPERATIONAL STATUS ===
 - Active missions: ${activeJobs.length} (types: ${[...new Set(activeJobs.map(j => j.type))].join(', ') || 'none'})
@@ -126,7 +141,13 @@ Generate exactly 3 new missions following these rules:
 9. Write gritty, immersive 2-3 sentence briefings
 10. Set expiry between 12-72 hours (harder = longer window)
 11. At least one mission in a contested/hostile territory if any exist
-12. DIPLOMACY RULES — diplomatic status MUST influence mission generation:
+12. OPERATIVE BACKSTORY INTEGRATION — use the ACTIVE OPERATIVES data above:
+    - Reference operative origins, skills, and personality when writing briefings
+    - If an operative has a matching primary_skill for a mission type (e.g. medic for escort, mechanic for extraction), mention them by callsign in the briefing as an ideal candidate
+    - If an operative's faction_loyalty aligns with the issuing faction, flavor the briefing to appeal to their ideology
+    - If an operative's goal relates to the mission objective, hint at it in the reward description
+    - This makes missions feel personally relevant to the players who read them
+13. DIPLOMACY RULES — diplomatic status MUST influence mission generation:
     - WAR between factions → generate sabotage/elimination missions targeting the enemy faction's territories or supply lines
     - HOSTILE factions → generate recon/sabotage missions, increased difficulty in shared borders
     - ALLIED factions → generate cooperative escort/extraction missions, avoid pitting allies against each other

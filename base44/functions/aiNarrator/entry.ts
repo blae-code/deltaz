@@ -98,15 +98,42 @@ Deno.serve(async (req) => {
     return Response.json({ status: 'skipped', reason: 'No narration trigger matched' });
   }
 
-  // Fetch character profile for narrator flavor
+  // Fetch character profile + origin data for deep narrator flavor
   if (targetPlayerEmail) {
-    const profiles = await base44.asServiceRole.entities.CharacterProfile.filter({ player_email: targetPlayerEmail }, '-created_date', 1);
+    const [profiles, targetUsers] = await Promise.all([
+      base44.asServiceRole.entities.CharacterProfile.filter({ player_email: targetPlayerEmail }, '-created_date', 1),
+      base44.asServiceRole.entities.User.filter({ email: targetPlayerEmail }),
+    ]);
     if (profiles.length > 0) {
       const cp = profiles[0];
-      const traits = [cp.personality, cp.skills, cp.weaknesses, cp.catchphrase, cp.backstory].filter(Boolean);
-      if (traits.length > 0) {
-        charContext = `\nCHARACTER RP DATA for ${getCallsign(targetPlayerEmail)}: ${cp.character_name ? `Name: ${cp.character_name}. ` : ''}${cp.personality ? `Personality: ${cp.personality}. ` : ''}${cp.skills ? `Skills: ${cp.skills}. ` : ''}${cp.weaknesses ? `Weaknesses: ${cp.weaknesses}. ` : ''}${cp.catchphrase ? `Catchphrase: "${cp.catchphrase}". ` : ''}${cp.backstory ? `Backstory: ${cp.backstory.substring(0, 200)}` : ''}`;
+      const targetUser = targetUsers[0];
+      const originChoices = targetUser?.origin_choices;
+      const originCompiled = targetUser?.origin_compiled;
+      
+      let originContext = '';
+      if (originChoices && originChoices.length > 0) {
+        originContext = `\nORIGIN STORY: ${originChoices.map(c => `${c.step}: "${c.label}"`).join(' → ')}`;
+        if (originCompiled) {
+          originContext += `\nOrigin tags: ${originCompiled.origin_tags?.join(', ') || 'unknown'}`;
+          originContext += `\nPrimary skill: ${originCompiled.primary_skill || 'general'}`;
+          originContext += `\nFaction loyalty: ${originCompiled.faction_loyalty || 'unaligned'}`;
+          originContext += `\nDriving goal: ${originCompiled.goal || 'survival'}`;
+          if (originCompiled.weaknesses?.length) originContext += `\nDeep flaws: ${originCompiled.weaknesses.join('; ')}`;
+        }
       }
+      
+      charContext = `\nCHARACTER DOSSIER for ${getCallsign(targetPlayerEmail)}:`;
+      charContext += cp.character_name ? `\n- Name: ${cp.character_name}` : '';
+      charContext += cp.backstory ? `\n- Backstory: ${cp.backstory}` : '';
+      charContext += cp.personality ? `\n- Personality: ${cp.personality}` : '';
+      charContext += cp.skills ? `\n- Skills: ${cp.skills}` : '';
+      charContext += cp.weaknesses ? `\n- Weaknesses: ${cp.weaknesses}` : '';
+      charContext += cp.goals ? `\n- Goals: ${cp.goals}` : '';
+      charContext += cp.catchphrase ? `\n- Catchphrase: "${cp.catchphrase}"` : '';
+      charContext += cp.appearance ? `\n- Appearance: ${cp.appearance}` : '';
+      charContext += cp.primary_skill ? `\n- Primary skill: ${cp.primary_skill}` : '';
+      charContext += cp.combat_rating ? `\n- Combat rating: ${cp.combat_rating}/10` : '';
+      charContext += originContext;
     }
   }
 
@@ -114,7 +141,7 @@ Deno.serve(async (req) => {
   const prompt = `You are GHOST PROTOCOL — the sardonic, dark-humoured AI narrator for DEAD SIGNAL, a post-apocalyptic survival HQ system based on HumanitZ.
 
 EVENT: ${contextDescription}
-${charContext ? `${charContext}\nUse the character's RP data to add personal flavor to both the broadcast and personal message — reference their personality, skills, or catchphrase when appropriate.` : ''}
+${charContext ? `${charContext}\n\nIMPORTANT — USE THE CHARACTER'S FULL DOSSIER AND ORIGIN STORY to deeply personalize narration:\n- Reference their backstory events (where they were when the signal died, how they survived, what they lost)\n- Tie the current event to their origin — e.g. if they lost their family and just completed a rescue mission, that's narratively rich\n- Reference their primary skill, weaknesses, and personality in how you describe their actions\n- If they have a catchphrase, work it in naturally\n- Their faction loyalty should color how you frame faction-related events\n- Make the personal message feel like it's written by someone who has READ their file` : ''}
 
 Generate EXACTLY the following JSON response:
 

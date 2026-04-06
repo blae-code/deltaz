@@ -23,16 +23,29 @@ Deno.serve(async (req) => {
     base44.asServiceRole.entities.CharacterProfile.filter({}, '-created_date', 20),
   ]);
 
-  // Build character roster for narrative flavor
+  // Fetch users for origin data
+  const allUsers = await base44.asServiceRole.entities.User.filter({});
+
+  // Build character roster with deep origin data for narrative flavor
   const activeCharacters = charProfiles
     .filter(cp => cp.character_name || cp.backstory)
-    .slice(0, 10)
-    .map(cp => ({
-      callsign: cp.character_name || 'Unknown',
-      personality: cp.personality?.substring(0, 80) || '',
-      skills: cp.skills?.substring(0, 80) || '',
-      faction_loyalty: cp.faction_loyalty?.substring(0, 60) || '',
-    }));
+    .slice(0, 15)
+    .map(cp => {
+      const u = allUsers.find(u => u.email === cp.player_email);
+      const originCompiled = u?.origin_compiled;
+      return {
+        callsign: u?.callsign || cp.character_name || 'Unknown',
+        origin: cp.origin || 'unknown',
+        primary_skill: cp.primary_skill || 'general',
+        personality: cp.personality?.substring(0, 100) || '',
+        backstory_snippet: cp.backstory?.substring(0, 150) || '',
+        faction_loyalty: cp.faction_loyalty?.substring(0, 80) || '',
+        goal: cp.goals?.substring(0, 80) || '',
+        weaknesses: cp.weaknesses?.substring(0, 80) || '',
+        combat_rating: cp.combat_rating || 2,
+        origin_tags: originCompiled?.origin_tags || [],
+      };
+    });
 
   const worldState = {
     factions: factions.map(f => {
@@ -84,7 +97,13 @@ Rules:
 - Be gritty, atmospheric, and immersive with a thread of dark humour woven through
 - Think: "What if a war journalist and a stand-up comedian had to write dispatches from the apocalypse?"
 - NEVER use real player names — only callsigns
-- If known_operatives are listed, you may reference their callsigns, personalities, or skills in rumors and intel as if they are known figures in the wasteland. This adds immersion for roleplaying operatives.`;
+- If known_operatives are listed, you MUST deeply reference their backstories, origin stories, and personalities:
+  - Create intel rumors that directly involve specific operatives (e.g. "Reports of a former military survivor matching [callsign]'s description near sector B-3")
+  - Reference operative origin tags in world events (e.g. a "drifter" operative being spotted on the highway, a "medical_survivor" running a field hospital)
+  - Create faction-related events that play on operative faction loyalties (e.g. if an operative is loyal to the Sovereigns, create events about Sovereign activity that would interest them)
+  - Weave operative weaknesses into threatening rumors (e.g. if someone lost their family, create a rumor about families being found alive)
+  - Reference operative goals in intel (e.g. if someone seeks the truth about the collapse, create anomaly reports that hint at answers)
+  - This makes every world pulse feel personally relevant to the active player base`;
 
   const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
     prompt,

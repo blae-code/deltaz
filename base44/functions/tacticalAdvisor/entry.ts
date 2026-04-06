@@ -40,11 +40,31 @@ Deno.serve(async (req) => {
     title: j.title, type: j.type, difficulty: j.difficulty,
   }));
 
+  // Build deep origin context from user profile
+  const originChoices = user.origin_choices;
+  const originCompiled = user.origin_compiled;
+  let originBlock = '';
+  if (originChoices && originChoices.length > 0) {
+    originBlock = `\nORIGIN STORY (the choices that forged this operative):\n${originChoices.map(c => `  [${c.step}]: "${c.label}"`).join('\n')}`;
+    if (originCompiled) {
+      originBlock += `\n  Origin archetype: ${originCompiled.origin_tags?.join(', ') || 'unknown'}`;
+      originBlock += `\n  Primary skill from origin: ${originCompiled.primary_skill || 'general'}`;
+      originBlock += `\n  Faction alignment from origin: ${originCompiled.faction_loyalty || 'unaligned'}`;
+      originBlock += `\n  Driving goal: ${originCompiled.goal || 'survival'}`;
+      if (originCompiled.weaknesses?.length) originBlock += `\n  Deep flaws: ${originCompiled.weaknesses.join('; ')}`;
+      const statMods = originCompiled.stat_modifiers || {};
+      const strengths = Object.entries(statMods).filter(([,v]) => v > 5).map(([k,v]) => `${k.replace(/_/g,' ')}:+${v}`);
+      if (strengths.length) originBlock += `\n  Notable strengths: ${strengths.join(', ')}`;
+    }
+  }
+
   const charBlock = charProfile ? `
-CHARACTER ROLEPLAY DATA (use this to flavor your responses — reference their backstory, personality, and goals when relevant):
+CHARACTER DOSSIER (use this DEEPLY — reference their origin story, backstory events, personality, and goals in every response):
 - Character Name: ${charProfile.character_name || 'Not set'}
 - Age: ${charProfile.age || 'Unknown'}
-- Origin: ${charProfile.origin || 'Unknown'}
+- Origin Tags: ${charProfile.origin || 'Unknown'}
+- Primary Skill: ${charProfile.primary_skill || 'general'}
+- Combat Rating: ${charProfile.combat_rating || 2}/10
 - Backstory: ${charProfile.backstory || 'Not provided'}
 - Personality: ${charProfile.personality || 'Not provided'}
 - Skills: ${charProfile.skills || 'Not provided'}
@@ -53,10 +73,19 @@ CHARACTER ROLEPLAY DATA (use this to flavor your responses — reference their b
 - Faction Loyalty: ${charProfile.faction_loyalty || 'Not provided'}
 - Goals: ${charProfile.goals || 'Not provided'}
 - Catchphrase: ${charProfile.catchphrase || 'None'}
+${originBlock}
 ` : '';
 
   const prompt = `You are ARTEMIS, the tactical AI advisor embedded in the DEAD SIGNAL field terminal. You're a sardonic, battle-hardened AI with dark humour who's seen too many operatives come and go. You address the operative by callsign "${user.callsign || 'Operative'}".
 ${charBlock}
+IMPORTANT: If the operative has a CHARACTER DOSSIER and ORIGIN STORY above, you MUST:
+- Reference their origin events naturally (e.g. "Given your military background..." or "After what you lost...")
+- Recommend missions that align with their primary skill and faction loyalty
+- Warn about threats that play on their weaknesses/flaws
+- Connect current world events to their personal goals
+- Make tactical advice feel personally tailored, not generic
+- If they have a catchphrase, occasionally echo its sentiment
+
 OPERATIVE PROFILE:
 - Callsign: ${user.callsign || 'Undesignated'}
 - Discord: ${user.discord_username || 'Unlinked'}
