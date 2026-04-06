@@ -1,20 +1,25 @@
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { Trophy, Crosshair, Coins, Star, TrendingUp } from "lucide-react";
+import { Trophy, Crosshair, Coins, Star, TrendingUp, Skull, Zap } from "lucide-react";
 import PageShell from "../components/layout/PageShell";
 import LeaderboardTable from "../components/records/LeaderboardTable";
 import PlayerRankCard from "../components/records/PlayerRankCard";
 import RecordStatCards from "../components/records/RecordStatCards";
+import OperativeActivityPanel from "../components/records/OperativeActivityPanel";
+import { isAdminOrGM } from "../lib/displayName";
 
 export default function Records() {
   const [user, setUser] = useState(null);
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState("credits");
+  const [opsLogs, setOpsLogs] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
+  const [factions, setFactions] = useState([]);
 
   useEffect(() => {
     const load = async () => {
-      const [me, users, jobs, repLogs, scavengeRuns, craftLogs, tradeRequests] = await Promise.all([
+      const [me, users, jobs, repLogs, scavengeRuns, craftLogs, tradeRequests, opsLogData, factionData] = await Promise.all([
         base44.auth.me(),
         base44.entities.User.list("-created_date", 200),
         base44.entities.Job.filter({}, "-created_date", 500),
@@ -22,7 +27,13 @@ export default function Records() {
         base44.entities.ScavengeRun.filter({}, "-created_date", 500),
         base44.entities.CraftLog.filter({}, "-created_date", 500),
         base44.entities.TradeRequest.filter({ status: "accepted" }, "-created_date", 500),
+        base44.entities.OpsLog.filter({}, "-created_date", 1000),
+        base44.entities.Faction.list("-created_date", 50),
       ]);
+
+      setOpsLogs(opsLogData || []);
+      setAllUsers(users || []);
+      setFactions(factionData || []);
 
       setUser(me);
 
@@ -41,6 +52,10 @@ export default function Records() {
           scavenge_value: 0,
           items_crafted: 0,
           trades_completed: 0,
+          combat_kills: 0,
+          combat_raids: 0,
+          territory_captures: 0,
+          ops_events: 0,
         };
       }
 
@@ -89,6 +104,16 @@ export default function Records() {
         if (playerMap[t.receiver_email]) playerMap[t.receiver_email].trades_completed += 1;
       }
 
+      // OpsLog-derived stats
+      for (const log of (opsLogData || [])) {
+        const email = log.player_email;
+        if (!email || !playerMap[email]) continue;
+        if (log.event_type === "combat_kill") playerMap[email].combat_kills = (playerMap[email].combat_kills || 0) + 1;
+        if (log.event_type === "combat_raid") playerMap[email].combat_raids = (playerMap[email].combat_raids || 0) + 1;
+        if (log.event_type === "territory_capture") playerMap[email].territory_captures = (playerMap[email].territory_captures || 0) + 1;
+        playerMap[email].ops_events = (playerMap[email].ops_events || 0) + 1;
+      }
+
       setLeaderboard(Object.values(playerMap));
       setLoading(false);
     };
@@ -103,10 +128,14 @@ export default function Records() {
     );
   }
 
+  const isGM = isAdminOrGM(user);
+
   const categories = [
     { key: "credits", label: "CREDITS EARNED", icon: Coins, field: "credits_earned", suffix: "c" },
     { key: "missions", label: "MISSIONS DONE", icon: Crosshair, field: "missions_completed", suffix: "" },
     { key: "reputation", label: "REP GAINED", icon: Star, field: "reputation_gained", suffix: "" },
+    { key: "kills", label: "COMBAT KILLS", icon: Skull, field: "combat_kills", suffix: "" },
+    { key: "ops", label: "OPS EVENTS", icon: Zap, field: "ops_events", suffix: "" },
     { key: "scavenge", label: "SCAVENGE VALUE", icon: TrendingUp, field: "scavenge_value", suffix: "c" },
     { key: "crafting", label: "ITEMS CRAFTED", icon: Trophy, field: "items_crafted", suffix: "" },
     { key: "trades", label: "TRADES DONE", icon: Trophy, field: "trades_completed", suffix: "" },
@@ -135,6 +164,15 @@ export default function Records() {
         activeCat={activeCat}
         currentUserEmail={user?.email}
       />
+
+      {/* GM-only: Detailed OpsLog activity breakdown */}
+      {isGM && opsLogs.length > 0 && (
+        <OperativeActivityPanel
+          opsLogs={opsLogs}
+          players={allUsers}
+          factions={factions}
+        />
+      )}
     </PageShell>
   );
 }
