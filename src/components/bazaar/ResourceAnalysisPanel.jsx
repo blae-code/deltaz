@@ -3,7 +3,10 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import DataCard from "../terminal/DataCard";
-import { Brain, AlertTriangle, TrendingDown, MapPin, ArrowLeftRight, Loader2, BarChart3 } from "lucide-react";
+import { Brain, AlertTriangle, TrendingDown, MapPin, ArrowLeftRight, Loader2, BarChart3, Clock, ShoppingCart, Shield } from "lucide-react";
+import HarvestTimingCard from "./HarvestTimingCard";
+import ProactiveTradeCard from "./ProactiveTradeCard";
+import MonopolyRiskCard from "./MonopolyRiskCard";
 
 const RISK_STYLES = {
   low: "text-status-ok border-status-ok/20 bg-status-ok/5",
@@ -68,7 +71,10 @@ export default function ResourceAnalysisPanel() {
     { id: "summary", label: "Summary" },
     { id: "depletion", label: "Depletion", count: analysis.depletion_forecasts?.length },
     { id: "harvest", label: "Harvesting", count: analysis.harvesting_strategy?.length },
+    { id: "timing", label: "Harvest Timing", count: analysis.harvest_timing?.length },
     { id: "trade", label: "Trade Ops", count: analysis.trade_recommendations?.length },
+    { id: "proactive", label: "AI Trades", count: analysis.proactive_trades?.length },
+    { id: "monopoly", label: "Monopoly", count: analysis.monopoly_risks?.length },
     { id: "risks", label: "Risks", count: analysis.risk_alerts?.length },
   ];
 
@@ -196,6 +202,50 @@ export default function ResourceAnalysisPanel() {
                 <p className="text-[10px] text-muted-foreground leading-snug ml-5">{t.reasoning}</p>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Harvest Timing */}
+        {section === "timing" && (
+          <div className="space-y-2">
+            {(analysis.harvest_timing || []).length === 0 ? (
+              <p className="text-[10px] text-muted-foreground text-center py-4">No harvest timing data available.</p>
+            ) : (
+              (analysis.harvest_timing || []).map((t, i) => (
+                <HarvestTimingCard key={i} timing={t} />
+              ))
+            )}
+          </div>
+        )}
+
+        {/* Proactive Trades */}
+        {section === "proactive" && (
+          <div className="space-y-2">
+            <div className="border border-primary/20 bg-primary/5 rounded-sm px-3 py-2">
+              <p className="text-[9px] text-primary">AI-generated trade recommendations you should list in the Bazaar now.</p>
+            </div>
+            {(analysis.proactive_trades || []).length === 0 ? (
+              <p className="text-[10px] text-muted-foreground text-center py-4">No proactive trade suggestions at this time.</p>
+            ) : (
+              (analysis.proactive_trades || []).map((t, i) => (
+                <ProactiveTradeCard key={i} trade={t} />
+              ))
+            )}
+          </div>
+        )}
+
+        {/* Monopoly Risks */}
+        {section === "monopoly" && (
+          <div className="space-y-2">
+            {(analysis.monopoly_risks || []).length === 0 ? (
+              <div className="text-center py-4 border border-dashed border-status-ok/20 rounded-sm">
+                <p className="text-[10px] text-status-ok">No monopoly risks detected. Market is healthy.</p>
+              </div>
+            ) : (
+              (analysis.monopoly_risks || []).map((r, i) => (
+                <MonopolyRiskCard key={i} risk={r} />
+              ))
+            )}
           </div>
         )}
 
