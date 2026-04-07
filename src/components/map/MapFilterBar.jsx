@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Layers, MapPin, Flame, Route, Shield, Swords, Package, Crosshair, Eye, EyeOff,
+  Layers, MapPin, Flame, Route, Shield, Swords, Package, Crosshair, Eye, EyeOff, CloudRain,
 } from "lucide-react";
 
 export default function MapFilterBar({
@@ -12,6 +12,7 @@ export default function MapFilterBar({
   showResourceDensity, setShowResourceDensity,
   showContested, setShowContested,
   showPlanner, onTogglePlanner,
+  showWeather, toggleWeather, weatherLoading,
   selectedMarker,
   counts,
 }) {
@@ -22,6 +23,7 @@ export default function MapFilterBar({
     { key: "contested", label: "CONTESTED", icon: Swords, active: showContested, onClick: () => setShowContested(!showContested), count: counts.contested },
     { key: "resources", label: "RESOURCES", icon: Package, active: showResourceDensity, onClick: () => setShowResourceDensity(!showResourceDensity) },
     { key: "threat", label: "THREAT", icon: Flame, active: showHeatmap, onClick: toggleHeatmap, loading: heatmapLoading },
+    { key: "weather", label: "WEATHER", icon: CloudRain, active: showWeather, onClick: toggleWeather, loading: weatherLoading, count: counts.weather },
     { key: "planner", label: "PLANNER", icon: Route, active: showPlanner, onClick: onTogglePlanner },
   ];
 

@@ -26,6 +26,8 @@ import ResourceNodeOverlay from "../components/map/ResourceNodeOverlay";
 import ThreatWaveOverlay from "../components/map/ThreatWaveOverlay";
 import BasePinOverlay from "../components/map/BasePinOverlay";
 import BaseInfluencePanel from "../components/map/BaseInfluencePanel";
+import WeatherOverlay from "../components/map/WeatherOverlay";
+import WeatherDetailPanel from "../components/map/WeatherDetailPanel";
 import StatusStripSkeleton from "../components/layout/StatusStripSkeleton";
 import SkeletonGrid from "../components/terminal/SkeletonGrid";
 import { ChevronDown, ChevronUp } from "lucide-react";
@@ -45,6 +47,11 @@ export default function WorldMap() {
   const [showResourceNodes, setShowResourceNodes] = useState(false);
   const [showThreatWaves, setShowThreatWaves] = useState(true);
   const [showBases, setShowBases] = useState(true);
+  const [showWeather, setShowWeather] = useState(false);
+  const [weatherData, setWeatherData] = useState(null);
+  const [weatherLoading, setWeatherLoading] = useState(false);
+  const [weatherBulletin, setWeatherBulletin] = useState("");
+  const [weatherStats, setWeatherStats] = useState(null);
   const [layersOpen, setLayersOpen] = useState(false);
   const [influencePanel, setInfluencePanel] = useState(null);
 
@@ -172,13 +179,31 @@ export default function WorldMap() {
     setPlanJobs(prev => prev.includes(jobId) ? prev.filter(id => id !== jobId) : [...prev, jobId]);
   };
 
+  // Weather toggle
+  const toggleWeather = useCallback(async () => {
+    if (showWeather) { setShowWeather(false); return; }
+    setWeatherLoading(true);
+    setShowWeather(true);
+    try {
+      const res = await base44.functions.invoke("weatherSimulation", { action: "simulate" });
+      setWeatherData(res.data?.weather_map || null);
+      setWeatherBulletin(res.data?.bulletin || "");
+      setWeatherStats(res.data?.stats || null);
+    } catch {
+      setWeatherData(null);
+    }
+    setWeatherLoading(false);
+  }, [showWeather]);
+
   // Counts for filter bar
   const waveCount = territories.filter(t => t.active_threat_wave?.status === "incoming").length;
+  const weatherHazards = weatherData ? Object.values(weatherData).filter(v => v.hazard).length : 0;
   const counts = {
     territories: filteredTerritories.length,
     markers: visibleMarkers.length,
     missions: availableJobs.length,
     contested: territories.filter(t => t.status === "contested" || t.status === "hostile").length,
+    weather: weatherHazards,
   };
 
   const statusItems = [
@@ -234,6 +259,7 @@ export default function WorldMap() {
               showResourceDensity={showResourceDensity} setShowResourceDensity={setShowResourceDensity}
               showContested={showContested} setShowContested={setShowContested}
               showPlanner={showPlanner} onTogglePlanner={handleTogglePlanner}
+              showWeather={showWeather} toggleWeather={toggleWeather} weatherLoading={weatherLoading}
               selectedMarker={selectedMarker}
               counts={counts}
             />
@@ -282,6 +308,11 @@ export default function WorldMap() {
 
             {/* Threat waves */}
             {showThreatWaves && <ThreatWaveOverlay territories={territories} onSectorClick={(s) => { setSelectedSector(s); setInfluencePanel(s); }} />}
+
+            {/* Weather overlay */}
+            {showWeather && weatherData && (
+              <WeatherOverlay weatherMap={weatherData} onSectorClick={(s) => { setSelectedSector(s); }} />
+            )}
 
             {/* Base pins */}
             {showBases && <BasePinOverlay bases={bases} selectedSector={selectedSector} onBaseClick={(b) => { setSelectedSector(b.sector); setInfluencePanel(b.sector); }} />}
@@ -379,6 +410,19 @@ export default function WorldMap() {
               onToggleJob={handleTogglePlanJob}
               onClear={() => setPlanJobs([])}
               onClose={handleTogglePlanner}
+            />
+          )}
+
+          {/* Weather detail panel */}
+          {showWeather && weatherData && (
+            <WeatherDetailPanel
+              weatherMap={weatherData}
+              selectedSector={selectedSector}
+              bulletin={weatherBulletin}
+              stats={weatherStats}
+              isAdmin={user?.role === "admin"}
+              onApplyEffects={() => {}}
+              onClose={() => setShowWeather(false)}
             />
           )}
 
