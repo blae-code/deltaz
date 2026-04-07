@@ -12,6 +12,7 @@ import BaseDefenseStatus from "../components/colony/BaseDefenseStatus";
 import ColonyVitalsPanel from "../components/colony/ColonyVitalsPanel";
 import ResourceHistoryFeed from "../components/colony/ResourceHistoryFeed";
 import SkillGapDashboard from "../components/colony/SkillGapDashboard";
+import BaseModulesPanel from "../components/colony/BaseModulesPanel";
 import { Home, Users, Plus, ChevronDown, ChevronUp, Shield, ClipboardList } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -25,6 +26,8 @@ export default function Colony() {
   const [showForm, setShowForm] = useState(false);
   const [colony, setColony] = useState(null);
 
+  const [modules, setModules] = useState([]);
+
   const loadData = () => {
     setLoading(true);
     Promise.all([
@@ -33,14 +36,15 @@ export default function Colony() {
       base44.entities.Survivor.list("-created_date", 200),
       base44.entities.Territory.list("-created_date", 100),
       base44.entities.ColonyStatus.list("-updated_date", 1).then(r => r[0] || null),
+      base44.entities.BaseModule.list("-created_date", 200),
     ])
-      .then(([u, b, s, t, c]) => {
+      .then(([u, b, s, t, c, m]) => {
         setUser(u);
         setBases(b);
         setSurvivors(s);
         setTerritories(t);
         setColony(c);
-        // Auto-select first owned base
+        setModules(m || []);
         const myBases = b.filter((base) => base.owner_email === u.email);
         if (myBases.length > 0 && !selectedBaseId) {
           setSelectedBaseId(myBases[0].id);
@@ -172,6 +176,7 @@ export default function Colony() {
                   territory={territories.find((t) => t.id === base.territory_id)}
                   selected={selectedBaseId === base.id}
                   onSelect={setSelectedBaseId}
+                  moduleCount={modules.filter(m => m.base_id === base.id && m.status !== "destroyed").length}
                 />
               ))}
             </div>
@@ -218,6 +223,11 @@ export default function Colony() {
             {/* Task Feed */}
             <DataCard title="Task Log">
               <TaskFeed baseId={selectedBaseId} onRefresh={loadData} />
+            </DataCard>
+
+            {/* Base Modules */}
+            <DataCard title="Base Modules" subtitle="Construction & upgrades">
+              <BaseModulesPanel baseId={selectedBaseId} baseName={selectedBase.name} />
             </DataCard>
 
             {/* Defense Status */}

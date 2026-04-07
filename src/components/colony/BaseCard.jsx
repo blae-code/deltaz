@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { Home, Users, Shield, MapPin } from "lucide-react";
+import { Home, Users, Shield, MapPin, Package } from "lucide-react";
 
 const statusStyle = {
   active: "text-status-ok bg-status-ok/10 border-status-ok/20",
@@ -8,7 +8,7 @@ const statusStyle = {
   under_siege: "text-status-warn bg-status-warn/10 border-status-warn/20",
 };
 
-export default function BaseCard({ base, survivors, territory, selected, onSelect }) {
+export default function BaseCard({ base, survivors, territory, selected, onSelect, moduleCount }) {
   const activeSurvivors = survivors.filter((s) => s.status === "active");
   const totalBonus = activeSurvivors.reduce((acc, s) => {
     const key = s.bonus_type || "unknown";
@@ -49,6 +49,12 @@ export default function BaseCard({ base, survivors, territory, selected, onSelec
             <Shield className="h-3 w-3" />
             <span>DEF {base.defense_level || 1}</span>
           </div>
+          {moduleCount > 0 && (
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+              <Package className="h-3 w-3" />
+              <span>{moduleCount} modules</span>
+            </div>
+          )}
         </div>
 
         {/* Aggregate bonuses */}

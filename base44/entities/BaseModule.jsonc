@@ -1,0 +1,68 @@
+{
+  "name": "BaseModule",
+  "type": "object",
+  "properties": {
+    "base_id": {
+      "type": "string",
+      "description": "PlayerBase this module belongs to"
+    },
+    "owner_email": {
+      "type": "string",
+      "description": "Email of the base owner"
+    },
+    "module_type": {
+      "type": "string",
+      "enum": [
+        "crafting_station",
+        "medical_bay",
+        "defensive_turret",
+        "hydroponics",
+        "armory",
+        "comms_tower",
+        "workshop",
+        "watchtower",
+        "storage_vault",
+        "solar_array"
+      ],
+      "description": "Type of module"
+    },
+    "level": {
+      "type": "number",
+      "default": 1,
+      "description": "Module level 1-5"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "constructing",
+        "damaged",
+        "destroyed"
+      ],
+      "default": "constructing"
+    },
+    "construction_progress": {
+      "type": "number",
+      "default": 0,
+      "description": "0-100 construction/upgrade progress"
+    },
+    "bonus_type": {
+      "type": "string",
+      "description": "What bonus this module provides"
+    },
+    "bonus_value": {
+      "type": "number",
+      "default": 0,
+      "description": "Numeric bonus value"
+    },
+    "description": {
+      "type": "string",
+      "description": "Module flavor text"
+    }
+  },
+  "required": [
+    "base_id",
+    "owner_email",
+    "module_type"
+  ]
+}
