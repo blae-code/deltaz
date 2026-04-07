@@ -1,0 +1,122 @@
+{
+  "name": "SurvivorDrama",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Drama scenario headline"
+    },
+    "description": {
+      "type": "string",
+      "description": "Full narrative of the drama scenario"
+    },
+    "drama_type": {
+      "type": "string",
+      "enum": [
+        "desertion",
+        "fight",
+        "mutiny",
+        "theft",
+        "breakdown",
+        "sabotage",
+        "romance",
+        "rivalry"
+      ],
+      "description": "Category of drama"
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "minor",
+        "moderate",
+        "serious",
+        "critical"
+      ],
+      "default": "moderate"
+    },
+    "morale_trigger": {
+      "type": "number",
+      "description": "Colony morale level that triggered this drama"
+    },
+    "involved_survivor_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "IDs of survivors involved"
+    },
+    "involved_survivor_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Names of survivors involved"
+    },
+    "colony_id": {
+      "type": "string",
+      "description": "ColonyStatus record this drama belongs to"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "resolved",
+        "escalated",
+        "expired"
+      ],
+      "default": "active"
+    },
+    "resolution_options": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "morale_effect": {
+            "type": "number"
+          },
+          "risk": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Available GM resolution options"
+    },
+    "chosen_resolution": {
+      "type": "string",
+      "description": "ID of the chosen resolution option"
+    },
+    "resolution_outcome": {
+      "type": "string",
+      "description": "Narrative outcome after GM resolves"
+    },
+    "resolved_by": {
+      "type": "string",
+      "description": "Email of GM who resolved"
+    },
+    "resolved_at": {
+      "type": "string",
+      "description": "ISO date of resolution"
+    },
+    "consequences": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Applied consequences (e.g. 'survivor_departed', 'morale_-5')"
+    }
+  },
+  "required": [
+    "title",
+    "drama_type",
+    "severity"
+  ]
+}
