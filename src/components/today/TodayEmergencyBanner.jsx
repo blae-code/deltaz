@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { AlertTriangle, Shield, ChevronRight } from "lucide-react";
+import { Shield, ChevronRight } from "lucide-react";
+import AlertSirenSvg from "../svg/AlertSirenSvg";
 
 const THREAT_CONFIG = {
   critical: {
@@ -39,8 +40,8 @@ export default function TodayEmergencyBanner({ colony }) {
       className={`block border-2 ${config.border} ${config.bg} rounded-sm p-4 transition-colors hover:opacity-90 group`}
     >
       <div className="flex items-start gap-3">
-        <div className={`shrink-0 mt-0.5 ${isCritical ? "animate-pulse" : ""}`}>
-          <AlertTriangle className={`h-5 w-5 ${config.text}`} />
+        <div className="shrink-0 mt-0.5">
+          <AlertSirenSvg size={28} animated={isCritical} className={config.text} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">

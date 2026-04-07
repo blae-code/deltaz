@@ -3,7 +3,8 @@ import { base44 } from "@/api/base44Client";
 import DataCard from "../terminal/DataCard";
 import { Badge } from "@/components/ui/badge";
 import { ORIGIN_STEPS } from "../onboarding/originSteps";
-import { Skull, ChevronDown, ChevronUp, Shield, Swords, Heart, Search, Wrench, ShoppingBag, Cpu, Target } from "lucide-react";
+import { ChevronDown, ChevronUp, Shield, Swords, Heart, Search, Wrench, ShoppingBag, Cpu, Target } from "lucide-react";
+import SkullOriginSvg from "../svg/SkullOriginSvg";
 
 const statIcons = {
   combat_rating: Swords, defense_bonus: Shield, healing_bonus: Heart,
@@ -47,7 +48,7 @@ export default function OriginRecap({ userEmail }) {
       <div className="space-y-3">
         {/* Summary line */}
         <div className="flex items-center gap-2">
-          <Skull className="h-4 w-4 text-primary shrink-0" />
+          <SkullOriginSvg size={20} className="text-primary shrink-0" />
           <p className="text-xs text-foreground">
             <span className="text-primary font-semibold">{compiled.origin_tags?.map(t => t.replace(/_/g, " ")).join(" · ") || "Survivor"}</span>
             {" — "}{compiled.primary_skill} specialist

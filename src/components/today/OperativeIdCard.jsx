@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Crosshair, Coins, Award, User, ChevronRight } from "lucide-react";
+import { Shield, Crosshair, Coins, ChevronRight } from "lucide-react";
 import { getDisplayName, isAdminOrGM } from "../../lib/displayName";
+import OperativeBadgeSvg from "../svg/OperativeBadgeSvg";
 
 /**
  * OperativeIdCard — strong in-world identity presentation.
@@ -35,19 +36,12 @@ export default function OperativeIdCard({ user, factions, reputations, jobs }) {
       {/* Header band */}
       <div className="flex items-center justify-between gap-3 px-3 sm:px-4 py-2.5 bg-primary/5 border-b border-primary/20">
         <div className="flex items-center gap-3">
-          {/* Avatar / Monogram */}
-          <div
-            className="h-10 w-10 rounded-sm border-2 flex items-center justify-center shrink-0 font-display text-lg font-bold"
-            style={{
-              borderColor: primaryFaction?.color || "hsl(175 65% 46%)",
-              color: primaryFaction?.color || "hsl(175 65% 46%)",
-              background: primaryFaction?.color
-                ? `${primaryFaction.color}10`
-                : "hsl(175 65% 46% / 0.05)",
-            }}
-          >
-            {displayName[0]?.toUpperCase() || "?"}
-          </div>
+          {/* Avatar / Monogram — SVG Badge */}
+          <OperativeBadgeSvg
+            size={44}
+            initial={displayName[0]?.toUpperCase() || "?"}
+            factionColor={primaryFaction?.color || "hsl(175 65% 46%)"}
+          />
 
           <div>
             <div className="flex items-center gap-2">

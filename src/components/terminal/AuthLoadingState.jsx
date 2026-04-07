@@ -1,4 +1,4 @@
-import { User } from "lucide-react";
+import ScanPulseSvg from "../svg/ScanPulseSvg";
 
 /**
  * AuthLoadingState — shown when a page is waiting for user authentication
@@ -7,9 +7,9 @@ import { User } from "lucide-react";
 export default function AuthLoadingState({ message }) {
   return (
     <div className="flex items-center justify-center py-12">
-      <div className="text-center space-y-2">
-        <div className="h-8 w-8 rounded-sm bg-secondary/60 flex items-center justify-center mx-auto">
-          <User className="h-4 w-4 text-muted-foreground animate-pulse" />
+      <div className="text-center space-y-3">
+        <div className="mx-auto">
+          <ScanPulseSvg size={48} className="text-primary mx-auto" />
         </div>
         <p className="text-[10px] text-muted-foreground font-mono tracking-widest animate-pulse">
           {message || "AUTHENTICATING OPERATIVE..."}

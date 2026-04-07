@@ -2,6 +2,7 @@ import {
   Cloud, Sun, CloudRain, CloudLightning, Snowflake, Wind, CloudFog,
   Thermometer, Eye, Radiation, Clock, Calendar, AlertTriangle
 } from "lucide-react";
+import CompassSvg from "../svg/CompassSvg";
 
 const WEATHER_CONFIG = {
   clear:            { icon: Sun,             label: "Clear Skies",      color: "text-amber-400" },
@@ -157,8 +158,8 @@ function ConditionCell({ icon: Icon, label, value, color }) {
 
 function WorldConditionsEmpty() {
   return (
-    <div className="border border-dashed border-border rounded-sm px-4 py-5 text-center">
-      <Cloud className="h-6 w-6 text-muted-foreground/40 mx-auto mb-2" />
+    <div className="border border-dashed border-border rounded-sm px-4 py-6 text-center">
+      <CompassSvg size={40} className="text-muted-foreground/30 mx-auto mb-2" />
       <p className="text-[10px] text-muted-foreground/60 font-mono tracking-wider">
         WORLD CONDITIONS UNAVAILABLE — AWAITING GM DATA
       </p>

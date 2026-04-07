@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import StatusIndicator from "../terminal/StatusIndicator";
 import { Clock, Lock, User, Search } from "lucide-react";
+import SidebarLogoSvg from "../svg/SidebarLogoSvg";
 import { cn } from "@/lib/utils";
 import GlobalSearchDialog from "../search/GlobalSearchDialog";
 import NotificationDropdown from "./NotificationDropdown";
@@ -102,7 +103,7 @@ export default function TopBar({ user: propUser }) {
                 <TooltipTrigger asChild>
                   <div className="flex items-center gap-2 cursor-pointer">
                     <div className="h-6 w-6 rounded-sm bg-primary/10 border border-primary/30 flex items-center justify-center">
-                      <User className="h-3 w-3 text-primary" />
+                      <SidebarLogoSvg size={14} className="text-primary" />
                     </div>
                     <div className="hidden sm:block">
                       <span className="text-xs text-primary font-semibold tracking-wider block leading-tight">
