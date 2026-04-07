@@ -145,6 +145,55 @@
       "type": "number",
       "default": 0,
       "description": "Hostiles eliminated during defense events"
+    },
+    "hunger": {
+      "type": "number",
+      "default": 80,
+      "description": "Hunger satisfaction 0-100 (0=starving, 100=full)"
+    },
+    "social": {
+      "type": "number",
+      "default": 60,
+      "description": "Social interaction satisfaction 0-100 (0=isolated, 100=fulfilled)"
+    },
+    "rest": {
+      "type": "number",
+      "default": 70,
+      "description": "Rest/energy level 0-100 (0=exhausted, 100=rested)"
+    },
+    "stress": {
+      "type": "number",
+      "default": 20,
+      "description": "Stress level 0-100 (0=calm, 100=breaking point)"
+    },
+    "last_needs_update": {
+      "type": "string",
+      "description": "ISO date of last AI needs simulation tick"
+    },
+    "ai_behavior_note": {
+      "type": "string",
+      "description": "AI-generated note about current behavioral state"
+    },
+    "relationships": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "survivor_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "strength": {
+            "type": "number"
+          }
+        }
+      },
+      "description": "Social connections with other survivors"
     }
   },
   "required": [
