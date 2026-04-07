@@ -21,6 +21,11 @@ import MissionDetailPopup from "../components/map/MissionDetailPopup";
 import MissionPlanOverlay from "../components/map/MissionPlanOverlay";
 import PlanRouteLines from "../components/map/PlanRouteLines";
 import ThreatPredictionPanel from "../components/map/ThreatPredictionPanel";
+import InfluenceOverlay from "../components/map/InfluenceOverlay";
+import ResourceNodeOverlay from "../components/map/ResourceNodeOverlay";
+import ThreatWaveOverlay from "../components/map/ThreatWaveOverlay";
+import BasePinOverlay from "../components/map/BasePinOverlay";
+import BaseInfluencePanel from "../components/map/BaseInfluencePanel";
 import StatusStripSkeleton from "../components/layout/StatusStripSkeleton";
 import SkeletonGrid from "../components/terminal/SkeletonGrid";
 import { ChevronDown, ChevronUp } from "lucide-react";
@@ -36,7 +41,12 @@ export default function WorldMap() {
   const [showResourceDensity, setShowResourceDensity] = useState(false);
   const [showContested, setShowContested] = useState(false);
   const [showPlanner, setShowPlanner] = useState(false);
+  const [showInfluence, setShowInfluence] = useState(true);
+  const [showResourceNodes, setShowResourceNodes] = useState(false);
+  const [showThreatWaves, setShowThreatWaves] = useState(true);
+  const [showBases, setShowBases] = useState(true);
   const [layersOpen, setLayersOpen] = useState(false);
+  const [influencePanel, setInfluencePanel] = useState(null);
 
   // Heatmap state
   const [heatmapData, setHeatmapData] = useState(null);
@@ -78,6 +88,14 @@ export default function WorldMap() {
   const { data: jobs = [] } = useEntityQuery("map-jobs",
     () => base44.entities.Job.list("-created_date", 100),
     { subscribeEntities: ["Job"] }
+  );
+  const { data: bases = [] } = useEntityQuery("map-bases",
+    () => base44.entities.PlayerBase.list("-created_date", 100),
+    { subscribeEntities: ["PlayerBase"] }
+  );
+  const { data: survivors = [] } = useEntityQuery("map-survivors",
+    () => base44.entities.Survivor.filter({ status: "active" }),
+    { subscribeEntities: ["Survivor"] }
   );
 
   // Filtered data
@@ -155,6 +173,7 @@ export default function WorldMap() {
   };
 
   // Counts for filter bar
+  const waveCount = territories.filter(t => t.active_threat_wave?.status === "incoming").length;
   const counts = {
     territories: filteredTerritories.length,
     markers: visibleMarkers.length,
@@ -164,9 +183,9 @@ export default function WorldMap() {
 
   const statusItems = [
     { label: "TERRITORIES", value: territories.length, color: "text-primary" },
-    { label: "MARKERS", value: visibleMarkers.length, color: "text-foreground" },
+    { label: "BASES", value: bases.filter(b => b.status === "active").length, color: "text-foreground" },
     { label: "MISSIONS", value: availableJobs.length, color: "text-accent" },
-    { label: "CONTESTED", value: counts.contested, color: counts.contested > 0 ? "text-destructive" : "text-foreground" },
+    { label: "THREATS", value: waveCount, color: waveCount > 0 ? "text-destructive" : "text-foreground" },
   ];
 
   // Initial loading state — show skeleton matching map layout
@@ -255,6 +274,18 @@ export default function WorldMap() {
             {/* Resource density */}
             {showResourceDensity && <ResourceDensityOverlay territories={territories} />}
 
+            {/* Influence zones */}
+            {showInfluence && <InfluenceOverlay bases={bases} territories={territories} factions={factions} />}
+
+            {/* Resource nodes */}
+            {showResourceNodes && <ResourceNodeOverlay territories={territories} />}
+
+            {/* Threat waves */}
+            {showThreatWaves && <ThreatWaveOverlay territories={territories} onSectorClick={(s) => { setSelectedSector(s); setInfluencePanel(s); }} />}
+
+            {/* Base pins */}
+            {showBases && <BasePinOverlay bases={bases} selectedSector={selectedSector} onBaseClick={(b) => { setSelectedSector(b.sector); setInfluencePanel(b.sector); }} />}
+
             {/* Mission pins */}
             {showMissions && (
               <MissionMarkers
@@ -314,8 +345,20 @@ export default function WorldMap() {
             />
           )}
 
+          {/* Base influence panel */}
+          {influencePanel && !selectedMission && (
+            <BaseInfluencePanel
+              sector={influencePanel}
+              territories={territories}
+              bases={bases}
+              survivors={survivors}
+              factions={factions}
+              onClose={() => setInfluencePanel(null)}
+            />
+          )}
+
           {/* Sector detail */}
-          {selectedSector && !selectedMarker && !pendingPosition && !selectedMission && (
+          {selectedSector && !selectedMarker && !pendingPosition && !selectedMission && !influencePanel && (
             <SectorDetailPanel
               sector={selectedSector}
               territories={territories}

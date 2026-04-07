@@ -5,13 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Flag, Shield, Plus, Megaphone, MapPin } from "lucide-react";
+import { Flag, Shield, Plus, Megaphone, MapPin, Swords } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import AdminSubSection from "./AdminSubSection";
 import SchemaWarningBanner from "./SchemaWarningBanner";
 import InlineConfirm from "../terminal/InlineConfirm";
 import TerritoryOpsPanel from "./TerritoryOpsPanel";
 import DiplomacyPanel from "./DiplomacyPanel";
+import ThreatWavePanel from "./ThreatWavePanel";
 
 // --- CreateFactionForm ---
 // TODO: Schema drift — Faction entity expects "tag" but this form sends "code".
@@ -215,6 +216,7 @@ const TABS = [
   { key: "factions", label: "Register Clan", icon: Shield },
   { key: "diplomacy", label: "Diplomacy", icon: Shield },
   { key: "events", label: "Broadcast Event", icon: Megaphone, risk: "medium" },
+  { key: "threats", label: "Threat Waves", icon: Swords, description: "Generate and resolve threat waves against sectors.", risk: "medium" },
 ];
 
 export default function AdminWorldMgmt() {
@@ -235,6 +237,7 @@ export default function AdminWorldMgmt() {
       {tab === "factions" && <CreateFactionForm key={refreshKey} onCreated={refresh} />}
       {tab === "diplomacy" && <DiplomacyPanel />}
       {tab === "events" && <CreateEventForm key={refreshKey} onCreated={refresh} />}
+      {tab === "threats" && <ThreatWavePanel />}
     </AdminSubSection>
   );
 }

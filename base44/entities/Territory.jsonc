@@ -14,6 +14,10 @@
       "type": "string",
       "description": "Faction ID that controls this territory"
     },
+    "controlling_base_id": {
+      "type": "string",
+      "description": "PlayerBase ID that claimed this territory"
+    },
     "threat_level": {
       "type": "string",
       "enum": [
@@ -31,6 +35,24 @@
         "type": "string"
       },
       "description": "Available resources in territory"
+    },
+    "resource_nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "yield_rate": {
+            "type": "number"
+          },
+          "depleted": {
+            "type": "boolean"
+          }
+        }
+      },
+      "description": "Specific harvestable resource nodes"
     },
     "coordinates": {
       "type": "object",
@@ -52,6 +74,49 @@
         "uncharted"
       ],
       "default": "uncharted"
+    },
+    "influence_level": {
+      "type": "number",
+      "default": 0,
+      "description": "0-100 influence control strength"
+    },
+    "defense_power": {
+      "type": "number",
+      "default": 0,
+      "description": "Combined defense strength from assigned defenders"
+    },
+    "defender_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of survivors defending this sector"
+    },
+    "active_threat_wave": {
+      "type": "object",
+      "properties": {
+        "wave_id": {
+          "type": "string"
+        },
+        "threat_name": {
+          "type": "string"
+        },
+        "strength": {
+          "type": "number"
+        },
+        "type": {
+          "type": "string"
+        },
+        "arriving_at": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        }
+      },
+      "description": "Current incoming threat wave if any"
+    },
+    "last_wave_result": {
+      "type": "string",
+      "description": "Outcome of the last threat wave"
     }
   },
   "required": [
