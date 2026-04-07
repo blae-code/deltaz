@@ -74,7 +74,7 @@ export default function FactionSupplyCard({ econ }) {
                     className="h-full rounded-full transition-all"
                     style={{
                       width: `${pct}%`,
-                      backgroundColor: effective === 0 ? "hsl(0 75% 48%)" : res === "fuel" ? "#d4a13a" : res === "metals" ? "#5ba8c8" : res === "tech" ? "#2dd4a0" : res === "food" ? "#4ade80" : "#c53030",
+                      backgroundColor: effective === 0 ? "hsl(0 75% 48%)" : res === "fuel" ? "#d4911a" : res === "metals" ? "#c8935b" : res === "tech" ? "#df8116" : res === "food" ? "#4ade80" : "#c53030",
                     }}
                   />
                 </div>

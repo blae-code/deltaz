@@ -1,4 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.24';
+import { deterministicBoolean, deterministicNumber } from '../_shared/deterministic.ts';
+import { DATA_ORIGINS, buildSourceRef, withProvenance } from '../_shared/provenance.ts';
 
 const TASK_TYPES = new Set([
   'scavenge',
@@ -21,6 +23,29 @@ const TASK_DURATIONS = {
   cook: 35,
   repair: 45,
   trade: 40,
+  defend: 0,
+};
+
+const TASK_SKILL_MATCH = {
+  scavenger: 'scavenge',
+  medic: 'heal',
+  mechanic: 'repair',
+  farmer: 'farm',
+  guard: 'patrol',
+  trader: 'trade',
+  engineer: 'craft',
+  cook: 'cook',
+};
+
+const TASK_CREDIT_BASE = {
+  scavenge: 15,
+  farm: 10,
+  craft: 20,
+  patrol: 5,
+  heal: 8,
+  cook: 8,
+  repair: 12,
+  trade: 25,
   defend: 0,
 };
 
@@ -99,7 +124,11 @@ async function handleAssignTask(base44, user, body) {
   }
 
   const now = new Date().toISOString();
-  const task = await base44.asServiceRole.entities.SurvivorTask.create({
+  const sourceRefs = [
+    buildSourceRef('survivor', survivor.id),
+    buildSourceRef('base', survivor.base_id),
+  ];
+  const task = await base44.asServiceRole.entities.SurvivorTask.create(withProvenance({
     survivor_id: survivor.id,
     survivor_name: survivor.name,
     base_id: survivor.base_id,
@@ -107,12 +136,22 @@ async function handleAssignTask(base44, user, body) {
     status: 'active',
     started_at: now,
     duration_minutes: TASK_DURATIONS[taskType] || 30,
-  });
+  }, {
+    dataOrigin: DATA_ORIGINS.SYSTEM_RULE,
+    sourceRefs,
+  }));
 
-  await base44.asServiceRole.entities.Survivor.update(survivor.id, {
+  await base44.asServiceRole.entities.Survivor.update(survivor.id, withProvenance({
     current_task: taskType,
     task_started_at: now,
-  });
+  }, {
+    dataOrigin: DATA_ORIGINS.SYSTEM_RULE,
+    sourceRefs: [
+      buildSourceRef('survivor', survivor.id),
+      buildSourceRef('survivor_task', task.id),
+      buildSourceRef('base', survivor.base_id),
+    ],
+  }));
 
   return Response.json({ status: 'ok', task });
 }
@@ -121,6 +160,7 @@ async function handleResolveTasks(base44, user) {
   const baseFilter = user.role === 'admin' ? {} : { owner_email: user.email };
   const bases = await base44.asServiceRole.entities.PlayerBase.filter(baseFilter);
   const baseIds = new Set(bases.map((base) => base.id).filter(Boolean));
+  const baseMap = new Map(bases.map((base) => [base.id, base]));
 
   if (baseIds.size === 0) {
     return Response.json({ status: 'ok', resolved: 0, message: 'No bases available to resolve' });
@@ -151,13 +191,19 @@ async function handleResolveTasks(base44, user) {
   const results = [];
   for (const task of tasksToResolve) {
     const survivor = survivorMap.get(task.survivor_id);
-    if (!survivor) {
+    const base = baseMap.get(task.base_id);
+    if (!survivor || !base) {
       continue;
     }
 
-    const outcome = await generateTaskOutcome(base44, task, survivor);
+    const outcome = buildTaskOutcome(task, survivor, base);
+    const sourceRefs = [
+      buildSourceRef('survivor_task', task.id),
+      buildSourceRef('survivor', survivor.id),
+      buildSourceRef('base', base.id),
+    ];
 
-    await base44.asServiceRole.entities.SurvivorTask.update(task.id, {
+    await base44.asServiceRole.entities.SurvivorTask.update(task.id, withProvenance({
       status: outcome.status,
       completed_at: new Date().toISOString(),
       outcome_summary: outcome.narrative,
@@ -166,12 +212,15 @@ async function handleResolveTasks(base44, user) {
       defense_contributed: outcome.defense,
       quality: outcome.quality,
       injury_caused: outcome.injured,
-    });
+    }, {
+      dataOrigin: DATA_ORIGINS.SYSTEM_RULE,
+      sourceRefs,
+    }));
 
-    const survivorUpdate = {
+    const survivorUpdate: Record<string, unknown> = {
       current_task: 'idle',
       task_started_at: '',
-      tasks_completed: (survivor.tasks_completed || 0) + 1,
+      tasks_completed: (Number(survivor.tasks_completed || 0) || 0) + 1,
     };
 
     if (outcome.injured) {
@@ -183,7 +232,11 @@ async function handleResolveTasks(base44, user) {
       survivorUpdate.skill_level = Number(survivor.skill_level || 1) + 1;
     }
 
-    await base44.asServiceRole.entities.Survivor.update(survivor.id, survivorUpdate);
+    await base44.asServiceRole.entities.Survivor.update(survivor.id, withProvenance(survivorUpdate, {
+      dataOrigin: DATA_ORIGINS.SYSTEM_RULE,
+      sourceRefs,
+    }));
+
     results.push({ survivor: survivor.name, task: task.task_type, outcome: outcome.quality });
   }
 
@@ -205,12 +258,16 @@ async function handleTriggerDefense(base44, user, body) {
     return Response.json({ error: 'Base not found' }, { status: 404 });
   }
 
-  const survivors = await base44.asServiceRole.entities.Survivor.filter({ base_id: base.id });
+  const [survivors, taskHistory] = await Promise.all([
+    base44.asServiceRole.entities.Survivor.filter({ base_id: base.id }),
+    base44.asServiceRole.entities.SurvivorTask.filter({ base_id: base.id }, '-created_date', 200),
+  ]);
   const activeSurvivors = survivors.filter((survivor) => survivor.status === 'active');
   const defenders = activeSurvivors.filter((survivor) =>
     survivor.current_task === 'patrol' || survivor.current_task === 'defend' || survivor.skill === 'guard'
   );
   const nonDefenders = activeSurvivors.filter((survivor) => !defenders.some((defender) => defender.id === survivor.id));
+  const defenseSeed = `defense:${base.id}:${taskHistory.filter((task) => task.task_type === 'defend').length}:${activeSurvivors.length}`;
 
   let defensePower = (Number(base.defense_level || 1) || 1) * 10;
   for (const defender of defenders) {
@@ -223,27 +280,37 @@ async function handleTriggerDefense(base44, user, body) {
     defensePower += Number(survivor.combat_rating || 1) || 1;
   }
 
-  const defaultThreat = Math.floor(Math.random() * 40) + 20;
+  const defaultThreat = deterministicNumber(20, 59, defenseSeed, 'default_threat');
   const threatStrength = clampNumber(body.threat_strength, 10, 200, defaultThreat);
   const defenseRatio = defensePower / Math.max(threatStrength, 1);
-  const victory = defenseRatio > 0.8 || (defenseRatio > 0.5 && Math.random() > 0.4);
-  const result = await generateDefenseNarrative(base44, base, defenders, nonDefenders, threatStrength, defensePower, victory);
+  const victoryChance = Math.max(0.05, Math.min(0.95, defenseRatio));
+  const victory = defenseRatio >= 1 || (defenseRatio > 0.5 && deterministicBoolean(victoryChance, defenseSeed, 'victory'));
+  const result = buildDefenseOutcome(base, defenders, nonDefenders, threatStrength, defensePower, victory, defenseSeed);
 
-  const activeTasks = await base44.asServiceRole.entities.SurvivorTask.filter({ base_id: base.id, status: 'active' });
+  const activeTasks = taskHistory.filter((task) => task.status === 'active');
   for (const task of activeTasks) {
     if (!defenders.some((defender) => defender.id === task.survivor_id)) {
       continue;
     }
 
-    await base44.asServiceRole.entities.SurvivorTask.update(task.id, {
+    await base44.asServiceRole.entities.SurvivorTask.update(task.id, withProvenance({
       status: 'interrupted',
       interrupted_by: 'Base defense event',
       completed_at: new Date().toISOString(),
-    });
+    }, {
+      dataOrigin: DATA_ORIGINS.SYSTEM_RULE,
+      sourceRefs: [
+        buildSourceRef('survivor_task', task.id),
+        buildSourceRef('survivor', task.survivor_id),
+        buildSourceRef('base', base.id),
+      ],
+    }));
   }
 
   for (const defender of defenders) {
-    await base44.asServiceRole.entities.SurvivorTask.create({
+    const injured = result.injuries.includes(defender.id);
+    const kills = victory ? deterministicNumber(0, 3, defenseSeed, defender.id, 'kills') : 0;
+    await base44.asServiceRole.entities.SurvivorTask.create(withProvenance({
       survivor_id: defender.id,
       survivor_name: defender.name,
       base_id: base.id,
@@ -252,46 +319,73 @@ async function handleTriggerDefense(base44, user, body) {
       started_at: new Date().toISOString(),
       completed_at: new Date().toISOString(),
       duration_minutes: 0,
-      outcome_summary: victory ? `Helped defend ${base.name}` : `Fought in the defense of ${base.name}`,
+      outcome_summary: injured
+        ? `${defender.name} held the line at ${base.name} and came away hurt.`
+        : victory
+          ? `${defender.name} helped repel the assault on ${base.name}.`
+          : `${defender.name} fought through the breach at ${base.name}.`,
       defense_contributed: Math.round(defensePower / Math.max(defenders.length, 1)),
       quality: victory ? 'good' : 'poor',
-      injury_caused: result.injuries.includes(defender.id),
-    });
+      injury_caused: injured,
+    }, {
+      dataOrigin: DATA_ORIGINS.SYSTEM_RULE,
+      sourceRefs: [
+        buildSourceRef('survivor', defender.id),
+        buildSourceRef('base', base.id),
+      ],
+    }));
 
-    const update = {
+    const update: Record<string, unknown> = {
       current_task: 'idle',
       task_started_at: '',
-      defense_kills: (Number(defender.defense_kills || 0) || 0) + (victory ? Math.floor(Math.random() * 3) + 1 : 0),
+      defense_kills: (Number(defender.defense_kills || 0) || 0) + kills,
     };
-    if (result.injuries.includes(defender.id)) {
+    if (injured) {
       update.health = 'injured';
       update.status = 'injured';
       update.morale = 'anxious';
     }
 
-    await base44.asServiceRole.entities.Survivor.update(defender.id, update);
+    await base44.asServiceRole.entities.Survivor.update(defender.id, withProvenance(update, {
+      dataOrigin: DATA_ORIGINS.SYSTEM_RULE,
+      sourceRefs: [
+        buildSourceRef('survivor', defender.id),
+        buildSourceRef('base', base.id),
+      ],
+    }));
   }
 
   if (victory) {
     if (base.status === 'under_siege') {
-      await base44.asServiceRole.entities.PlayerBase.update(base.id, { status: 'active' });
+      await base44.asServiceRole.entities.PlayerBase.update(base.id, withProvenance({
+        status: 'active',
+      }, {
+        dataOrigin: DATA_ORIGINS.SYSTEM_RULE,
+        sourceRefs: [buildSourceRef('base', base.id)],
+      }));
     }
   } else {
-    await base44.asServiceRole.entities.PlayerBase.update(base.id, {
+    await base44.asServiceRole.entities.PlayerBase.update(base.id, withProvenance({
       status: 'under_siege',
       defense_level: Math.max(1, (Number(base.defense_level || 1) || 1) - 1),
-    });
+    }, {
+      dataOrigin: DATA_ORIGINS.SYSTEM_RULE,
+      sourceRefs: [buildSourceRef('base', base.id)],
+    }));
   }
 
   if (base.owner_email) {
-    await base44.asServiceRole.entities.Notification.create({
+    await base44.asServiceRole.entities.Notification.create(withProvenance({
       player_email: base.owner_email,
       title: victory ? `${base.name} defended successfully!` : `${base.name} was overrun!`,
       message: result.summary,
       type: 'colony_alert',
       priority: victory ? 'normal' : 'critical',
       is_read: false,
-    });
+    }, {
+      dataOrigin: DATA_ORIGINS.DETERMINISTIC_PROJECTION,
+      sourceRefs: [buildSourceRef('base', base.id)],
+    }));
   }
 
   return Response.json({
@@ -392,178 +486,92 @@ async function getAuthorizedBaseForSurvivor(base44, user, survivor) {
   return await getAuthorizedBase(base44, user, survivor.base_id);
 }
 
-async function generateTaskOutcome(base44, task, survivor) {
-  const skillMatch = {
-    scavenger: 'scavenge',
-    medic: 'heal',
-    mechanic: 'repair',
-    farmer: 'farm',
-    guard: 'patrol',
-    trader: 'trade',
-    engineer: 'craft',
-    cook: 'cook',
-  };
-
+function buildTaskOutcome(task, survivor, base) {
   const survivorSkillLevel = clampNumber(survivor.skill_level, 1, 5, 1);
-  const isSpecialist = skillMatch[survivor.skill] === task.task_type;
+  const isSpecialist = TASK_SKILL_MATCH[survivor.skill] === task.task_type;
   const skillBonus = isSpecialist ? survivorSkillLevel * 15 : survivorSkillLevel * 5;
-  const baseSuccess = 60 + skillBonus;
-  const roll = Math.random() * 100;
-  const success = roll < baseSuccess;
-  const excellent = success && roll < baseSuccess * 0.4;
-  const injured = !success && Math.random() > 0.7;
-  const skillUp = excellent && isSpecialist && Math.random() > 0.6;
-
-  const creditBase = {
-    scavenge: 15,
-    farm: 10,
-    craft: 20,
-    patrol: 5,
-    heal: 8,
-    cook: 8,
-    repair: 12,
-    trade: 25,
-    defend: 0,
-  };
+  const baseSuccess = Math.min(95, 60 + skillBonus);
+  const seed = `task:${task.id}:${survivor.id}:${task.task_type}:${base.id}`;
+  const roll = deterministicNumber(1, 100, seed, 'roll');
+  const success = roll <= baseSuccess;
+  const excellent = success && roll <= Math.max(10, Math.round(baseSuccess * 0.4));
+  const injured = !success && deterministicBoolean(0.3, seed, 'injured');
+  const skillUp = excellent && isSpecialist && deterministicBoolean(0.35, seed, 'skill_up');
+  const quality = excellent ? 'excellent' : success ? (deterministicBoolean(0.5, seed, 'quality') ? 'good' : 'standard') : 'poor';
+  const creditBase = TASK_CREDIT_BASE[task.task_type] || 10;
   const defaultCredits = success
-    ? Math.round((creditBase[task.task_type] || 10) * (excellent ? 2 : 1) * (1 + survivorSkillLevel * 0.1))
+    ? Math.round(creditBase * (excellent ? 2 : 1) * (1 + survivorSkillLevel * 0.1))
     : 0;
 
-  try {
-    const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      prompt: `A post-apocalyptic survivor named "${sanitizeText(survivor.name, 80)}" (${sanitizeText(survivor.skill, 40)}, skill level ${survivorSkillLevel}/5, personality: "${sanitizeText(survivor.personality, 160)}") just ${success ? 'completed' : 'attempted'} a ${sanitizeText(task.task_type, 40)} task at their settlement.
-
-Result: ${excellent ? 'EXCELLENT - extraordinary success' : success ? 'SUCCESS - completed adequately' : 'FAILURE - something went wrong'}
-${injured ? 'The survivor was INJURED during the task.' : ''}
-
-Write a 1-2 sentence gritty narrative of what happened. Also list any resources produced (be specific and thematic). Keep it short and atmospheric.`,
-      response_json_schema: {
-        type: 'object',
-        properties: {
-          narrative: { type: 'string' },
-          resources: { type: 'string' },
-          credits: { type: 'number' },
-        },
-      },
-    });
-
-    return {
-      status: success ? 'completed' : 'failed',
-      narrative: sanitizeText(result?.narrative, 400) || getDefaultTaskNarrative(task, survivor, success, excellent),
-      resources: sanitizeText(result?.resources, 200) || getDefaultTaskResources(task, success),
-      credits: success ? clampNumber(result?.credits, 0, 500, defaultCredits) : 0,
-      defense: task.task_type === 'patrol' ? Math.round(5 + survivorSkillLevel * 2) : 0,
-      quality: excellent ? 'excellent' : success ? (Math.random() > 0.5 ? 'good' : 'standard') : 'poor',
-      injured,
-      skillUp,
-    };
-  } catch (error) {
-    console.error('settlementSim task generation failed:', error);
-    return {
-      status: success ? 'completed' : 'failed',
-      narrative: getDefaultTaskNarrative(task, survivor, success, excellent),
-      resources: getDefaultTaskResources(task, success),
-      credits: defaultCredits,
-      defense: task.task_type === 'patrol' ? Math.round(5 + survivorSkillLevel * 2) : 0,
-      quality: excellent ? 'excellent' : success ? 'good' : 'poor',
-      injured,
-      skillUp,
-    };
-  }
+  return {
+    status: success ? 'completed' : 'failed',
+    narrative: buildTaskNarrative(task, survivor, base, success, excellent, injured),
+    resources: getTaskResources(task.task_type, success, excellent),
+    credits: success ? defaultCredits + deterministicNumber(0, Math.max(2, survivorSkillLevel * 2), seed, 'credits') : 0,
+    defense: task.task_type === 'patrol' ? Math.round(5 + survivorSkillLevel * 2 + (survivor.skill === 'guard' ? 2 : 0)) : 0,
+    quality,
+    injured,
+    skillUp,
+  };
 }
 
-async function generateDefenseNarrative(base44, base, defenders, others, threatStrength, defensePower, victory) {
+function buildDefenseOutcome(base, defenders, others, threatStrength, defensePower, victory, seed) {
   const injuries = [];
   const injuryChance = victory ? 0.15 : 0.4;
 
   for (const defender of defenders) {
-    if (Math.random() < injuryChance) {
+    if (deterministicBoolean(injuryChance, seed, defender.id, 'injury')) {
       injuries.push(defender.id);
     }
   }
   if (!victory) {
     for (const survivor of others) {
-      if (Math.random() < 0.2) {
+      if (deterministicBoolean(0.2, seed, survivor.id, 'collateral')) {
         injuries.push(survivor.id);
       }
     }
   }
 
-  const defenderNames = defenders
-    .map((defender) => `${sanitizeText(defender.name, 60)} (${sanitizeText(defender.skill, 30)})`)
-    .join(', ');
+  const leadDefender = defenders[0]?.name || 'No standing defender';
+  const summary = victory
+    ? `${base.name} held the perimeter. ${leadDefender} anchored the defense while the attackers burned time against prepared positions.`
+    : `${base.name} lost the perimeter under concentrated pressure. ${leadDefender} bought time, but the breach spread faster than the camp could seal it.`;
+  const details = `Defense power ${defensePower} met threat strength ${threatStrength}. ${injuries.length} survivor(s) were marked as injured during the exchange.`;
 
-  try {
-    const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      prompt: `A post-apocalyptic base called "${sanitizeText(base.name, 80)}" was attacked by hostiles.
-
-Defenders (${defenders.length}): ${defenderNames || 'None — base was undefended'}
-Other survivors at base: ${others.length}
-Base defense level: ${Number(base.defense_level || 1) || 1}
-Defense power: ${defensePower} vs Threat: ${threatStrength}
-Outcome: ${victory ? 'DEFENDERS WON' : 'BASE WAS OVERRUN'}
-Injuries: ${injuries.length}
-
-Write a 2-3 sentence gritty combat narrative. Be specific about what happened. Mention defenders by name if possible.`,
-      response_json_schema: {
-        type: 'object',
-        properties: {
-          summary: { type: 'string' },
-          details: { type: 'string' },
-        },
-      },
-    });
-
-    return {
-      summary: sanitizeText(result?.summary, 500) || getDefaultDefenseSummary(base, victory, defenders.length),
-      details: sanitizeText(result?.details, 500),
-      injuries,
-    };
-  } catch (error) {
-    console.error('settlementSim defense generation failed:', error);
-    return {
-      summary: getDefaultDefenseSummary(base, victory, defenders.length),
-      details: '',
-      injuries,
-    };
-  }
+  return { summary, details, injuries };
 }
 
-function getDefaultTaskNarrative(task, survivor, success, excellent) {
+function buildTaskNarrative(task, survivor, base, success, excellent, injured) {
   if (excellent) {
-    return `${survivor.name} returned from ${task.task_type} duty with uncommon efficiency and a story the rest of the camp will repeat tonight.`;
+    return `${survivor.name} turned a routine ${task.task_type} shift at ${base.name} into a clean surplus run. The camp got more out of the job than it budgeted for.`;
   }
   if (success) {
-    return `${survivor.name} completed the ${task.task_type} assignment and brought back something the settlement can use.`;
+    return `${survivor.name} completed ${task.task_type} duty at ${base.name} and returned with usable output before the window closed.`;
   }
-  return `${survivor.name}'s ${task.task_type} run broke down in the field, leaving little to show for the risk.`;
+  if (injured) {
+    return `${survivor.name}'s ${task.task_type} assignment at ${base.name} went sideways and cost blood as well as time.`;
+  }
+  return `${survivor.name}'s ${task.task_type} assignment at ${base.name} stalled out before it paid the settlement back.`;
 }
 
-function getDefaultTaskResources(task, success) {
+function getTaskResources(taskType, success, excellent) {
   if (!success) {
     return 'Nothing recovered';
   }
 
   const defaults = {
-    scavenge: 'Recovered scrap and salvageable gear',
-    farm: 'Fresh ration crops and usable seed stock',
-    craft: 'Field-made tools and reinforced parts',
-    patrol: 'Perimeter intel and a safer approach route',
-    heal: 'Stabilized patients and conserved medical supplies',
-    cook: 'Prepared meals and improved camp morale',
-    repair: 'Reinforced structures and patched equipment',
-    trade: 'Barter goods and favorable caravan contacts',
+    scavenge: excellent ? 'Recovered scrap, sealed gear, and a clean salvage map' : 'Recovered scrap and salvageable gear',
+    farm: excellent ? 'Fresh ration crops, seed stock, and stable water yield' : 'Fresh ration crops and usable seed stock',
+    craft: excellent ? 'Field-made tools, reinforced parts, and a spare assembly' : 'Field-made tools and reinforced parts',
+    patrol: excellent ? 'Perimeter intel, cleared lines of sight, and safer routes' : 'Perimeter intel and a safer approach route',
+    heal: excellent ? 'Stabilized patients and preserved high-value medical stock' : 'Stabilized patients and conserved medical supplies',
+    cook: excellent ? 'Prepared meals, ration reserves, and a measurable morale lift' : 'Prepared meals and improved camp morale',
+    repair: excellent ? 'Reinforced structures, patched gear, and hardened weak points' : 'Reinforced structures and patched equipment',
+    trade: excellent ? 'Barter goods, favorable caravan terms, and fresh contacts' : 'Barter goods and favorable caravan contacts',
     defend: 'No material yield',
   };
 
-  return defaults[task.task_type] || 'Some useful materials';
-}
-
-function getDefaultDefenseSummary(base, victory, defenderCount) {
-  if (victory) {
-    return `${base.name} held the line with ${defenderCount} defender(s) in the fight, and the attackers broke before the perimeter did.`;
-  }
-  return `${base.name} could not absorb the assault, and the attackers pushed through the defenses before the settlement could recover.`;
+  return defaults[taskType] || 'Some useful materials';
 }
 
 function sanitizeTaskType(value) {

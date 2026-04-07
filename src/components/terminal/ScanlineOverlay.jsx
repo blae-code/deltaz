@@ -4,7 +4,7 @@ export default function ScanlineOverlay() {
       <div
         className="absolute inset-0 opacity-[0.03]"
         style={{
-          backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,128,0.03) 2px, rgba(0,255,128,0.03) 4px)',
+          backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(223,129,22,0.035) 2px, rgba(223,129,22,0.035) 4px)',
         }}
       />
     </div>

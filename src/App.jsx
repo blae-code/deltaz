@@ -34,6 +34,7 @@ import ConflictTimeline from './pages/ConflictTimeline';
 import Today from './pages/Today';
 import OpsLog from './pages/OpsLog';
 import Bazaar from './pages/Bazaar';
+import WarRoom from './pages/WarRoom';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -81,6 +82,7 @@ const AuthenticatedApp = () => {
         <Route path="/conflicts" element={<ConflictTimeline />} />
         <Route path="/ops-log" element={<OpsLog />} />
         <Route path="/bazaar" element={<Bazaar />} />
+        <Route path="/warroom" element={<WarRoom />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>

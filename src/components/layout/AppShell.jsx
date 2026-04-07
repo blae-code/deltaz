@@ -54,7 +54,7 @@ export default function AppShell() {
       <Sidebar user={user} />
       <div className="flex flex-1 flex-col overflow-hidden">
         <TopBar user={user} />
-        <main className="flex-1 overflow-auto px-3 py-4 sm:px-4 sm:py-5 md:px-6 md:py-6 pt-14 md:pt-6">
+        <main className="flex-1 overflow-auto px-3 py-4 sm:px-4 sm:py-5 md:px-6 md:py-6 pt-14 md:pt-6 tech-grid-bg">
           <div className="max-w-[1400px] mx-auto">
             <Outlet context={{ user, isAdmin }} />
           </div>

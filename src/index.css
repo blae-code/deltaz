@@ -6,76 +6,78 @@
 
 @layer base {
   :root {
-    --background: 230 20% 5%;
-    --foreground: 210 10% 78%;
-    --card: 230 18% 7%;
-    --card-foreground: 210 10% 78%;
-    --popover: 230 18% 7%;
-    --popover-foreground: 210 10% 78%;
-    --primary: 175 65% 46%;
-    --primary-foreground: 230 20% 5%;
-    --secondary: 230 14% 11%;
-    --secondary-foreground: 210 10% 65%;
-    --muted: 230 12% 10%;
-    --muted-foreground: 210 8% 42%;
-    --accent: 38 85% 55%;
-    --accent-foreground: 230 20% 5%;
+    /* === MINMATAR PALETTE — warm amber/rust on near-black === */
+    --background: 24 12% 5%;
+    --foreground: 30 8% 76%;
+    --card: 24 10% 7%;
+    --card-foreground: 30 8% 76%;
+    --popover: 24 10% 7%;
+    --popover-foreground: 30 8% 76%;
+    --primary: 32 82% 48%;
+    --primary-foreground: 24 12% 5%;
+    --secondary: 24 8% 10%;
+    --secondary-foreground: 30 8% 65%;
+    --muted: 24 7% 9%;
+    --muted-foreground: 30 6% 40%;
+    --accent: 4 72% 46%;
+    --accent-foreground: 24 12% 5%;
     --destructive: 0 75% 48%;
     --destructive-foreground: 0 0% 98%;
-    --border: 230 14% 14%;
-    --input: 230 14% 14%;
-    --ring: 175 65% 46%;
-    --chart-1: 175 65% 46%;
-    --chart-2: 38 85% 55%;
+    --border: 24 10% 13%;
+    --input: 24 10% 13%;
+    --ring: 32 82% 48%;
+    --chart-1: 32 82% 48%;
+    --chart-2: 4 72% 46%;
     --chart-3: 0 75% 48%;
-    --chart-4: 190 50% 55%;
-    --chart-5: 28 80% 50%;
-    --radius: 0.2rem;
-    --sidebar-background: 230 20% 4%;
-    --sidebar-foreground: 210 10% 60%;
-    --sidebar-primary: 175 65% 46%;
-    --sidebar-primary-foreground: 230 20% 5%;
-    --sidebar-accent: 230 14% 10%;
-    --sidebar-accent-foreground: 210 10% 78%;
-    --sidebar-border: 230 14% 12%;
-    --sidebar-ring: 175 65% 46%;
+    --chart-4: 48 70% 52%;
+    --chart-5: 16 68% 44%;
+    --radius: 0rem;
+    --sidebar-background: 24 12% 4%;
+    --sidebar-foreground: 30 8% 58%;
+    --sidebar-primary: 32 82% 48%;
+    --sidebar-primary-foreground: 24 12% 5%;
+    --sidebar-accent: 24 8% 9%;
+    --sidebar-accent-foreground: 30 8% 76%;
+    --sidebar-border: 24 10% 11%;
+    --sidebar-ring: 32 82% 48%;
     --font-mono: 'JetBrains Mono', monospace;
     --font-display: 'Rajdhani', sans-serif;
   }
 
   .dark {
-    --background: 230 20% 5%;
-    --foreground: 210 10% 78%;
-    --card: 230 18% 7%;
-    --card-foreground: 210 10% 78%;
-    --popover: 230 18% 7%;
-    --popover-foreground: 210 10% 78%;
-    --primary: 175 65% 46%;
-    --primary-foreground: 230 20% 5%;
-    --secondary: 230 14% 11%;
-    --secondary-foreground: 210 10% 65%;
-    --muted: 230 12% 10%;
-    --muted-foreground: 210 8% 42%;
-    --accent: 38 85% 55%;
-    --accent-foreground: 230 20% 5%;
+    --background: 24 12% 5%;
+    --foreground: 30 8% 76%;
+    --card: 24 10% 7%;
+    --card-foreground: 30 8% 76%;
+    --popover: 24 10% 7%;
+    --popover-foreground: 30 8% 76%;
+    --primary: 32 82% 48%;
+    --primary-foreground: 24 12% 5%;
+    --secondary: 24 8% 10%;
+    --secondary-foreground: 30 8% 65%;
+    --muted: 24 7% 9%;
+    --muted-foreground: 30 6% 40%;
+    --accent: 4 72% 46%;
+    --accent-foreground: 24 12% 5%;
     --destructive: 0 75% 48%;
     --destructive-foreground: 0 0% 98%;
-    --border: 230 14% 14%;
-    --input: 230 14% 14%;
-    --ring: 175 65% 46%;
-    --chart-1: 175 65% 46%;
-    --chart-2: 38 85% 55%;
+    --border: 24 10% 13%;
+    --input: 24 10% 13%;
+    --ring: 32 82% 48%;
+    --chart-1: 32 82% 48%;
+    --chart-2: 4 72% 46%;
     --chart-3: 0 75% 48%;
-    --chart-4: 190 50% 55%;
-    --chart-5: 28 80% 50%;
-    --sidebar-background: 230 20% 4%;
-    --sidebar-foreground: 210 10% 60%;
-    --sidebar-primary: 175 65% 46%;
-    --sidebar-primary-foreground: 230 20% 5%;
-    --sidebar-accent: 230 14% 10%;
-    --sidebar-accent-foreground: 210 10% 78%;
-    --sidebar-border: 230 14% 12%;
-    --sidebar-ring: 175 65% 46%;
+    --chart-4: 48 70% 52%;
+    --chart-5: 16 68% 44%;
+    --radius: 0rem;
+    --sidebar-background: 24 12% 4%;
+    --sidebar-foreground: 30 8% 58%;
+    --sidebar-primary: 32 82% 48%;
+    --sidebar-primary-foreground: 24 12% 5%;
+    --sidebar-accent: 24 8% 9%;
+    --sidebar-accent-foreground: 30 8% 76%;
+    --sidebar-border: 24 10% 11%;
+    --sidebar-ring: 32 82% 48%;
   }
 }
 
@@ -91,7 +93,7 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Accessibility: global focus-visible ring for all interactive elements */
+  /* Accessibility: global focus-visible ring */
   button:focus-visible,
   a:focus-visible,
   input:focus-visible,
@@ -101,13 +103,64 @@
     @apply outline-none ring-2 ring-primary/60 ring-offset-1 ring-offset-background;
   }
 
-  /* Accessibility: minimum touch target for small interactive elements */
+  /* Accessibility: minimum touch target */
   button, a, [role="button"] {
     min-height: 28px;
   }
 }
 
-/* Terminal scanline effect */
+/* =========================================================
+   MINMATAR PANEL UTILITIES
+   ========================================================= */
+
+/* Clipped corners — EVE chamfer effect */
+.clip-corner-tr {
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+}
+.clip-corner-bl {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+}
+.clip-corner-tr-bl {
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+}
+
+/* Panel frame: border + bg + amber gradient top rule */
+.panel-frame {
+  position: relative;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+}
+.panel-frame::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    hsl(var(--primary) / 0.75) 0%,
+    hsl(var(--primary) / 0.3) 50%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Subtle amber dot-matrix grid on content areas */
+.tech-grid-bg {
+  background-image: radial-gradient(circle, hsl(var(--primary) / 0.055) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Bracket notation — [ LABEL ] */
+.bracket-label::before { content: '[ '; color: hsl(var(--primary) / 0.55); }
+.bracket-label::after  { content: ' ]'; color: hsl(var(--primary) / 0.55); }
+
+/* =========================================================
+   ANIMATIONS
+   ========================================================= */
+
 @keyframes scanline {
   0% { transform: translateY(-100%); }
   100% { transform: translateY(100vh); }
@@ -115,27 +168,54 @@
 
 @keyframes flicker {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.97; }
+  50% { opacity: 0.975; }
   75% { opacity: 0.99; }
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 4px hsl(175 65% 46% / 0.3); }
-  50% { box-shadow: 0 0 12px hsl(175 65% 46% / 0.6); }
+  0%, 100% { box-shadow: 0 0 4px hsl(32 82% 48% / 0.5); }
+  50% { box-shadow: 0 0 14px hsl(32 82% 48% / 0.9); }
+}
+
+@keyframes glow-pulse-subtle {
+  0%, 100% {
+    box-shadow: 0 0 5px 2px hsl(4 72% 46% / 0.4);
+    border-color: hsl(4 72% 46% / 0.6);
+  }
+  50% {
+    box-shadow: 0 0 10px 4px hsl(4 72% 46% / 0.7);
+    border-color: hsl(4 72% 46% / 0.9);
+  }
+}
+
+@keyframes glow-pulse-strong {
+  0%, 100% {
+    box-shadow: 0 0 6px 3px hsl(0 75% 48% / 0.5);
+    border-color: hsl(0 75% 48% / 0.7);
+  }
+  50% {
+    box-shadow: 0 0 15px 6px hsl(0 75% 48% / 0.8);
+    border-color: hsl(0 75% 48% / 1);
+  }
 }
 
 .terminal-flicker {
-  animation: flicker 4s infinite;
+  animation: flicker 5s infinite;
 }
-
 .pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
+  animation: pulse-glow 2.5s ease-in-out infinite;
+}
+.animate-glow-pulse-subtle {
+  animation: glow-pulse-subtle 3s ease-in-out infinite;
+}
+.animate-glow-pulse-strong {
+  animation: glow-pulse-strong 2s ease-in-out infinite;
 }
 
 /* Accessibility: boost muted foreground contrast */
 @media (prefers-contrast: more) {
   :root {
-    --muted-foreground: 210 8% 55%;
+    --muted-foreground: 30 8% 55%;
   }
 }
 
@@ -146,18 +226,20 @@
   }
 }
 
-/* Scrollbar styling */
+/* =========================================================
+   SCROLLBARS — amber-tinted Minmatar chrome
+   ========================================================= */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
 }
 ::-webkit-scrollbar-track {
-  background: hsl(230 20% 5%);
+  background: hsl(24 12% 5%);
 }
 ::-webkit-scrollbar-thumb {
-  background: hsl(220 12% 20%);
-  border-radius: 3px;
+  background: hsl(24 10% 18%);
+  border-radius: 2px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(175 65% 46% / 0.5);
+  background: hsl(32 82% 48% / 0.45);
 }

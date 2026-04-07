@@ -2,8 +2,8 @@ import { ROWS } from "../map/GridMap";
 
 const statusStyles = {
   secured: {
-    bg: "rgba(45, 212, 160, 0.18)",
-    border: "rgba(45, 212, 160, 0.45)",
+    bg: "rgba(223, 129, 22, 0.18)",
+    border: "rgba(223, 129, 22, 0.45)",
     dashed: false,
   },
   contested: {

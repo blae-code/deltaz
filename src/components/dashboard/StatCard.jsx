@@ -4,7 +4,8 @@ import { Info } from "lucide-react";
 export default function StatCard({ label, value, icon: Icon, color, description, detail }) {
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="border border-border bg-card rounded-sm p-4 group hover:border-primary/30 transition-all hover:shadow-md hover:shadow-primary/5 relative">
+      <div className="panel-frame clip-corner-tr p-4 group hover:border-primary/40 transition-all hover:shadow-md hover:shadow-primary/5 relative">
+        <div className="absolute top-0 left-0 w-8 h-[2px] bg-primary/60 pointer-events-none" />
         <div className="flex items-center gap-2 mb-2">
           <div className={`h-7 w-7 rounded-sm flex items-center justify-center bg-current/5 border border-current/20 ${color}`}>
             <Icon className="h-3.5 w-3.5" />

@@ -1,5 +1,5 @@
 function getGaugeColor(score) {
-  if (score >= 80) return { stroke: "hsl(175, 65%, 46%)", bg: "hsl(175, 65%, 46%, 0.15)" };
+  if (score >= 80) return { stroke: "hsl(32, 82%, 48%)", bg: "hsl(32, 82%, 48%, 0.15)" };
   if (score >= 60) return { stroke: "hsl(38, 85%, 55%)", bg: "hsl(38, 85%, 55%, 0.15)" };
   if (score >= 40) return { stroke: "hsl(28, 80%, 50%)", bg: "hsl(28, 80%, 50%, 0.15)" };
   return { stroke: "hsl(0, 75%, 48%)", bg: "hsl(0, 75%, 48%, 0.15)" };

@@ -30,6 +30,7 @@ import {
   Swords,
   ArrowLeftRight,
   Store,
+  Radar,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
@@ -53,6 +54,7 @@ const coreNav = [
 ];
 
 const planningNav = [
+  { path: "/warroom", label: "WAR ROOM", icon: Radar },
   { path: "/planner", label: "PLANNER", icon: Target },
   { path: "/intel", label: "INTEL", icon: Eye },
   { path: "/treaties", label: "TREATIES", icon: FileSignature },
@@ -133,7 +135,8 @@ export default function Sidebar({ user: propUser }) {
         )}
       >
       {/* Logo */}
-      <div className="flex items-center justify-between border-b border-border px-4 py-4">
+      <div className="relative flex items-center justify-between border-b border-border px-4 py-4">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/70 via-primary/25 to-transparent pointer-events-none" />
         <div className="flex items-center gap-3">
         <div className="h-8 w-8 rounded-sm bg-primary/20 border border-primary/40 flex items-center justify-center">
           <SidebarLogoSvg size={18} className="text-primary" />
@@ -183,7 +186,7 @@ export default function Sidebar({ user: propUser }) {
                       className={cn(
                         "flex items-center gap-3 rounded-sm px-3 py-2.5 text-[11px] font-medium tracking-wider transition-colors",
                         isActive
-                          ? "bg-primary/10 text-primary border border-primary/30"
+                          ? "bg-primary/10 text-primary border border-primary/20 border-l-2 border-l-primary"
                           : "text-muted-foreground hover:text-foreground hover:bg-secondary/50 border border-transparent"
                       )}
                     >

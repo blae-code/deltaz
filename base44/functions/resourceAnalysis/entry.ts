@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.24';
 
 /**
  * resourceAnalysis v2 — Enhanced AI-powered resource intelligence:

@@ -57,7 +57,7 @@ export default function LoginSplash() {
         if (p.y > canvas.height) p.y = 0;
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(45, 212, 160, ${p.alpha})`;
+        ctx.fillStyle = `rgba(223, 129, 22, ${p.alpha})`;
         ctx.fill();
       });
       // Draw faint connections
@@ -70,7 +70,7 @@ export default function LoginSplash() {
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.strokeStyle = `rgba(45, 212, 160, ${0.06 * (1 - dist / 120)})`;
+            ctx.strokeStyle = `rgba(223, 129, 22, ${0.06 * (1 - dist / 120)})`;
             ctx.lineWidth = 0.5;
             ctx.stroke();
           }

@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.24';
 
 const LEADERSHIP_RANKS = new Set(['trusted', 'allied', 'revered']);
 const NEGOTIABLE_STATUSES = new Set(['proposed', 'negotiating']);

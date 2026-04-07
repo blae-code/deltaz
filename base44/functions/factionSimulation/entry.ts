@@ -1,4 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.24';
+import { deterministicBoolean, deterministicNumber, sortDeterministic } from '../_shared/deterministic.ts';
+import { DATA_ORIGINS, buildSourceRef, getCycleKey, hasSourceRef, withProvenance } from '../_shared/provenance.ts';
 
 const ACTIVE_JOB_STATUSES = new Set(['available', 'in_progress']);
 const ACTIVE_TREATY_STATUSES = new Set(['accepted']);
@@ -38,6 +40,8 @@ Deno.serve(async (req) => {
     }
 
     const now = new Date();
+    const cycleKey = getCycleKey(30, now.getTime());
+    const cycleRef = `faction_sim:${cycleKey}`;
     const actions = [];
     const recentEventTitles = new Set(recentEvents.map((event) => sanitizeText(event.title, 140)).filter(Boolean));
     const recentIntelTitles = new Set(recentIntel.map((intel) => sanitizeText(intel.title, 140)).filter(Boolean));
@@ -81,59 +85,83 @@ Deno.serve(async (req) => {
         score: wealth * 0.3 + productionTotal * 20 + factionTerritories.length * 50 + securedCount * 30 + playerCount * 40,
       };
     };
-    const createEventOnce = async (payload) => {
+    const createEventOnce = async (payload, sourceRefs = []) => {
       const title = sanitizeText(payload.title, 140);
       if (!title || recentEventTitles.has(title)) {
         return null;
       }
 
-      const event = await base44.asServiceRole.entities.Event.create(payload);
+      const event = await base44.asServiceRole.entities.Event.create(withProvenance(payload, {
+        dataOrigin: DATA_ORIGINS.DETERMINISTIC_PROJECTION,
+        sourceRefs: [cycleRef, ...sourceRefs],
+      }));
       recentEventTitles.add(title);
       return event;
     };
-    const createIntelOnce = async (payload) => {
+    const createIntelOnce = async (payload, sourceRefs = []) => {
       const title = sanitizeText(payload.title, 140);
       if (!title || recentIntelTitles.has(title)) {
         return null;
       }
 
-      const intel = await base44.asServiceRole.entities.IntelFeed.create(payload);
+      const intel = await base44.asServiceRole.entities.IntelFeed.create(withProvenance(payload, {
+        dataOrigin: DATA_ORIGINS.DETERMINISTIC_PROJECTION,
+        sourceRefs: [cycleRef, ...sourceRefs],
+      }));
       recentIntelTitles.add(title);
       return intel;
     };
-    const createJobOnce = async (payload) => {
+    const createJobOnce = async (payload, sourceRefs = []) => {
       const title = sanitizeText(payload.title, 140);
       if (!title || openJobTitles.has(title)) {
         return null;
       }
 
-      const job = await base44.asServiceRole.entities.Job.create(payload);
+      const job = await base44.asServiceRole.entities.Job.create(withProvenance(payload, {
+        dataOrigin: DATA_ORIGINS.SYSTEM_RULE,
+        sourceRefs: [cycleRef, ...sourceRefs],
+      }));
       openJobTitles.add(title);
       return job;
     };
 
     for (const diplomacy of diplomacyRecords) {
       const expiresAt = Date.parse(diplomacy.expires_at || '');
-      if (!Number.isFinite(expiresAt) || expiresAt >= now.getTime() || diplomacy.status === 'neutral') {
+      if (!Number.isFinite(expiresAt) || expiresAt >= now.getTime() || diplomacy.status === 'neutral' || hasSourceRef(diplomacy, cycleRef)) {
         continue;
       }
 
-      await base44.asServiceRole.entities.Diplomacy.update(diplomacy.id, {
-        previous_status: diplomacy.status,
+      diplomacy.previous_status = diplomacy.status;
+      diplomacy.status = 'neutral';
+      diplomacy.expires_at = '';
+      await base44.asServiceRole.entities.Diplomacy.update(diplomacy.id, withProvenance({
+        previous_status: diplomacy.previous_status,
         status: 'neutral',
         expires_at: '',
-      });
+      }, {
+        dataOrigin: DATA_ORIGINS.SYSTEM_RULE,
+        sourceRefs: [
+          cycleRef,
+          buildSourceRef('diplomacy', diplomacy.id),
+          buildSourceRef('faction', diplomacy.faction_a_id),
+          buildSourceRef('faction', diplomacy.faction_b_id),
+        ],
+      }));
 
       const factionA = factions.find((faction) => faction.id === diplomacy.faction_a_id);
       const factionB = factions.find((faction) => faction.id === diplomacy.faction_b_id);
       await createEventOnce({
         title: `AGREEMENT EXPIRED: ${factionA?.name || 'Unknown'} - ${factionB?.name || 'Unknown'}`,
-        content: `The ${diplomacy.status} agreement between ${factionA?.name || 'Unknown'} and ${factionB?.name || 'Unknown'} has expired. Relations reset to neutral. The balance of power shifts.`,
+        content: `The ${diplomacy.previous_status} agreement between ${factionA?.name || 'Unknown'} and ${factionB?.name || 'Unknown'} has expired. Relations reset to neutral. The balance of power shifts.`,
         type: 'world_event',
         severity: 'warning',
         faction_id: diplomacy.faction_a_id,
         is_active: true,
-      });
+      }, [
+        buildSourceRef('diplomacy', diplomacy.id),
+        buildSourceRef('faction', diplomacy.faction_a_id),
+        buildSourceRef('faction', diplomacy.faction_b_id),
+      ]);
 
       actions.push({ type: 'agreement_expired', factions: [factionA?.name, factionB?.name] });
     }
@@ -142,6 +170,7 @@ Deno.serve(async (req) => {
       for (let indexB = indexA + 1; indexB < activeFactions.length; indexB += 1) {
         const factionA = activeFactions[indexA];
         const factionB = activeFactions[indexB];
+        const pairKey = `${factionA.id}:${factionB.id}`;
         const diplomacy = getDiplomacy(factionA.id, factionB.id);
         const treaty = getActiveTreaty(factionA.id, factionB.id);
         const powerA = getFactionPower(factionA.id);
@@ -189,35 +218,55 @@ Deno.serve(async (req) => {
           tension += 15;
         }
 
-        tension += Math.floor(Math.random() * 20);
+        tension += deterministicNumber(0, 19, cycleKey, pairKey, 'tension_noise');
         tension = Math.min(100, Math.max(0, tension));
 
         if (tension >= 75 && diplomacyStatus !== 'war') {
-          const disputeTerritory = territories.find((territory) =>
-            sharedSectors.includes(territory.sector) && territory.status !== 'hostile'
+          const disputeCandidates = sortDeterministic(
+            territories.filter((territory) => sharedSectors.includes(territory.sector) && territory.status !== 'hostile'),
+            (territory) => territory.id,
+            cycleKey,
+            pairKey,
+            'dispute',
           );
-          if (!disputeTerritory || Math.random() <= 0.4) {
+          const disputeTerritory = disputeCandidates[0];
+          const shouldEscalate = disputeTerritory && deterministicBoolean(0.6, cycleKey, pairKey, disputeTerritory?.id, 'escalate');
+          if (!disputeTerritory || !shouldEscalate) {
             continue;
           }
 
-          await base44.asServiceRole.entities.Territory.update(disputeTerritory.id, {
+          disputeTerritory.status = 'contested';
+          disputeTerritory.threat_level = 'high';
+          await base44.asServiceRole.entities.Territory.update(disputeTerritory.id, withProvenance({
             status: 'contested',
             threat_level: 'high',
-          });
+          }, {
+            dataOrigin: DATA_ORIGINS.SYSTEM_RULE,
+            sourceRefs: [
+              cycleRef,
+              buildSourceRef('territory', disputeTerritory.id),
+              buildSourceRef('faction', factionA.id),
+              buildSourceRef('faction', factionB.id),
+            ],
+          }));
 
           await createEventOnce({
             title: `BORDER INCIDENT: ${factionA.name} vs ${factionB.name}`,
-            content: `Hostile forces from both ${factionA.name} and ${factionB.name} have been spotted in ${disputeTerritory.name} (${disputeTerritory.sector}). Armed patrols are encroaching on each other's supply lines. The sector is now contested - operatives can intervene through diplomatic channels or direct tactical action.`,
+            content: `Hostile forces from both ${factionA.name} and ${factionB.name} have been spotted in ${disputeTerritory.name} (${disputeTerritory.sector}). Armed patrols are encroaching on each other's supply lines. The sector is now contested and intervention is likely.`,
             type: 'faction_conflict',
             severity: 'critical',
             territory_id: disputeTerritory.id,
             faction_id: factionA.id,
             is_active: true,
-          });
+          }, [
+            buildSourceRef('territory', disputeTerritory.id),
+            buildSourceRef('faction', factionA.id),
+            buildSourceRef('faction', factionB.id),
+          ]);
 
           await createIntelOnce({
             title: `FLASHPOINT: ${disputeTerritory.name} Dispute Escalating`,
-            content: `Intelligence suggests both ${factionA.name} and ${factionB.name} are mobilizing assets toward ${disputeTerritory.name}. A diplomatic resolution is still possible, but the window is narrowing. Players aligned with either faction can propose a treaty or take direct action.`,
+            content: `Sensor sweeps confirm both ${factionA.name} and ${factionB.name} are shifting assets toward ${disputeTerritory.name}. Diplomatic intervention is still possible, but the sector is already trending toward direct conflict.`,
             category: 'tactical_advisory',
             severity: 'critical',
             source: 'GHOST PROTOCOL Strategic Analysis',
@@ -225,7 +274,11 @@ Deno.serve(async (req) => {
             related_territory_id: disputeTerritory.id,
             is_active: true,
             expires_at: new Date(now.getTime() + 12 * 3600000).toISOString(),
-          });
+          }, [
+            buildSourceRef('territory', disputeTerritory.id),
+            buildSourceRef('faction', factionA.id),
+            buildSourceRef('faction', factionB.id),
+          ]);
 
           await createJobOnce({
             title: `Stabilize ${disputeTerritory.name}`,
@@ -240,59 +293,87 @@ Deno.serve(async (req) => {
             verification_type: 'admin_confirm',
             verification_criteria: 'Provide evidence of diplomatic contact or tactical intervention in the disputed sector.',
             expires_at: new Date(now.getTime() + 24 * 3600000).toISOString(),
-          });
+          }, [
+            buildSourceRef('territory', disputeTerritory.id),
+            buildSourceRef('faction', factionA.id),
+            buildSourceRef('faction', factionB.id),
+          ]);
 
           actions.push({ type: 'territorial_dispute', territory: disputeTerritory.name, factions: [factionA.name, factionB.name], tension });
 
           if (diplomacyStatus === 'neutral') {
             if (diplomacy) {
-              await base44.asServiceRole.entities.Diplomacy.update(diplomacy.id, {
+              diplomacy.previous_status = 'neutral';
+              diplomacy.status = 'hostile';
+              await base44.asServiceRole.entities.Diplomacy.update(diplomacy.id, withProvenance({
                 status: 'hostile',
                 previous_status: 'neutral',
-              });
+              }, {
+                dataOrigin: DATA_ORIGINS.SYSTEM_RULE,
+                sourceRefs: [
+                  cycleRef,
+                  buildSourceRef('diplomacy', diplomacy.id),
+                  buildSourceRef('faction', factionA.id),
+                  buildSourceRef('faction', factionB.id),
+                ],
+              }));
             } else {
-              await base44.asServiceRole.entities.Diplomacy.create({
+              const newDiplomacy = await base44.asServiceRole.entities.Diplomacy.create(withProvenance({
                 faction_a_id: factionA.id,
                 faction_b_id: factionB.id,
                 status: 'hostile',
                 previous_status: 'neutral',
                 initiated_by: powerA.score > powerB.score ? factionA.id : factionB.id,
-              });
+              }, {
+                dataOrigin: DATA_ORIGINS.SYSTEM_RULE,
+                sourceRefs: [
+                  cycleRef,
+                  buildSourceRef('faction', factionA.id),
+                  buildSourceRef('faction', factionB.id),
+                ],
+              }));
+              diplomacyRecords.push(newDiplomacy);
             }
           }
           continue;
         }
 
-        if (tension >= 50 && tension < 75 && Math.random() > 0.5) {
-          const scenario = Math.random();
+        if (tension >= 50 && tension < 75 && deterministicBoolean(0.5, cycleKey, pairKey, 'midband')) {
+          const scenario = deterministicNumber(0, 99, cycleKey, pairKey, 'scenario');
 
-          if (scenario < 0.4) {
+          if (scenario < 40) {
             await createIntelOnce({
               title: `SECRET TALKS: ${factionA.name} and ${factionB.name} Back-Channel`,
-              content: `Intercepted communications suggest back-channel negotiations between ${factionA.name} and ${factionB.name} leadership. The nature of these talks is unclear - could be a trade pact, a non-aggression treaty, or something more sinister. Operatives with standing in either faction may be able to influence the outcome.`,
+              content: `Intercepted traffic indicates controlled communication between ${factionA.name} and ${factionB.name}. Analysts cannot confirm the end state, but the exchange looks deliberate and immediate.`,
               category: 'faction_intel',
               severity: 'high',
               source: 'SIGINT Intercept / GHOST PROTOCOL',
               related_faction_id: factionA.id,
               is_active: true,
               expires_at: new Date(now.getTime() + 18 * 3600000).toISOString(),
-            });
+            }, [
+              buildSourceRef('faction', factionA.id),
+              buildSourceRef('faction', factionB.id),
+            ]);
             actions.push({ type: 'secret_negotiations', factions: [factionA.name, factionB.name], tension });
             continue;
           }
 
-          if (scenario < 0.7) {
+          if (scenario < 70) {
             const spyFaction = powerA.score > powerB.score ? factionA : factionB;
             const targetFaction = spyFaction.id === factionA.id ? factionB : factionA;
 
             await createEventOnce({
               title: `ESPIONAGE DETECTED: ${spyFaction.name} Operatives in ${targetFaction.name} Territory`,
-              content: `${targetFaction.name} scouts have reported suspicious activity near their supply caches. Evidence points to ${spyFaction.name} intelligence operatives conducting surveillance. This could be a precursor to a larger operation - or simply routine reconnaissance.`,
+              content: `${targetFaction.name} patrol reports point to covert surveillance activity tied to ${spyFaction.name}. Command is treating the movement as a precursor to a larger operation unless disproven.`,
               type: 'faction_conflict',
               severity: 'warning',
               faction_id: targetFaction.id,
               is_active: true,
-            });
+            }, [
+              buildSourceRef('faction', spyFaction.id),
+              buildSourceRef('faction', targetFaction.id),
+            ]);
 
             await createJobOnce({
               title: `Counter-Intelligence: Track ${spyFaction.name} Agents`,
@@ -306,7 +387,10 @@ Deno.serve(async (req) => {
               verification_type: 'screenshot',
               verification_criteria: 'Document evidence of hostile faction activity in the target zone.',
               expires_at: new Date(now.getTime() + 18 * 3600000).toISOString(),
-            });
+            }, [
+              buildSourceRef('faction', spyFaction.id),
+              buildSourceRef('faction', targetFaction.id),
+            ]);
 
             actions.push({ type: 'espionage', spy: spyFaction.name, target: targetFaction.name, tension });
             continue;
@@ -314,20 +398,31 @@ Deno.serve(async (req) => {
 
           const raiderFaction = powerA.score > powerB.score ? factionA : factionB;
           const victimFaction = raiderFaction.id === factionA.id ? factionB : factionA;
-          const victimTerritory = getFactionTerritories(victimFaction.id).find((territory) => (territory.resources || []).length > 0);
+          const victimTerritories = sortDeterministic(
+            getFactionTerritories(victimFaction.id).filter((territory) => (territory.resources || []).length > 0),
+            (territory) => territory.id,
+            cycleKey,
+            pairKey,
+            'raid_target',
+          );
+          const victimTerritory = victimTerritories[0];
           if (!victimTerritory) {
             continue;
           }
 
           await createEventOnce({
             title: `RAID ALERT: ${raiderFaction.name} Targets ${victimTerritory.name}`,
-            content: `Intelligence reports indicate ${raiderFaction.name} is planning a resource raid on ${victimTerritory.name}. ${victimFaction.name} operatives are urged to fortify the sector or request allied assistance.`,
+            content: `Intelligence reports indicate ${raiderFaction.name} is preparing a resource raid on ${victimTerritory.name}. ${victimFaction.name} has a short window to harden the sector or negotiate pressure off the route.`,
             type: 'faction_conflict',
             severity: 'warning',
             territory_id: victimTerritory.id,
             faction_id: raiderFaction.id,
             is_active: true,
-          });
+          }, [
+            buildSourceRef('territory', victimTerritory.id),
+            buildSourceRef('faction', raiderFaction.id),
+            buildSourceRef('faction', victimFaction.id),
+          ]);
 
           await createJobOnce({
             title: `Defend ${victimTerritory.name} from ${raiderFaction.name}`,
@@ -342,55 +437,87 @@ Deno.serve(async (req) => {
             verification_type: 'admin_confirm',
             verification_criteria: 'Prove that the raid was repelled or diplomatically averted.',
             expires_at: new Date(now.getTime() + 12 * 3600000).toISOString(),
-          });
+          }, [
+            buildSourceRef('territory', victimTerritory.id),
+            buildSourceRef('faction', raiderFaction.id),
+            buildSourceRef('faction', victimFaction.id),
+          ]);
 
           actions.push({ type: 'resource_raid', raider: raiderFaction.name, target: victimTerritory.name, tension });
           continue;
         }
 
-        if (tension < 30 && diplomacyStatus === 'hostile' && Math.random() > 0.6 && diplomacy) {
-          await base44.asServiceRole.entities.Diplomacy.update(diplomacy.id, {
+        if (tension < 30 && diplomacyStatus === 'hostile' && diplomacy && deterministicBoolean(0.4, cycleKey, pairKey, 'deescalate')) {
+          diplomacy.previous_status = 'hostile';
+          diplomacy.status = 'neutral';
+          await base44.asServiceRole.entities.Diplomacy.update(diplomacy.id, withProvenance({
             status: 'neutral',
             previous_status: 'hostile',
-          });
+          }, {
+            dataOrigin: DATA_ORIGINS.SYSTEM_RULE,
+            sourceRefs: [
+              cycleRef,
+              buildSourceRef('diplomacy', diplomacy.id),
+              buildSourceRef('faction', factionA.id),
+              buildSourceRef('faction', factionB.id),
+            ],
+          }));
 
           await createEventOnce({
             title: `DETENTE: ${factionA.name} and ${factionB.name} Cool Hostilities`,
-            content: `After a period of relative calm, tensions between ${factionA.name} and ${factionB.name} have eased. Diplomatic channels are re-opening. Operatives may seize this opportunity to negotiate a formal agreement.`,
+            content: `After sustained low-pressure contact, tensions between ${factionA.name} and ${factionB.name} have eased. Diplomatic channels are reopening and field escalation has slowed.`,
             type: 'world_event',
             severity: 'info',
             faction_id: factionA.id,
             is_active: true,
-          });
+          }, [
+            buildSourceRef('faction', factionA.id),
+            buildSourceRef('faction', factionB.id),
+          ]);
 
           actions.push({ type: 'de_escalation', factions: [factionA.name, factionB.name], tension });
         }
       }
     }
 
-    const contestedTerritories = territories.filter((territory) => territory.status === 'contested');
     const threatLevels = ['minimal', 'low', 'moderate', 'high', 'critical'];
+    const contestedTerritories = territories.filter((territory) => territory.status === 'contested');
     for (const territory of contestedTerritories) {
       const currentIndex = threatLevels.indexOf(territory.threat_level || 'moderate');
-      if (currentIndex < 0 || currentIndex >= threatLevels.length - 1 || Math.random() <= 0.65) {
+      if (currentIndex < 0 || currentIndex >= threatLevels.length - 1 || hasSourceRef(territory, cycleRef)) {
+        continue;
+      }
+      if (!deterministicBoolean(0.35, cycleKey, territory.id, 'threat_escalation')) {
         continue;
       }
 
       const newThreat = threatLevels[currentIndex + 1];
-      await base44.asServiceRole.entities.Territory.update(territory.id, { threat_level: newThreat });
+      territory.threat_level = newThreat;
+      await base44.asServiceRole.entities.Territory.update(territory.id, withProvenance({
+        threat_level: newThreat,
+      }, {
+        dataOrigin: DATA_ORIGINS.SYSTEM_RULE,
+        sourceRefs: [
+          cycleRef,
+          buildSourceRef('territory', territory.id),
+        ],
+      }));
       actions.push({ type: 'threat_escalation', territory: territory.name, new_threat: newThreat });
     }
 
-    const unclaimedTerritories = territories.filter((territory) =>
-      !territory.controlling_faction_id && territory.status === 'uncharted'
+    const unclaimedTerritories = sortDeterministic(
+      territories.filter((territory) => !territory.controlling_faction_id && territory.status === 'uncharted'),
+      (territory) => territory.id,
+      cycleKey,
+      'unclaimed',
     );
-    if (unclaimedTerritories.length > 0 && Math.random() > 0.7) {
-      const targetTerritory = unclaimedTerritories[Math.floor(Math.random() * unclaimedTerritories.length)];
-      const claimantFaction = activeFactions[Math.floor(Math.random() * activeFactions.length)];
+    if (unclaimedTerritories.length > 0 && deterministicBoolean(0.3, cycleKey, 'power_vacuum')) {
+      const targetTerritory = unclaimedTerritories[0];
+      const claimantFaction = sortDeterministic(activeFactions, (faction) => faction.id, cycleKey, targetTerritory.id, 'claimant')[0];
 
       await createIntelOnce({
         title: `LAND GRAB: ${claimantFaction.name} Eyes ${targetTerritory.name}`,
-        content: `${claimantFaction.name} scouts have been surveying ${targetTerritory.name} in sector ${targetTerritory.sector}. Analysts believe a formal territorial claim is imminent. Other factions may want to contest this expansion.`,
+        content: `${claimantFaction.name} scouting patterns have tightened around ${targetTerritory.name} in sector ${targetTerritory.sector}. Analysts assess the zone as a near-term expansion target unless another faction intervenes first.`,
         category: 'faction_intel',
         severity: 'medium',
         source: 'Territorial Analysis Division',
@@ -398,7 +525,10 @@ Deno.serve(async (req) => {
         related_territory_id: targetTerritory.id,
         is_active: true,
         expires_at: new Date(now.getTime() + 24 * 3600000).toISOString(),
-      });
+      }, [
+        buildSourceRef('territory', targetTerritory.id),
+        buildSourceRef('faction', claimantFaction.id),
+      ]);
 
       actions.push({ type: 'power_vacuum', territory: targetTerritory.name, interested_faction: claimantFaction.name });
     }

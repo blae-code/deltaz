@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import ts from 'typescript';
+import { backendTrustRegistry, canonicalTrustLanes } from './lib/backend-trust-registry.mjs';
 
 const rootDir = process.cwd();
 const packageJsonPath = path.join(rootDir, 'package.json');
@@ -69,6 +70,24 @@ const collectEntityAccess = (sourceText) => {
   };
 };
 
+const checkTypeScriptSyntax = (relativePath, sourceText, errors) => {
+  const sourceFile = ts.createSourceFile(relativePath, sourceText, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  const diagnostics = [];
+  const visit = (node) => {
+    if (node.flags & ts.NodeFlags.ThisNodeHasError) {
+      diagnostics.push(node);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sourceFile);
+  if (sourceFile.parseDiagnostics.length > 0) {
+    for (const diagnostic of sourceFile.parseDiagnostics) {
+      const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
+      errors.push(`TypeScript parse error in ${relativePath}: ${message}`);
+    }
+  }
+};
+
 const main = async () => {
   const errors = [];
 
@@ -100,6 +119,7 @@ const main = async () => {
 
   const entityFiles = await listFiles(entitiesDir, (filePath) => filePath.endsWith('.jsonc'));
   const functionEntries = await listFiles(functionsDir, (filePath) => filePath.endsWith(path.join('entry.ts')));
+  const tsFiles = await listFiles(functionsDir, (filePath) => filePath.endsWith('.ts'));
 
   if (entityFiles.length === 0) {
     errors.push('No entity schema files were found under base44/entities.');
@@ -122,12 +142,23 @@ const main = async () => {
     }
   }
 
+  for (const tsFile of tsFiles) {
+    const sourceText = await fs.readFile(tsFile, 'utf8');
+    checkTypeScriptSyntax(path.relative(rootDir, tsFile), sourceText, errors);
+  }
+
   const functionSummaries = [];
 
   for (const functionEntry of functionEntries) {
     const sourceText = await fs.readFile(functionEntry, 'utf8');
     const relativePath = path.relative(rootDir, functionEntry);
+    const functionName = path.basename(path.dirname(functionEntry));
     const importMatch = sourceText.match(/npm:@base44\/sdk@(\d+\.\d+\.\d+)/);
+    const trustConfig = backendTrustRegistry[functionName];
+
+    if (!trustConfig) {
+      errors.push(`${relativePath} is missing an entry in scripts/lib/backend-trust-registry.mjs.`);
+    }
 
     if (!importMatch) {
       errors.push(`${relativePath} does not pin npm:@base44/sdk to an explicit version.`);
@@ -141,9 +172,20 @@ const main = async () => {
       errors.push(`${relativePath} does not contain a Deno.serve handler.`);
     }
 
+    if (trustConfig && trustConfig.classification !== 'temporary_freeze' && canonicalTrustLanes.has(trustConfig.lane)) {
+      if (!trustConfig.allowsLLM && sourceText.includes('InvokeLLM')) {
+        errors.push(`${relativePath} is ${trustConfig.lane} but still calls InvokeLLM.`);
+      }
+      if (!trustConfig.allowsRandom && sourceText.includes('Math.random')) {
+        errors.push(`${relativePath} is ${trustConfig.lane} but still uses Math.random.`);
+      }
+    }
+
     functionSummaries.push({
-      name: path.basename(path.dirname(functionEntry)),
+      name: functionName,
       path: relativePath,
+      lane: trustConfig?.lane || 'unknown',
+      classification: trustConfig?.classification || 'missing',
       ...collectEntityAccess(sourceText),
     });
   }
@@ -155,7 +197,7 @@ const main = async () => {
     process.exit(1);
   }
 
-  console.log(`Base44 backend check passed.`);
+  console.log('Base44 backend check passed.');
   console.log(`SDK version: ${expectedSdkVersion}`);
   console.log(`Entities: ${entityFiles.length}`);
   console.log(`Functions: ${functionSummaries.length}`);
@@ -163,7 +205,7 @@ const main = async () => {
   for (const summary of functionSummaries.sort((a, b) => a.name.localeCompare(b.name))) {
     const reads = summary.reads.length > 0 ? summary.reads.join(', ') : 'none';
     const writes = summary.writes.length > 0 ? summary.writes.join(', ') : 'none';
-    console.log(`- ${summary.name}: reads [${reads}] writes [${writes}]`);
+    console.log(`- ${summary.name} (${summary.lane}/${summary.classification}): reads [${reads}] writes [${writes}]`);
   }
 };
 

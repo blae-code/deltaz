@@ -69,7 +69,7 @@ export default function FactionResourceBreakdown({ factions, factionResources, e
                         className="h-full rounded-full transition-all duration-500"
                         style={{
                           width: `${pct}%`,
-                          backgroundColor: f.color || "hsl(175 65% 46%)",
+                          backgroundColor: f.color || "hsl(32 82% 48%)",
                         }}
                       />
                     </div>

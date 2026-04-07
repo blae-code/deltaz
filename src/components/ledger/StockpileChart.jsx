@@ -7,8 +7,8 @@ const RESOURCE_TYPES = ["fuel", "metals", "tech", "food", "munitions"];
 const RESOURCE_COLORS = {
   fuel: "#d4a13a",
   metals: "#8b8b8b",
-  tech: "#5ba8c8",
-  food: "#2dd4a0",
+  tech: "#c8935b",
+  food: "#4ade80",
   munitions: "#c53030",
 };
 
@@ -70,7 +70,7 @@ export default function StockpileChart({ factions, factionResources, economyByFa
                 fontFamily: "monospace",
                 fontSize: 11,
               }}
-              labelStyle={{ color: "hsl(175 65% 46%)", fontWeight: "bold" }}
+              labelStyle={{ color: "hsl(32 82% 48%)", fontWeight: "bold" }}
             />
             <Legend
               wrapperStyle={{ fontSize: 9, fontFamily: "monospace" }}

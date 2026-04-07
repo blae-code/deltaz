@@ -9,7 +9,7 @@ export default function ColonyGauge({ label, value, icon }) {
     if (v < 20) return { stroke: "hsl(0 75% 48%)", text: "text-status-danger", bg: "bg-status-danger/10" };
     if (v < 40) return { stroke: "hsl(38 85% 55%)", text: "text-status-warn", bg: "bg-status-warn/10" };
     if (v < 60) return { stroke: "hsl(38 60% 55%)", text: "text-accent", bg: "" };
-    return { stroke: "hsl(175 65% 46%)", text: "text-primary", bg: "" };
+    return { stroke: "hsl(32 82% 48%)", text: "text-primary", bg: "" };
   };
 
   const colors = getColor(clamped);

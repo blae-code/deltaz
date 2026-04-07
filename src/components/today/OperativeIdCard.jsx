@@ -40,7 +40,7 @@ export default function OperativeIdCard({ user, factions, reputations, jobs }) {
           <OperativeBadgeSvg
             size={44}
             initial={displayName[0]?.toUpperCase() || "?"}
-            factionColor={primaryFaction?.color || "hsl(175 65% 46%)"}
+            factionColor={primaryFaction?.color || "hsl(32 82% 48%)"}
           />
 
           <div>

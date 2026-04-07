@@ -46,7 +46,8 @@ export default function TopBar({ user: propUser }) {
 
   return (
     <TooltipProvider delayDuration={200}>
-    <header className="flex items-center justify-between border-b border-border bg-card px-3 sm:px-4 py-2.5">
+    <header className="relative flex items-center justify-between border-b border-border bg-card px-3 sm:px-4 py-2.5">
+      <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-primary/50 via-primary/20 to-transparent pointer-events-none" />
       <div className="flex items-center gap-4">
         <Tooltip>
           <TooltipTrigger asChild>

@@ -3,8 +3,8 @@ import { ROWS } from "./GridMap";
 const resourceColors = {
   fuel: "rgba(212, 161, 58, 0.5)",
   metals: "rgba(148, 163, 184, 0.5)",
-  tech: "rgba(91, 168, 200, 0.5)",
-  food: "rgba(45, 212, 160, 0.5)",
+  tech: "rgba(200, 147, 91, 0.5)",
+  food: "rgba(74, 222, 128, 0.5)",
   munitions: "rgba(197, 48, 48, 0.5)",
 };
 
@@ -29,7 +29,7 @@ export default function ResourceDensityOverlay({ territories }) {
         const uniqueResources = [...new Set(resources)];
         const density = Math.min(resources.length, 8);
         const primaryResource = uniqueResources[0];
-        const bgColor = resourceColors[primaryResource] || "rgba(45, 212, 160, 0.3)";
+        const bgColor = resourceColors[primaryResource] || "rgba(223, 129, 22, 0.3)";
 
         return (
           <div
@@ -52,7 +52,7 @@ export default function ResourceDensityOverlay({ territories }) {
                 <span
                   key={i}
                   className="h-1.5 w-1.5 rounded-full"
-                  style={{ backgroundColor: resourceColors[r] || "#5ba8c8" }}
+                  style={{ backgroundColor: resourceColors[r] || "#c8935b" }}
                   title={r}
                 />
               ))}

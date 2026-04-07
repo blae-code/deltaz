@@ -50,17 +50,17 @@ const intensityStyles = {
     animate: false,
   },
   cool: {
-    bg: "rgba(45, 212, 160, 0.12)",
-    border: "rgba(45, 212, 160, 0.35)",
+    bg: "rgba(223, 129, 22, 0.12)",
+    border: "rgba(223, 129, 22, 0.35)",
     label: "",
-    labelColor: "#2dd4a0",
+    labelColor: "#df8116",
     animate: false,
   },
   stable: {
-    bg: "rgba(45, 212, 160, 0.05)",
-    border: "rgba(45, 212, 160, 0.15)",
+    bg: "rgba(223, 129, 22, 0.05)",
+    border: "rgba(223, 129, 22, 0.15)",
     label: "",
-    labelColor: "#2dd4a060",
+    labelColor: "#df811660",
     animate: false,
   },
 };

@@ -1,4 +1,12 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.24';
+import {
+  buildMissionCompletionNarrative,
+  getErrorMessage,
+  isGeneratedMission,
+  normalizeEmail,
+  normalizeString,
+} from '../_shared/missionRules.ts';
+import { DATA_ORIGINS, buildSourceRef, withProvenance } from '../_shared/provenance.ts';
 
 const ACTIVE_JOB_LIMIT = 5;
 const MAX_COMPLETION_NOTES_LENGTH = 1200;
@@ -67,7 +75,12 @@ async function acceptMission(base44, jobs, job, userEmail) {
 
   if (isJobExpired(job)) {
     if (job.status === 'available') {
-      await base44.asServiceRole.entities.Job.update(job.id, { status: 'expired' });
+      await base44.asServiceRole.entities.Job.update(job.id, withProvenance({
+        status: 'expired',
+      }, {
+        dataOrigin: DATA_ORIGINS.SYSTEM_RULE,
+        sourceRefs: getMissionSourceRefs(job),
+      }));
     }
     return Response.json({ error: 'Mission has expired' }, { status: 409 });
   }
@@ -76,8 +89,6 @@ async function acceptMission(base44, jobs, job, userEmail) {
     return Response.json({ error: 'Mission is no longer available' }, { status: 409 });
   }
 
-  // The current app contract only stores one assignee string, so multi-slot jobs
-  // still have to behave as single-slot jobs until Base44 lands a matching model.
   if (normalizeEmail(job.assigned_to)) {
     return Response.json({ error: 'Mission is already assigned' }, { status: 409 });
   }
@@ -93,13 +104,16 @@ async function acceptMission(base44, jobs, job, userEmail) {
   const factions = job.faction_id ? await base44.asServiceRole.entities.Faction.filter({}) : [];
   const factionName = factions.find((faction) => faction.id === job.faction_id)?.name || 'Unknown';
 
-  await base44.asServiceRole.entities.Job.update(job.id, {
+  await base44.asServiceRole.entities.Job.update(job.id, withProvenance({
     status: 'in_progress',
     assigned_to: userEmail,
     accepted_at: new Date().toISOString(),
     completed_at: '',
     completion_notes: '',
-  });
+  }, {
+    dataOrigin: DATA_ORIGINS.SYSTEM_RULE,
+    sourceRefs: getMissionSourceRefs(job, [buildSourceRef('player', userEmail)]),
+  }));
 
   await Promise.all([
     createNotification(base44, {
@@ -143,15 +157,18 @@ async function completeMission(base44, job, user, userEmail, completionNotes) {
   }
 
   const now = new Date().toISOString();
-  const narrative = completionNotes || await generateCompletionNarrative(base44, job);
+  const narrative = completionNotes || buildMissionCompletionNarrative(job);
   const repReward = Math.max(0, Math.trunc(Number(job.reward_reputation) || 0));
   const listedCredits = Math.max(0, Math.trunc(Number(job.reward_credits) || 0));
 
-  await base44.asServiceRole.entities.Job.update(job.id, {
+  await base44.asServiceRole.entities.Job.update(job.id, withProvenance({
     status: 'completed',
     completed_at: now,
     completion_notes: narrative,
-  });
+  }, {
+    dataOrigin: DATA_ORIGINS.SYSTEM_RULE,
+    sourceRefs: getMissionSourceRefs(job, [buildSourceRef('player', assigneeEmail)]),
+  }));
 
   const reputation = await applyReputationDelta(base44, {
     playerEmail: assigneeEmail,
@@ -216,13 +233,16 @@ async function abandonMission(base44, job, user, userEmail) {
 
   const generatedMission = isGeneratedMission(job);
 
-  await base44.asServiceRole.entities.Job.update(job.id, {
+  await base44.asServiceRole.entities.Job.update(job.id, withProvenance({
     status: generatedMission ? 'expired' : 'available',
     assigned_to: '',
     accepted_at: '',
     completed_at: '',
     completion_notes: '',
-  });
+  }, {
+    dataOrigin: DATA_ORIGINS.SYSTEM_RULE,
+    sourceRefs: getMissionSourceRefs(job, [buildSourceRef('player', assigneeEmail)]),
+  }));
 
   const requestedPenalty = -Math.ceil(Math.max(5, Number(job.reward_reputation) || 0) * 0.5);
   const reputation = await applyReputationDelta(base44, {
@@ -266,11 +286,14 @@ async function failMission(base44, job, user, completionNotes) {
   const now = new Date().toISOString();
   const narrative = completionNotes || 'Mission failed.';
 
-  await base44.asServiceRole.entities.Job.update(job.id, {
+  await base44.asServiceRole.entities.Job.update(job.id, withProvenance({
     status: 'failed',
     completed_at: now,
     completion_notes: narrative,
-  });
+  }, {
+    dataOrigin: DATA_ORIGINS.SYSTEM_RULE,
+    sourceRefs: getMissionSourceRefs(job, assigneeEmail ? [buildSourceRef('player', assigneeEmail)] : []),
+  }));
 
   let reputation = null;
   if (assigneeEmail) {
@@ -320,36 +343,50 @@ async function applyReputationDelta(base44, { playerEmail, factionId, delta, rea
   const nextScore = Math.max(-100, currentScore + Math.trunc(delta));
   const appliedDelta = nextScore - currentScore;
   const rank = getReputationRank(nextScore);
+  const sourceRefs = [
+    buildSourceRef('player', playerEmail),
+    buildSourceRef('faction', factionId),
+    buildSourceRef('job', sourceJobId),
+  ];
 
   if (existing) {
-    await base44.asServiceRole.entities.Reputation.update(existing.id, {
+    await base44.asServiceRole.entities.Reputation.update(existing.id, withProvenance({
       score: nextScore,
       rank,
-    });
+    }, {
+      dataOrigin: DATA_ORIGINS.SYSTEM_RULE,
+      sourceRefs,
+    }));
   } else {
-    await base44.asServiceRole.entities.Reputation.create({
+    await base44.asServiceRole.entities.Reputation.create(withProvenance({
       player_email: playerEmail,
       faction_id: factionId,
       score: nextScore,
       rank,
-    });
+    }, {
+      dataOrigin: DATA_ORIGINS.SYSTEM_RULE,
+      sourceRefs,
+    }));
   }
 
   if (appliedDelta !== 0) {
-    await base44.asServiceRole.entities.ReputationLog.create({
+    await base44.asServiceRole.entities.ReputationLog.create(withProvenance({
       player_email: playerEmail,
       faction_id: factionId,
       delta: appliedDelta,
       reason,
       source_job_id: sourceJobId,
-    });
+    }, {
+      dataOrigin: DATA_ORIGINS.SYSTEM_RULE,
+      sourceRefs,
+    }));
   }
 
   return { score: nextScore, rank, delta: appliedDelta };
 }
 
 async function createNotification(base44, { playerEmail, title, message, type, priority, referenceId }) {
-  return await base44.asServiceRole.entities.Notification.create({
+  return await base44.asServiceRole.entities.Notification.create(withProvenance({
     player_email: playerEmail,
     title,
     message,
@@ -357,11 +394,17 @@ async function createNotification(base44, { playerEmail, title, message, type, p
     priority,
     is_read: false,
     reference_id: referenceId,
-  });
+  }, {
+    dataOrigin: DATA_ORIGINS.DETERMINISTIC_PROJECTION,
+    sourceRefs: [
+      buildSourceRef('player', playerEmail),
+      buildSourceRef('job', referenceId),
+    ],
+  }));
 }
 
 async function createEvent(base44, { title, content, type, severity, factionId, territoryId }) {
-  return await base44.asServiceRole.entities.Event.create({
+  return await base44.asServiceRole.entities.Event.create(withProvenance({
     title,
     content,
     type,
@@ -369,37 +412,17 @@ async function createEvent(base44, { title, content, type, severity, factionId, 
     is_active: true,
     faction_id: factionId,
     territory_id: territoryId,
-  });
-}
-
-async function generateCompletionNarrative(base44, job) {
-  try {
-    const response = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      prompt: `Write a brief 2-sentence post-apocalyptic mission report for a completed "${job.type}" mission titled "${job.title}". Difficulty: ${job.difficulty}. ${job.description || ''}. Keep it gritty and tactical.`,
-    });
-
-    if (typeof response === 'string' && response.trim()) {
-      return normalizeString(response, MAX_COMPLETION_NOTES_LENGTH);
-    }
-  } catch (_) {}
-
-  return 'Mission completed successfully. Operative returned to base.';
+  }, {
+    dataOrigin: DATA_ORIGINS.DETERMINISTIC_PROJECTION,
+    sourceRefs: [
+      buildSourceRef('faction', factionId),
+      buildSourceRef('territory', territoryId),
+    ],
+  }));
 }
 
 function normalizeAction(value) {
   return typeof value === 'string' && VALID_ACTIONS.has(value) ? value : '';
-}
-
-function normalizeString(value, maxLength = 255) {
-  if (typeof value !== 'string') {
-    return '';
-  }
-
-  return value.replace(/\s+/g, ' ').trim().slice(0, maxLength);
-}
-
-function normalizeEmail(value) {
-  return normalizeString(value, 320).toLowerCase();
 }
 
 function truncateText(value, maxLength) {
@@ -416,8 +439,13 @@ function isJobExpired(job) {
   return Number.isFinite(expiresAt) && expiresAt <= Date.now();
 }
 
-function isGeneratedMission(job) {
-  return typeof job?.description === 'string' && job.description.includes('[GENERATED]');
+function getMissionSourceRefs(job, extraRefs = []) {
+  return [
+    buildSourceRef('job', job?.id),
+    buildSourceRef('faction', job?.faction_id),
+    buildSourceRef('territory', job?.territory_id),
+    ...extraRefs,
+  ];
 }
 
 function getReputationRank(score) {
@@ -429,8 +457,4 @@ function getReputationRank(score) {
   if (score <= -20) return 'hostile';
   if (score > 0) return 'neutral';
   return 'unknown';
-}
-
-function getErrorMessage(error) {
-  return error instanceof Error ? error.message : 'Unexpected error';
 }
