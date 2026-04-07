@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Crosshair, Clock, Award, ChevronRight, Coins, Target } from "lucide-react";
+import { Clock, Award, ChevronRight, Coins, Target } from "lucide-react";
+import CrosshairTargetSvg from "../svg/CrosshairTargetSvg";
 import NextStepBanner from "../terminal/NextStepBanner";
 import moment from "moment";
 import EmptyState from "../terminal/EmptyState";
@@ -32,7 +33,7 @@ export default function TodayMissions({ jobs, userEmail }) {
           <div className="space-y-1.5">
             {myActive.map(job => (
               <div key={job.id} className="flex items-center gap-3 border border-border rounded-sm px-3 py-2 bg-primary/5 hover:bg-primary/10 transition-colors">
-                <Crosshair className="h-3.5 w-3.5 text-primary shrink-0" />
+                <CrosshairTargetSvg size={16} className="text-primary shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-foreground truncate">{job.title}</p>
                   <div className="flex items-center gap-2 mt-0.5">
@@ -68,7 +69,7 @@ export default function TodayMissions({ jobs, userEmail }) {
           <div className="space-y-1">
             {available.map(job => (
               <div key={job.id} className="flex items-center gap-3 border border-border rounded-sm px-3 py-2 hover:bg-secondary/30 transition-colors">
-                <Crosshair className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                <CrosshairTargetSvg size={16} className="text-muted-foreground shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-foreground truncate">{job.title}</p>
                   <div className="flex items-center gap-2 mt-0.5">

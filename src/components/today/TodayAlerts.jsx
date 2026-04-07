@@ -1,7 +1,10 @@
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Radio, Eye, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
+import AlertSirenSvg from "../svg/AlertSirenSvg";
+import RadioTowerSvg from "../svg/RadioTowerSvg";
+import IntelEyeSvg from "../svg/IntelEyeSvg";
 import moment from "moment";
 
 const severityStyle = {
@@ -73,12 +76,12 @@ export default function TodayAlerts({ events, intel, broadcasts }) {
       <div className="flex gap-1.5 mt-2">
         <Link to="/events" className="flex-1">
           <Button variant="outline" size="sm" className="w-full text-[10px] uppercase tracking-wider h-8">
-            <Radio className="h-3 w-3 mr-1" /> Comms
+            <RadioTowerSvg size={14} className="mr-1" /> Comms
           </Button>
         </Link>
         <Link to="/intel" className="flex-1">
           <Button variant="outline" size="sm" className="w-full text-[10px] uppercase tracking-wider h-8">
-            <Eye className="h-3 w-3 mr-1" /> Intel
+            <IntelEyeSvg size={14} className="mr-1" /> Intel
           </Button>
         </Link>
       </div>

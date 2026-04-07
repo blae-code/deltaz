@@ -7,9 +7,10 @@ import { useToast } from "@/components/ui/use-toast";
 import StatusIndicator from "../terminal/StatusIndicator";
 import InlineConfirm from "../terminal/InlineConfirm";
 import {
-  Crosshair, Clock, Award, MapPin, Shield, Loader2,
+  Clock, Award, MapPin, Shield, Loader2,
   CheckCircle, XCircle, LogOut, Coins, ChevronDown, ChevronUp
 } from "lucide-react";
+import CrosshairTargetSvg from "../svg/CrosshairTargetSvg";
 import moment from "moment";
 
 const difficultyColor = {
@@ -105,7 +106,7 @@ export default function MissionCard({ job, faction, territory, userEmail, isAdmi
         <div className="flex items-start justify-between gap-2 sm:gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1.5">
-              <Crosshair className="h-4 w-4 text-primary shrink-0" />
+              <CrosshairTargetSvg size={18} className="text-primary shrink-0" />
               <h3 className="text-sm font-semibold text-foreground truncate leading-snug">{job.title}</h3>
               {isMine && job.status === "in_progress" && (
                 <Badge className="text-[10px] bg-accent/20 text-accent border-accent/30 shrink-0">YOUR MISSION</Badge>

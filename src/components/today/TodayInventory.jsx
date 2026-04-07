@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Package, Hammer, ChevronRight, ArrowLeftRight } from "lucide-react";
+import { Hammer, ChevronRight, ArrowLeftRight } from "lucide-react";
+import GearCrateSvg from "../svg/GearCrateSvg";
 import NextStepBanner from "../terminal/NextStepBanner";
 
 export default function TodayInventory({ inventory, craftingProjects }) {
@@ -12,7 +13,7 @@ export default function TodayInventory({ inventory, craftingProjects }) {
   if (totalItems === 0 && (!craftingProjects || craftingProjects.length === 0)) {
     return (
       <div className="text-center py-4">
-        <Package className="h-5 w-5 text-muted-foreground/30 mx-auto mb-2" />
+        <GearCrateSvg size={32} className="text-muted-foreground/30 mx-auto mb-2" />
         <p className="text-xs text-muted-foreground/60 italic">No gear logged yet.</p>
         <p className="text-[10px] text-muted-foreground/40 mt-1">Head to the Gear Locker to add items manually, scan a screenshot, or paste a list.</p>
       </div>
@@ -90,7 +91,7 @@ export default function TodayInventory({ inventory, craftingProjects }) {
       <div className="flex gap-1.5">
         <Link to="/inventory" className="flex-1">
           <Button variant="outline" size="sm" className="w-full text-[10px] uppercase tracking-wider h-8">
-            <Package className="h-3 w-3 mr-1" /> Inventory
+            <GearCrateSvg size={14} className="mr-1" /> Inventory
           </Button>
         </Link>
         <Link to="/workbench" className="flex-1">

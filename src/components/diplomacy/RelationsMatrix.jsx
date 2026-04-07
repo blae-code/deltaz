@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import DiplomacyHandsSvg from "../svg/DiplomacyHandsSvg";
 
 const statusStyles = {
   allied: "bg-status-ok/15 text-status-ok border-status-ok/30",
@@ -29,7 +30,12 @@ export default function RelationsMatrix({ factions, diplomacy, onPairClick }) {
   };
 
   if (factions.length < 2) {
-    return <p className="text-[10px] text-muted-foreground text-center py-4">Need 2+ clans to show relations.</p>;
+    return (
+      <div className="text-center py-4">
+        <DiplomacyHandsSvg size={36} className="text-muted-foreground/30 mx-auto mb-2" />
+        <p className="text-[10px] text-muted-foreground">Need 2+ clans to show relations.</p>
+      </div>
+    );
   }
 
   return (

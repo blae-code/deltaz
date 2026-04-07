@@ -3,7 +3,8 @@ import { base44 } from "@/api/base44Client";
 import DataCard from "../terminal/DataCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Bot, Send, Loader2, MessageSquare } from "lucide-react";
+import { Send, Loader2, MessageSquare } from "lucide-react";
+import ArtemisBotSvg from "../svg/ArtemisBotSvg";
 
 export default function TacticalAdvisor() {
   const [advisory, setAdvisory] = useState(null);
@@ -43,7 +44,7 @@ export default function TacticalAdvisor() {
         {/* Initial prompt or response */}
         {!advisory && !loading && (
           <div className="text-center py-4">
-            <Bot className="h-6 w-6 text-primary mx-auto mb-2" />
+            <ArtemisBotSvg size={36} animated className="text-primary mx-auto mb-2" />
             <p className="text-[10px] text-muted-foreground tracking-wider mb-3">
               ARTEMIS TACTICAL AI STANDING BY
             </p>
@@ -79,7 +80,7 @@ export default function TacticalAdvisor() {
                   </div>
                 )}
                 <div className="flex items-start gap-2">
-                  <Bot className="h-3 w-3 text-primary mt-0.5 shrink-0" />
+                  <ArtemisBotSvg size={14} className="text-primary mt-0.5 shrink-0" />
                   <p className="text-xs text-foreground leading-relaxed">{entry.response}</p>
                 </div>
               </div>

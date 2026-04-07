@@ -5,7 +5,8 @@ import InventorySorter, { sortItems } from "./InventorySorter";
 import EmptyState from "../terminal/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Package, ArrowLeftRight } from "lucide-react";
+import { Search, ArrowLeftRight } from "lucide-react";
+import GearCrateSvg from "../svg/GearCrateSvg";
 
 const CATEGORIES = ["all", "weapon", "armor", "tool", "consumable", "material", "ammo", "misc"];
 
@@ -78,7 +79,7 @@ export default function InventoryGrid({ items: rawItems, onUpdate, userEmail }) 
         {filtered.length === 0 ? (
           items.length === 0 ? (
             <EmptyState
-              icon={Package}
+              icon={() => <GearCrateSvg size={20} className="text-muted-foreground" />}
               title="Gear Locker Empty"
               why="No items registered. Your weapons, armor, consumables, and materials will appear here once you log them."
               action="Hit ADD GEAR above to register a single item, paste a bulk list, or upload a screenshot of your in-game inventory for automatic scanning."
