@@ -46,7 +46,18 @@
     "reward_credits": { "type": "number", "default": 0, "description": "Credit payout on completion" },
     "reward_description": { "type": "string" },
     "completion_notes": { "type": "string", "description": "AI-generated or admin notes on mission outcome" },
-    "max_slots": { "type": "number", "default": 1, "description": "Max players that can accept this mission" }
+    "max_slots": { "type": "number", "default": 1, "description": "Max players that can accept this mission" },
+    "data_origin": {
+      "type": "string",
+      "enum": ["user", "system_rule", "deterministic_projection", "migration", "advisory"],
+      "default": "system_rule"
+    },
+    "source_refs": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "rule_version": { "type": "string" },
+    "generated_at": { "type": "string", "format": "date-time" }
   },
   "required": ["title", "type", "status", "difficulty"]
 }

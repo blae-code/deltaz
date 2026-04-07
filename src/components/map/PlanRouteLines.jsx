@@ -22,7 +22,7 @@ export default function PlanRouteLines({ anchorMarker, selectedJobs, jobs, terri
     <svg className="absolute inset-0 w-full h-full z-10 pointer-events-none">
       <defs>
         <marker id="routeArrow" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
-          <path d="M0,0 L6,2 L0,4" fill="none" stroke="hsl(175, 65%, 46%)" strokeWidth="1" />
+          <path d="M0,0 L6,2 L0,4" fill="none" stroke="hsl(32, 82%, 48%)" strokeWidth="1" />
         </marker>
       </defs>
       {waypoints.map((wp, i) => {
@@ -35,7 +35,7 @@ export default function PlanRouteLines({ anchorMarker, selectedJobs, jobs, terri
             y1={`${prev.y}%`}
             x2={`${wp.x}%`}
             y2={`${wp.y}%`}
-            stroke="hsl(175, 65%, 46%)"
+            stroke="hsl(32, 82%, 48%)"
             strokeWidth="2"
             strokeDasharray="6 3"
             strokeOpacity="0.7"
@@ -50,8 +50,8 @@ export default function PlanRouteLines({ anchorMarker, selectedJobs, jobs, terri
           cx={`${wp.x}%`}
           cy={`${wp.y}%`}
           r={i === 0 ? 5 : 4}
-          fill={i === 0 ? "hsl(38, 85%, 55%)" : "hsl(175, 65%, 46%)"}
-          stroke="hsl(230, 20%, 5%)"
+          fill={i === 0 ? "hsl(4, 72%, 46%)" : "hsl(32, 82%, 48%)"}
+          stroke="hsl(24, 12%, 5%)"
           strokeWidth="1.5"
         />
       ))}
@@ -65,7 +65,7 @@ export default function PlanRouteLines({ anchorMarker, selectedJobs, jobs, terri
             y={`${wp.y}%`}
             dy="-8"
             textAnchor="middle"
-            fill="hsl(175, 65%, 46%)"
+            fill="hsl(32, 82%, 48%)"
             fontSize="9"
             fontFamily="JetBrains Mono, monospace"
             fontWeight="bold"

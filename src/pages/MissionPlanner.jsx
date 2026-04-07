@@ -189,7 +189,7 @@ export default function MissionPlanner() {
         base44.entities.MissionPlan.filter({ planned_by: user.email }, "-created_date", 10)
           .then(setRecentPlans);
       }
-    } catch (err) => {
+    } catch (err) {
       toast({ title: "Generation failed", description: err.message, variant: "destructive" });
     } finally {
       setIsGeneratingPlan(false);

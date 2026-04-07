@@ -2,10 +2,10 @@ import { Badge } from "@/components/ui/badge";
 import HeatmapLegend from "./HeatmapLegend";
 
 const resourceColors = [
-  { label: "Fuel", color: "#d4a13a" },
+  { label: "Fuel", color: "#df8116" },
   { label: "Metals", color: "#94a3b8" },
-  { label: "Tech", color: "#5ba8c8" },
-  { label: "Food", color: "#2dd4a0" },
+  { label: "Tech", color: "#c8935b" },
+  { label: "Food", color: "#4ade80" },
   { label: "Munitions", color: "#c53030" },
 ];
 
@@ -17,7 +17,7 @@ const statusDefs = [
 ];
 
 const missionDefs = [
-  { label: "Routine", color: "#2dd4a0" },
+  { label: "Routine", color: "#df8116" },
   { label: "Hazardous", color: "#d4a13a" },
   { label: "Critical", color: "#c47b2a" },
   { label: "Suicide", color: "#c53030" },

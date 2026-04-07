@@ -41,6 +41,22 @@
     "reference_id": {
       "type": "string",
       "description": "ID of related entity (e.g. job ID)"
+    },
+    "data_origin": {
+      "type": "string",
+      "enum": ["user", "system_rule", "deterministic_projection", "migration", "advisory"],
+      "default": "system_rule"
+    },
+    "source_refs": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "rule_version": {
+      "type": "string"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
     }
   },
   "required": [

@@ -2,8 +2,8 @@ import { ROWS } from "./GridMap";
 import { Crosshair } from "lucide-react";
 
 const difficultyColors = {
-  routine: "#2dd4a0",
-  hazardous: "#d4a13a",
+  routine: "#df8116",
+  hazardous: "#d4911a",
   critical: "#c47b2a",
   suicide: "#c53030",
 };

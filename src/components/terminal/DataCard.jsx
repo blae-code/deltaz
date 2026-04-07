@@ -2,12 +2,15 @@ import { cn } from "@/lib/utils";
 
 export default function DataCard({ title, children, className, headerRight }) {
   return (
-    <div className={cn("border border-border bg-card rounded-sm overflow-hidden", className)}>
+    <div className={cn("panel-frame overflow-hidden", className)}>
       {title && (
-        <div className="flex items-center justify-between border-b border-border px-4 py-2 bg-secondary/50">
-          <h3 className="text-xs font-semibold uppercase tracking-widest text-primary font-display">
-            {title}
-          </h3>
+        <div className="flex items-center justify-between border-b border-border px-3 py-2 bg-secondary/60">
+          <div className="flex items-center gap-2">
+            <div className="h-0.5 w-2.5 bg-primary/70 shrink-0" />
+            <h3 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary font-display">
+              {title}
+            </h3>
+          </div>
           {headerRight}
         </div>
       )}

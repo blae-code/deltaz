@@ -58,6 +58,7 @@ const sidebarNavGroups = [
     items: [
       { path: "/", label: "SITREP", icon: LayoutDashboard },
       { path: "/jobs", label: "MISSIONS", icon: Crosshair },
+      { path: "/warroom", label: "WAR ROOM", icon: Target },
       { path: "/colony", label: "COLONY", icon: Home },
       { path: "/market", label: "MARKET", icon: CreditCard },
       { path: "/inventory", label: "INVENTORY", icon: Archive },
@@ -166,15 +167,17 @@ export default function Sidebar() {
         )}
       >
       {/* Logo */}
-      <div className="flex items-center justify-between border-b border-border px-4 py-4">
+      <div className="flex items-center justify-between border-b border-border px-4 py-4 relative">
+        {/* Top accent line */}
+        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-primary/60 via-primary/20 to-transparent" />
         <div className="flex items-center gap-3">
-        <div className="h-8 w-8 rounded-sm bg-primary/20 border border-primary/40 flex items-center justify-center">
-          <Radio className="h-4 w-4 text-primary" />
-        </div>
+          <div className="h-8 w-8 bg-primary/15 border border-primary/50 flex items-center justify-center clip-corner-tr">
+            <Radio className="h-4 w-4 text-primary" />
+          </div>
           {!collapsed && (
             <div>
               <h1 className="text-sm font-bold font-display tracking-wider text-primary">
-                DEAD SIGNAL
+                [ DEAD SIGNAL ]
               </h1>
               <p className="text-[10px] text-muted-foreground tracking-widest">
                 FIELD TERMINAL v2.1
@@ -202,7 +205,8 @@ export default function Sidebar() {
                 <NavTooltip path={group.id} collapsed={collapsed}>
                   <AccordionTrigger
                     className={cn(
-                      "flex items-center gap-3 rounded-sm px-3 text-xs font-medium tracking-wider transition-colors hover:no-underline py-2.5",
+                      "flex items-center gap-3 px-3 text-xs font-medium tracking-wider transition-colors hover:no-underline py-2.5",
+                      "border-l-2 border-transparent data-[state=open]:border-primary/60 data-[state=open]:text-foreground",
                       collapsed ? "justify-center" : ""
                     )}
                   >
@@ -227,11 +231,11 @@ export default function Sidebar() {
                             to={item.path}
                             onClick={() => setMobileOpen(false)}
                             className={cn(
-                              "flex items-center gap-3 rounded-sm px-3 py-2.5 text-xs font-medium tracking-wider transition-colors",
+                              "flex items-center gap-3 px-3 py-2.5 text-xs font-medium tracking-wider transition-colors",
                               isActive
-                                ? "bg-primary/10 text-primary border border-primary/30"
-                                : "text-muted-foreground hover:text-foreground hover:bg-secondary/50 border border-transparent",
-                              collapsed ? "justify-center px-0" : "pl-6" // Adjusted padding for nested items
+                                ? "bg-primary/10 text-primary border border-primary/30 border-l-2 border-l-primary"
+                                : "text-muted-foreground hover:text-foreground hover:bg-secondary/50 border border-transparent border-l-2 border-l-transparent",
+                              collapsed ? "justify-center px-0" : "pl-6"
                             )}
                           >
                             <item.icon className="h-4 w-4 shrink-0" />

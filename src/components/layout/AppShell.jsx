@@ -56,7 +56,7 @@ export default function AppShell() {
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
         <TopBar />
-        <main className="flex-1 overflow-auto p-4 md:p-6 pt-14 md:pt-6">
+        <main className="flex-1 overflow-auto p-4 md:p-6 pt-14 md:pt-6 tech-grid-bg">
           <Outlet />
         </main>
         <footer className="border-t border-border/30 px-4 py-1.5 flex items-center justify-between bg-card/50">

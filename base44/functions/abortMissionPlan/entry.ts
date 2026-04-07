@@ -1,4 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.24';
+import { MissionPlanningError } from '../_shared/missionPlanning.ts';
+import { getMissionOutcome, getMissionPlanId, updateMissionPlanStatus } from '../_shared/missionPlanLifecycle.ts';
 
 Deno.serve(async (req) => {
   if (req.method !== 'POST') {
@@ -13,44 +15,27 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json().catch(() => null);
-    if (!body || typeof body !== 'object') {
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
       return Response.json({ error: 'Invalid request body' }, { status: 400 });
     }
 
-    const { missionPlanId, outcome } = body;
-    if (!missionPlanId || typeof missionPlanId !== 'string') {
-        return Response.json({ error: 'missionPlanId is required' }, { status: 400 });
-    }
-
-    const plans = await base44.asServiceRole.entities.MissionPlan.filter({ id: missionPlanId });
-    const plan = plans[0];
-
-    if (!plan) {
-        return Response.json({ error: 'MissionPlan not found' }, { status: 404 });
-    }
-
-    const validPreviousStatuses = ['generated', 'accepted', 'active'];
-    if (!validPreviousStatuses.includes(plan.status)) {
-        return Response.json({ error: `MissionPlan cannot be aborted. Status is '${plan.status}'.` }, { status: 409 });
-    }
-
-    const now = new Date().toISOString();
-    const updatedPlan = await base44.asServiceRole.entities.MissionPlan.update(missionPlanId, {
-        status: 'aborted',
-        abortedAt: now,
-        updatedAt: now,
-        outcome: outcome || 'Mission aborted by user.',
+    const missionPlanId = getMissionPlanId(body.missionPlanId);
+    const outcome = getMissionOutcome(body.outcome, { fallback: 'Mission aborted by user.' });
+    const updatedPlan = await updateMissionPlanStatus(base44, user, {
+      missionPlanId,
+      nextStatus: 'aborted',
+      outcome,
     });
-
-    // TODO: Add logging/audit hooks
-    // TODO: Add event emission
 
     return Response.json({
-        status: 'ok',
-        plan: updatedPlan,
+      status: 'ok',
+      plan: updatedPlan,
     });
+  } catch (error) {
+    if (error instanceof MissionPlanningError) {
+      return Response.json({ error: error.message }, { status: error.status });
+    }
 
-  } catch (error) => {
     console.error('abortMissionPlan error:', error);
     return Response.json({ error: error.message || 'Failed to abort mission plan' }, { status: 500 });
   }

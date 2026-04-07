@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import StatusIndicator from "../terminal/StatusIndicator";
-import { Clock, Lock, Bell, User, Volume2, VolumeX } from "lucide-react";
+import { Clock, Lock, Bell, User, Volume2, VolumeX, Cpu } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { getDisplayName } from "../../lib/displayName";
 
@@ -34,7 +34,7 @@ export default function TopBar() {
 
   return (
     <TooltipProvider delayDuration={200}>
-    <header className="flex items-center justify-between border-b border-border bg-card px-4 py-2">
+    <header className="flex items-center justify-between border-b border-border border-b-primary/20 bg-card px-4 py-2">
       <div className="flex items-center gap-4">
         <Tooltip>
           <TooltipTrigger asChild>
@@ -57,6 +57,15 @@ export default function TopBar() {
             <p className="text-muted-foreground">End-to-end encrypted data link between your terminal and Dead Signal HQ.</p>
           </TooltipContent>
         </Tooltip>
+        {/* Protocol identifier */}
+        <div className="hidden sm:flex items-center gap-1.5 text-[9px] text-muted-foreground border-l border-border pl-3 font-mono tracking-wider">
+          PROTO <span className="text-primary ml-1">DS-7</span>
+        </div>
+        {/* Session status */}
+        <div className="hidden md:flex items-center gap-1.5 text-[9px] text-muted-foreground font-mono">
+          <Cpu className="h-2.5 w-2.5" />
+          <span className="tracking-wider">SESS:<span className="text-primary/70 ml-0.5">ACTIVE</span></span>
+        </div>
       </div>
       <div className="flex items-center gap-4">
         <Tooltip>

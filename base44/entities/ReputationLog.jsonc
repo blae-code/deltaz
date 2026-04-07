@@ -21,6 +21,22 @@
     "source_job_id": {
       "type": "string",
       "description": "Optional job that triggered this change"
+    },
+    "data_origin": {
+      "type": "string",
+      "enum": ["user", "system_rule", "deterministic_projection", "migration", "advisory"],
+      "default": "system_rule"
+    },
+    "source_refs": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "rule_version": {
+      "type": "string"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
     }
   },
   "required": [

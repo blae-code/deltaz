@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import ts from 'typescript';
+import { backendTrustRegistry, canonicalTrustLanes } from './lib/backend-trust-registry.mjs';
 
 const rootDir = process.cwd();
 const packageJsonPath = path.join(rootDir, 'package.json');
@@ -47,6 +48,28 @@ const parseJsonc = (filePath, text) => {
   }
 
   return { ok: true, data: parsed.config };
+};
+
+const parseTypeScript = (filePath, text) => {
+  const sourceFile = ts.createSourceFile(filePath, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  if (sourceFile.parseDiagnostics.length === 0) {
+    return { ok: true };
+  }
+
+  const messages = sourceFile.parseDiagnostics.map((diagnostic) => {
+    const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
+    if (typeof diagnostic.start !== 'number') {
+      return message;
+    }
+
+    const { line, character } = sourceFile.getLineAndCharacterOfPosition(diagnostic.start);
+    return `${line + 1}:${character + 1} ${message}`;
+  });
+
+  return {
+    ok: false,
+    message: messages.join('; '),
+  };
 };
 
 const collectEntityAccess = (sourceText) => {
@@ -99,7 +122,8 @@ const main = async () => {
   }
 
   const entityFiles = await listFiles(entitiesDir, (filePath) => filePath.endsWith('.jsonc'));
-  const functionEntries = await listFiles(functionsDir, (filePath) => filePath.endsWith(path.join('entry.ts')));
+  const functionSourceFiles = await listFiles(functionsDir, (filePath) => filePath.endsWith('.ts'));
+  const functionEntries = functionSourceFiles.filter((filePath) => filePath.endsWith(path.join('entry.ts')));
 
   if (entityFiles.length === 0) {
     errors.push('No entity schema files were found under base44/entities.');
@@ -124,10 +148,32 @@ const main = async () => {
 
   const functionSummaries = [];
 
+  for (const functionSourceFile of functionSourceFiles) {
+    const sourceText = await fs.readFile(functionSourceFile, 'utf8');
+    const parsed = parseTypeScript(functionSourceFile, sourceText);
+    if (!parsed.ok) {
+      errors.push(`Invalid TypeScript syntax in ${path.relative(rootDir, functionSourceFile)}: ${parsed.message}`);
+    }
+  }
+
   for (const functionEntry of functionEntries) {
     const sourceText = await fs.readFile(functionEntry, 'utf8');
     const relativePath = path.relative(rootDir, functionEntry);
+    const functionName = path.basename(path.dirname(functionEntry));
     const importMatch = sourceText.match(/npm:@base44\/sdk@(\d+\.\d+\.\d+)/);
+    const trustPolicy = backendTrustRegistry[functionName];
+
+    if (!trustPolicy) {
+      errors.push(`${relativePath} is missing a trust-policy registry entry.`);
+    } else {
+      if (canonicalTrustLanes.has(trustPolicy.lane) && sourceText.includes('InvokeLLM')) {
+        errors.push(`${relativePath} is classified as ${trustPolicy.lane} but still uses InvokeLLM.`);
+      }
+
+      if (canonicalTrustLanes.has(trustPolicy.lane) && sourceText.includes('Math.random')) {
+        errors.push(`${relativePath} is classified as ${trustPolicy.lane} but still uses Math.random.`);
+      }
+    }
 
     if (!importMatch) {
       errors.push(`${relativePath} does not pin npm:@base44/sdk to an explicit version.`);
@@ -142,8 +188,9 @@ const main = async () => {
     }
 
     functionSummaries.push({
-      name: path.basename(path.dirname(functionEntry)),
+      name: functionName,
       path: relativePath,
+      lane: trustPolicy?.lane || 'unregistered',
       ...collectEntityAccess(sourceText),
     });
   }
@@ -158,12 +205,13 @@ const main = async () => {
   console.log(`Base44 backend check passed.`);
   console.log(`SDK version: ${expectedSdkVersion}`);
   console.log(`Entities: ${entityFiles.length}`);
+  console.log(`TypeScript files: ${functionSourceFiles.length}`);
   console.log(`Functions: ${functionSummaries.length}`);
 
   for (const summary of functionSummaries.sort((a, b) => a.name.localeCompare(b.name))) {
     const reads = summary.reads.length > 0 ? summary.reads.join(', ') : 'none';
     const writes = summary.writes.length > 0 ? summary.writes.join(', ') : 'none';
-    console.log(`- ${summary.name}: reads [${reads}] writes [${writes}]`);
+    console.log(`- ${summary.name}: lane=${summary.lane} reads [${reads}] writes [${writes}]`);
   }
 };
 

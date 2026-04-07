@@ -4,9 +4,9 @@ import { useState } from "react";
 
 const RESOURCES = ["fuel", "metals", "tech", "food", "munitions"];
 const RESOURCE_COLORS = {
-  fuel: "#d4a13a",
-  metals: "#5ba8c8",
-  tech: "#2dd4a0",
+  fuel: "#df8116",
+  metals: "#94a3b8",
+  tech: "#c8935b",
   food: "#4ade80",
   munitions: "#c53030",
 };

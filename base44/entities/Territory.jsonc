@@ -52,6 +52,22 @@
         "uncharted"
       ],
       "default": "uncharted"
+    },
+    "data_origin": {
+      "type": "string",
+      "enum": ["user", "system_rule", "deterministic_projection", "migration", "advisory"],
+      "default": "user"
+    },
+    "source_refs": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "rule_version": {
+      "type": "string"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
     }
   },
   "required": [

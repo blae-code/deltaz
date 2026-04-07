@@ -1,4 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.24';
+import { MissionPlanningError } from '../_shared/missionPlanning.ts';
+import { getMissionPlanId, updateMissionPlanStatus } from '../_shared/missionPlanLifecycle.ts';
 
 Deno.serve(async (req) => {
   if (req.method !== 'POST') {
@@ -13,42 +15,25 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json().catch(() => null);
-    if (!body || typeof body !== 'object') {
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
       return Response.json({ error: 'Invalid request body' }, { status: 400 });
     }
 
-    const missionPlanId = body.missionPlanId;
-    if (!missionPlanId || typeof missionPlanId !== 'string') {
-        return Response.json({ error: 'missionPlanId is required' }, { status: 400 });
-    }
-
-    const plans = await base44.asServiceRole.entities.MissionPlan.filter({ id: missionPlanId });
-    const plan = plans[0];
-
-    if (!plan) {
-        return Response.json({ error: 'MissionPlan not found' }, { status: 404 });
-    }
-
-    if (plan.status !== 'generated') {
-        return Response.json({ error: `MissionPlan cannot be accepted. Status is '${plan.status}'.` }, { status: 409 });
-    }
-
-    const now = new Date().toISOString();
-    const updatedPlan = await base44.asServiceRole.entities.MissionPlan.update(missionPlanId, {
-        status: 'accepted',
-        acceptedAt: now,
-        updatedAt: now,
+    const missionPlanId = getMissionPlanId(body.missionPlanId);
+    const updatedPlan = await updateMissionPlanStatus(base44, user, {
+      missionPlanId,
+      nextStatus: 'accepted',
     });
-
-    // TODO: Add logging/audit hooks
-    // TODO: Add event emission
 
     return Response.json({
-        status: 'ok',
-        plan: updatedPlan,
+      status: 'ok',
+      plan: updatedPlan,
     });
-
   } catch (error) {
+    if (error instanceof MissionPlanningError) {
+      return Response.json({ error: error.message }, { status: error.status });
+    }
+
     console.error('acceptMissionPlan error:', error);
     return Response.json({ error: error.message || 'Failed to accept mission plan' }, { status: 500 });
   }

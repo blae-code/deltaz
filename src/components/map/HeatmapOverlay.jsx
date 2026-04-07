@@ -4,8 +4,8 @@ function getHeatColor(score) {
   if (score >= 70) return { bg: "rgba(197, 48, 48, 0.45)", border: "rgba(197, 48, 48, 0.7)", text: "#c53030" };
   if (score >= 50) return { bg: "rgba(196, 123, 42, 0.35)", border: "rgba(196, 123, 42, 0.6)", text: "#c47b2a" };
   if (score >= 30) return { bg: "rgba(212, 161, 58, 0.25)", border: "rgba(212, 161, 58, 0.5)", text: "#d4a13a" };
-  if (score >= 15) return { bg: "rgba(45, 212, 160, 0.12)", border: "rgba(45, 212, 160, 0.3)", text: "#2dd4a0" };
-  return { bg: "rgba(45, 212, 160, 0.05)", border: "rgba(45, 212, 160, 0.15)", text: "#2dd4a060" };
+  if (score >= 15) return { bg: "rgba(223, 129, 22, 0.12)", border: "rgba(223, 129, 22, 0.3)", text: "#df8116" };
+  return { bg: "rgba(223, 129, 22, 0.05)", border: "rgba(223, 129, 22, 0.12)", text: "rgba(223, 129, 22, 0.5)" };
 }
 
 export default function HeatmapOverlay({ sectorScores, onSectorClick }) {

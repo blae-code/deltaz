@@ -114,6 +114,26 @@
         "type": "string"
       },
       "description": "Tags describing long-term consequences (e.g. 'betrayed_iron_order', 'discovered_bunker')"
+    },
+    "event_key": {
+      "type": "string",
+      "description": "Deterministic template key for this journal event"
+    },
+    "data_origin": {
+      "type": "string",
+      "enum": ["user", "system_rule", "deterministic_projection", "migration", "advisory"],
+      "default": "user"
+    },
+    "source_refs": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "rule_version": {
+      "type": "string"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
     }
   },
   "required": [

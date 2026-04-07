@@ -90,6 +90,7 @@ const AuthenticatedApp = () => {
         <Route path="*" element={<PageNotFound />} />
       </Route>
     </Routes>
+  </AnimatePresence>
   );
 };
 

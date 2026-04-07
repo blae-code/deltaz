@@ -10,9 +10,9 @@ const STATUS_SCORES = {
 };
 
 const STATUS_COLORS = {
-  allied: "#2dd4a0",
-  trade_agreement: "#5ba8c8",
-  ceasefire: "#d4a13a",
+  allied: "#df8116",
+  trade_agreement: "#c8935b",
+  ceasefire: "#d4911a",
   neutral: "#4a4e5a",
   hostile: "#c47b2a",
   war: "#c53030",
@@ -41,7 +41,7 @@ export default function DiplomacyTensionChart({ factions, relations, selectedFac
         id: f.id,
         x: cx + radius * Math.cos(angle),
         y: cy + radius * Math.sin(angle),
-        color: f.color || "hsl(175, 65%, 46%)",
+        color: f.color || "hsl(32, 82%, 48%)",
         name: f.name,
         tag: f.tag,
       };

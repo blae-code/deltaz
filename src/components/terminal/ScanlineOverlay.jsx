@@ -4,11 +4,15 @@ import { cn } from "@/lib/utils";
 export default function ScanlineOverlay({ className }) {
   return (
     <div
-      className={cn(
-        "pointer-events-none fixed inset-0 z-50 opacity-10",
-        "bg-[repeating-linear-gradient(transparent_0px,transparent_1px,white_1px,white_2px)]",
-        className
-      )}
+      className={cn("pointer-events-none fixed inset-0 z-50", className)}
+      style={{
+        backgroundImage: `repeating-linear-gradient(
+          transparent 0px,
+          transparent 2px,
+          hsl(32 82% 48% / 0.02) 2px,
+          hsl(32 82% 48% / 0.02) 3px
+        )`,
+      }}
     />
   );
 }
