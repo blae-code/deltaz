@@ -36,6 +36,7 @@ import { base44 } from "@/api/base44Client";
 import NavTooltip from "./NavTooltip";
 import { isAdminOrGM } from "../../lib/displayName";
 import { Zap } from "lucide-react";
+import SidebarLogoSvg from "../svg/SidebarLogoSvg";
 
 const coreNav = [
   { path: "/", label: "TODAY", icon: Zap },
@@ -135,7 +136,7 @@ export default function Sidebar({ user: propUser }) {
       <div className="flex items-center justify-between border-b border-border px-4 py-4">
         <div className="flex items-center gap-3">
         <div className="h-8 w-8 rounded-sm bg-primary/20 border border-primary/40 flex items-center justify-center">
-          <Radio className="h-4 w-4 text-primary" />
+          <SidebarLogoSvg size={18} className="text-primary" />
         </div>
           {!collapsed && (
             <div>

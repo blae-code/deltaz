@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { CircleOff } from "lucide-react";
+import WastelandSvg from "../svg/WastelandSvg";
 
 /**
  * EmptyState — directive empty state that answers:
@@ -19,8 +20,11 @@ export default function EmptyState({ icon: Icon = CircleOff, title, why, action,
       "border border-border border-dashed rounded-sm py-6 sm:py-8 px-4 sm:px-6 flex flex-col items-center text-center space-y-2.5",
       className
     )}>
-      <div className="h-8 w-8 rounded-sm bg-secondary/60 flex items-center justify-center">
-        <Icon className="h-4 w-4 text-muted-foreground" />
+      <div className="flex flex-col items-center gap-2">
+        <WastelandSvg size={56} className="text-muted-foreground/50" />
+        <div className="h-8 w-8 rounded-sm bg-secondary/60 flex items-center justify-center">
+          <Icon className="h-4 w-4 text-muted-foreground" />
+        </div>
       </div>
       {title && (
         <p className="text-xs sm:text-sm font-semibold text-foreground font-mono tracking-wide">{title}</p>

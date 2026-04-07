@@ -1,10 +1,10 @@
-import { Radio } from "lucide-react";
+import RadioTowerSvg from "../svg/RadioTowerSvg";
 
 export default function AuthLoadingScreen() {
   return (
     <div className="fixed inset-0 bg-background flex flex-col items-center justify-center gap-6">
-      <div className="h-16 w-16 rounded-sm bg-primary/10 border border-primary/30 flex items-center justify-center pulse-glow">
-        <Radio className="h-8 w-8 text-primary" />
+      <div className="h-20 w-20 rounded-sm bg-primary/10 border border-primary/30 flex items-center justify-center pulse-glow">
+        <RadioTowerSvg size={48} animated className="text-primary" />
       </div>
       <div className="text-center space-y-2">
         <h1 className="text-lg font-bold font-display tracking-[0.3em] text-primary uppercase">

@@ -1,4 +1,6 @@
-import { Radio, ShieldAlert, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
+import ShieldLockSvg from "./svg/ShieldLockSvg";
+import RadioTowerSvg from "./svg/RadioTowerSvg";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 
@@ -8,8 +10,8 @@ const UserNotRegisteredError = () => {
       <div className="w-full max-w-sm space-y-8">
         {/* Logo */}
         <div className="text-center space-y-3">
-          <div className="h-16 w-16 rounded-sm bg-destructive/10 border border-destructive/30 flex items-center justify-center mx-auto">
-            <ShieldAlert className="h-8 w-8 text-destructive" />
+          <div className="h-20 w-20 rounded-sm bg-destructive/10 border border-destructive/30 flex items-center justify-center mx-auto">
+            <ShieldLockSvg size={56} className="text-destructive" />
           </div>
           <h1 className="text-xl font-bold font-display tracking-[0.2em] text-destructive uppercase">
             Access Denied
@@ -57,7 +59,7 @@ const UserNotRegisteredError = () => {
 
         {/* Footer */}
         <div className="flex items-center justify-center gap-2 text-[9px] text-muted-foreground/40">
-          <Radio className="h-3 w-3" />
+          <RadioTowerSvg size={14} className="text-muted-foreground/40" />
           <span className="tracking-widest">DEAD SIGNAL FIELD TERMINAL v2.1</span>
         </div>
       </div>

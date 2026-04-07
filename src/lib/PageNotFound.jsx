@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Radio, ArrowLeft, Home } from 'lucide-react';
+import { ArrowLeft, Home } from 'lucide-react';
+import BrokenSignalSvg from '../components/svg/BrokenSignalSvg';
 
 export default function PageNotFound() {
   const location = useLocation();
@@ -9,8 +10,8 @@ export default function PageNotFound() {
     <div className="flex items-center justify-center p-6 h-full">
       <div className="max-w-md w-full text-center space-y-6">
         <div className="space-y-2">
-          <div className="h-16 w-16 mx-auto rounded-sm border border-destructive/30 bg-destructive/10 flex items-center justify-center">
-            <Radio className="h-8 w-8 text-destructive" />
+          <div className="h-20 w-20 mx-auto rounded-sm border border-destructive/30 bg-destructive/10 flex items-center justify-center">
+            <BrokenSignalSvg size={56} className="text-destructive" />
           </div>
           <h1 className="text-4xl font-bold font-display text-destructive tracking-wider">404</h1>
           <div className="h-px w-16 bg-border mx-auto" />

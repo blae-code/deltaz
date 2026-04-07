@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Radio, Signal, Lock, ChevronRight, Wifi, Volume2, VolumeX } from "lucide-react";
+import { Signal, Lock, ChevronRight, Wifi } from "lucide-react";
+import RadioTowerSvg from "../svg/RadioTowerSvg";
 import { Button } from "@/components/ui/button";
 import BootSequence from "./BootSequence";
 import WorldStatus from "./WorldStatus";
@@ -128,13 +129,13 @@ export default function LoginSplash() {
       <div className="relative z-20 w-full max-w-md px-6 space-y-6">
         {/* Logo block */}
         <div className="text-center space-y-3">
-          <div className="relative mx-auto w-24 h-24">
+          <div className="relative mx-auto w-28 h-28">
             {/* Outer ring */}
             <div className="absolute inset-0 rounded-full border border-primary/20 animate-[spin_20s_linear_infinite]" />
             <div className="absolute inset-1 rounded-full border border-primary/10 animate-[spin_15s_linear_infinite_reverse]" />
-            {/* Inner icon */}
+            {/* Inner icon — custom SVG radio tower */}
             <div className="absolute inset-3 rounded-sm bg-primary/10 border border-primary/30 flex items-center justify-center pulse-glow">
-              <Radio className="h-10 w-10 text-primary" />
+              <RadioTowerSvg size={52} animated className="text-primary" />
             </div>
             <div className="absolute top-1 right-1">
               <Signal className="h-4 w-4 text-primary animate-pulse" />
