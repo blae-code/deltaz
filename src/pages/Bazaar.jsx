@@ -11,6 +11,7 @@ import TradeListingCard from "../components/bazaar/TradeListingCard";
 import CreateTradeListingForm from "../components/bazaar/CreateTradeListingForm";
 import TransactionLog from "../components/bazaar/TransactionLog";
 import NpcTradeGenerator from "../components/bazaar/NpcTradeGenerator";
+import ResourceAnalysisPanel from "../components/bazaar/ResourceAnalysisPanel";
 import ActionRail from "../components/layout/ActionRail";
 import { Plus, ChevronDown, ChevronUp, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -68,6 +69,7 @@ export default function Bazaar() {
     { id: "open", label: "Open", count: trades.filter(t => t.status === "open").length },
     { id: "mine", label: "My Listings", count: trades.filter(t => t.seller_email === user?.email).length },
     { id: "log", label: "Transaction Log" },
+    { id: "analysis", label: "AI Analysis" },
   ];
 
   const RESOURCE_FILTERS = ["all", "food", "water", "medical", "power", "defense_parts", "scrap"];
@@ -166,7 +168,9 @@ export default function Bazaar() {
       )}
 
       {/* Content */}
-      {tab === "log" ? (
+      {tab === "analysis" ? (
+        <ResourceAnalysisPanel />
+      ) : tab === "log" ? (
         <DataCard title="Transaction History">
           <TransactionLog transactions={transactions} userEmail={user?.email} />
         </DataCard>
