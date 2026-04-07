@@ -29,6 +29,7 @@ import {
   BarChart3,
   Swords,
   ArrowLeftRight,
+  Store,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
@@ -46,6 +47,7 @@ const coreNav = [
   { path: "/colony", label: "COLONY", icon: Home },
   { path: "/inventory", label: "GEAR", icon: Package },
   { path: "/trade", label: "TRADE HUB", icon: ArrowLeftRight },
+  { path: "/bazaar", label: "BAZAAR", icon: Store },
   { path: "/market", label: "MARKET", icon: TrendingUp },
 ];
 

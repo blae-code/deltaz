@@ -33,6 +33,7 @@ import ResourceLedger from './pages/ResourceLedger';
 import ConflictTimeline from './pages/ConflictTimeline';
 import Today from './pages/Today';
 import OpsLog from './pages/OpsLog';
+import Bazaar from './pages/Bazaar';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -79,6 +80,7 @@ const AuthenticatedApp = () => {
         <Route path="/ledger" element={<ResourceLedger />} />
         <Route path="/conflicts" element={<ConflictTimeline />} />
         <Route path="/ops-log" element={<OpsLog />} />
+        <Route path="/bazaar" element={<Bazaar />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>

@@ -1,0 +1,107 @@
+{
+  "name": "ResourceTrade",
+  "type": "object",
+  "properties": {
+    "seller_email": {
+      "type": "string",
+      "description": "Email of the player listing the trade"
+    },
+    "seller_base_id": {
+      "type": "string",
+      "description": "PlayerBase offering the resource"
+    },
+    "seller_base_name": {
+      "type": "string",
+      "description": "Snapshot of the base name"
+    },
+    "seller_type": {
+      "type": "string",
+      "enum": [
+        "player",
+        "npc_faction"
+      ],
+      "default": "player",
+      "description": "Whether seller is a player or NPC faction"
+    },
+    "npc_faction_id": {
+      "type": "string",
+      "description": "Faction ID if this is an NPC listing"
+    },
+    "npc_faction_name": {
+      "type": "string",
+      "description": "Faction name if NPC listing"
+    },
+    "resource_offered": {
+      "type": "string",
+      "enum": [
+        "food",
+        "water",
+        "medical",
+        "power",
+        "defense_parts",
+        "scrap"
+      ],
+      "description": "Resource being offered"
+    },
+    "quantity_offered": {
+      "type": "number",
+      "default": 10,
+      "description": "Amount of resource offered (units)"
+    },
+    "resource_requested": {
+      "type": "string",
+      "enum": [
+        "food",
+        "water",
+        "medical",
+        "power",
+        "defense_parts",
+        "scrap",
+        "credits"
+      ],
+      "description": "Resource wanted in exchange"
+    },
+    "quantity_requested": {
+      "type": "number",
+      "default": 10,
+      "description": "Amount of requested resource"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "accepted",
+        "completed",
+        "cancelled",
+        "expired"
+      ],
+      "default": "open"
+    },
+    "buyer_email": {
+      "type": "string",
+      "description": "Email of the player who accepted the trade"
+    },
+    "buyer_base_id": {
+      "type": "string",
+      "description": "PlayerBase accepting the trade"
+    },
+    "buyer_base_name": {
+      "type": "string",
+      "description": "Snapshot of buyer base name"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Optional notes about the trade"
+    },
+    "expires_at": {
+      "type": "string",
+      "description": "ISO date when listing expires"
+    }
+  },
+  "required": [
+    "resource_offered",
+    "quantity_offered",
+    "resource_requested",
+    "quantity_requested"
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "name": "TradeTransaction",
+  "type": "object",
+  "properties": {
+    "trade_id": {
+      "type": "string",
+      "description": "Reference to the ResourceTrade listing"
+    },
+    "seller_email": {
+      "type": "string"
+    },
+    "seller_base_name": {
+      "type": "string"
+    },
+    "buyer_email": {
+      "type": "string"
+    },
+    "buyer_base_name": {
+      "type": "string"
+    },
+    "resource_sold": {
+      "type": "string",
+      "description": "Resource that was sold"
+    },
+    "quantity_sold": {
+      "type": "number"
+    },
+    "resource_paid": {
+      "type": "string",
+      "description": "Resource given in payment"
+    },
+    "quantity_paid": {
+      "type": "number"
+    },
+    "seller_type": {
+      "type": "string",
+      "enum": [
+        "player",
+        "npc_faction"
+      ],
+      "default": "player"
+    },
+    "npc_faction_name": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "completed",
+        "failed",
+        "reversed"
+      ],
+      "default": "completed"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "trade_id",
+    "resource_sold",
+    "quantity_sold",
+    "resource_paid",
+    "quantity_paid"
+  ]
+}
