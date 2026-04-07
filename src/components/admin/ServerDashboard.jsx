@@ -5,6 +5,7 @@ import ServerPowerControls from "./ServerPowerControls";
 import ServerBroadcast from "./ServerBroadcast";
 import ServerPlayerList from "./ServerPlayerList";
 import ServerResourceGauges from "./ServerResourceGauges";
+import RconConsole from "./RconConsole";
 import { Activity } from "lucide-react";
 
 export default function ServerDashboard() {
@@ -96,6 +97,8 @@ export default function ServerDashboard() {
       </div>
 
       <ServerPlayerList raw={players} loading={loading} onRefresh={fetchPlayers} />
+
+      <RconConsole />
     </div>
   );
 }
