@@ -17,8 +17,8 @@ export default function MissionToolsDrawer({ jobs, userEmail, territories, facti
   const [open, setOpen] = useState(false);
   const [activeTool, setActiveTool] = useState(null);
 
-  // Only GMs should see the tools drawer
-  if (!isAdmin) return null;
+  // Show generate for all players, scavenge/stats for GMs only
+  const visibleTools = isAdmin ? TOOLS : TOOLS.filter(t => t.key === 'generate');
 
   const handleToolClick = (key) => {
     if (activeTool === key) {
@@ -37,7 +37,7 @@ export default function MissionToolsDrawer({ jobs, userEmail, territories, facti
         className="w-full flex items-center justify-between px-3 py-2 hover:bg-secondary/30 transition-colors"
       >
         <span className="text-[10px] font-mono text-muted-foreground tracking-widest uppercase">
-          GM TOOLS
+          {isAdmin ? 'GM TOOLS' : 'MISSION TOOLS'}
         </span>
         {open ? <ChevronUp className="h-3 w-3 text-muted-foreground" /> : <ChevronDown className="h-3 w-3 text-muted-foreground" />}
       </button>
@@ -46,7 +46,7 @@ export default function MissionToolsDrawer({ jobs, userEmail, territories, facti
         <div className="border-t border-border">
           {/* Tool selector */}
           <div className="flex gap-1 p-2">
-            {TOOLS.map(t => (
+            {visibleTools.map(t => (
               <Button
                 key={t.key}
                 variant={activeTool === t.key ? "default" : "outline"}

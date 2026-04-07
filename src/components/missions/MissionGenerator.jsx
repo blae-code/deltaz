@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Sparkles, Crosshair, MapPin, Shield, Clock, Zap, Coins } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import GeneratedMissionCard from "./GeneratedMissionCard";
 
@@ -38,7 +38,7 @@ export default function MissionGenerator() {
         setError(res.data.error);
         toast({ title: "Generation Failed", description: res.data.error, variant: "destructive" });
       } else {
-        setResult(res.data.mission);
+        setResult(res.data);
         toast({ title: "Mission Generated", description: res.data.mission.title });
         queryClient.invalidateQueries({ queryKey: ["jobs"] });
       }
@@ -54,10 +54,10 @@ export default function MissionGenerator() {
       <div className="flex items-start gap-2 border border-accent/20 bg-accent/5 rounded-sm p-3">
         <Sparkles className="h-3.5 w-3.5 text-accent shrink-0 mt-0.5" />
         <div>
-          <p className="text-[10px] text-accent font-semibold tracking-wider">GHOST PROTOCOL — MISSION GENERATOR</p>
+          <p className="text-[10px] text-accent font-semibold tracking-wider">GHOST PROTOCOL — AI MISSION GENERATOR</p>
           <p className="text-[10px] text-muted-foreground mt-0.5">
-            AI analyzes live world events, resource scarcity, faction conflicts, and scavenge patterns
-            to generate a unique mission tailored to current conditions. Max 2 active generated missions at a time.
+            Analyzes live world conditions, territory threats, colony resources, faction conflicts, and your base capabilities 
+            to generate a unique mission tailored to the current situation. Max 2 active generated missions.
           </p>
         </div>
       </div>
@@ -80,7 +80,7 @@ export default function MissionGenerator() {
           size="sm"
         >
           {generating ? (
-            <><Loader2 className="h-3 w-3 mr-1.5 animate-spin" /> GENERATING...</>
+            <><Loader2 className="h-3 w-3 mr-1.5 animate-spin" /> ANALYZING WORLD STATE...</>
           ) : (
             <><Sparkles className="h-3 w-3 mr-1.5" /> GENERATE MISSION</>
           )}
@@ -93,7 +93,18 @@ export default function MissionGenerator() {
         </div>
       )}
 
-      {result && <GeneratedMissionCard mission={result} />}
+      {/* Colony urgency indicator */}
+      {result?.colony_urgency && result.colony_urgency !== "normal" && (
+        <div className={`text-[9px] font-mono tracking-wider px-2.5 py-1.5 rounded-sm border ${
+          result.colony_urgency === "critical" ? "border-destructive/30 bg-destructive/5 text-destructive" :
+          result.colony_urgency === "high" ? "border-accent/30 bg-accent/5 text-accent" :
+          "border-primary/30 bg-primary/5 text-primary"
+        }`}>
+          COLONY URGENCY: {result.colony_urgency.toUpperCase()} — rewards {result.colony_urgency === "critical" ? "1.5x" : "1.25x"} boosted
+        </div>
+      )}
+
+      {result?.mission && <GeneratedMissionCard mission={result.mission} />}
     </div>
   );
 }

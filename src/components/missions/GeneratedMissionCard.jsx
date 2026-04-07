@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { Crosshair, MapPin, Shield, Clock, Zap, Coins, Sparkles } from "lucide-react";
+import { MapPin, Shield, Clock, Zap, Coins, Sparkles, Target } from "lucide-react";
 import moment from "moment";
 
 const diffColors = {
@@ -24,6 +24,11 @@ export default function GeneratedMissionCard({ mission }) {
         <div className="flex items-center gap-2">
           <Sparkles className="h-3 w-3 text-accent" />
           <span className="text-[9px] text-accent tracking-widest font-semibold">AI-GENERATED</span>
+          {mission.world_trigger && (
+            <Badge variant="outline" className="text-[7px] font-mono text-muted-foreground">
+              {mission.world_trigger}
+            </Badge>
+          )}
         </div>
         <Badge variant="outline" className={`text-[8px] uppercase ${diffColors[mission.difficulty] || ""}`}>
           {mission.difficulty}
@@ -34,7 +39,7 @@ export default function GeneratedMissionCard({ mission }) {
         {/* Title + Type */}
         <div>
           <h4 className="text-xs font-semibold text-foreground">{mission.title}</h4>
-          <div className="flex items-center gap-2 mt-1">
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
             <Badge variant="outline" className="text-[9px] uppercase">{mission.type}</Badge>
             {mission.faction_name && (
               <span className="flex items-center gap-1 text-[9px] text-muted-foreground">
@@ -55,7 +60,9 @@ export default function GeneratedMissionCard({ mission }) {
         {/* Objective */}
         {mission.objective && (
           <div className="border border-primary/20 bg-primary/5 rounded-sm p-2">
-            <span className="text-[8px] text-primary font-semibold tracking-widest block mb-0.5">OBJECTIVE</span>
+            <span className="text-[8px] text-primary font-semibold tracking-widest block mb-0.5">
+              <Target className="h-2.5 w-2.5 inline mr-1" />OBJECTIVE
+            </span>
             <p className="text-[10px] text-foreground">{mission.objective}</p>
           </div>
         )}
