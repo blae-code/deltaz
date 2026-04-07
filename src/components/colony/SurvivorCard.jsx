@@ -1,5 +1,7 @@
 import { Badge } from "@/components/ui/badge";
-import { User, Heart, Smile, Wrench, Shield, Wheat, Search, ShoppingBag, Cpu, ChefHat, Swords, Clock } from "lucide-react";
+import { User, Heart, Smile, Wrench, Shield, Wheat, Search, ShoppingBag, Cpu, ChefHat, Swords, Clock, ChevronDown, ChevronUp } from "lucide-react";
+import { useState } from "react";
+import SurvivorSkillsPanel from "./SurvivorSkillsPanel";
 
 const skillIcons = {
   scavenger: Search,
@@ -40,6 +42,7 @@ const originStyle = {
 export default function SurvivorCard({ survivor, compact }) {
   const SkillIcon = skillIcons[survivor.skill] || User;
   const skillDots = Array.from({ length: 5 }, (_, i) => i < (survivor.skill_level || 1));
+  const [showSkills, setShowSkills] = useState(false);
 
   if (compact) {
     return (
@@ -47,7 +50,10 @@ export default function SurvivorCard({ survivor, compact }) {
         <SkillIcon className="h-3.5 w-3.5 text-primary shrink-0" />
         <div className="flex-1 min-w-0">
           <span className="text-xs font-semibold text-foreground truncate block">{survivor.name}</span>
-          <span className="text-[9px] text-muted-foreground">{survivor.skill} · {survivor.nickname}</span>
+          <div className="flex items-center gap-2">
+            <span className="text-[9px] text-muted-foreground">{survivor.skill} · {survivor.nickname}</span>
+            <SurvivorSkillsPanel survivor={survivor} compact />
+          </div>
         </div>
         <Badge variant="outline" className={`text-[8px] ${moraleStyle[survivor.morale] || ""}`}>
           {survivor.morale}
@@ -128,6 +134,22 @@ export default function SurvivorCard({ survivor, compact }) {
         {survivor.personality && (
           <div className="text-[9px] text-muted-foreground">
             <span className="text-foreground/80">Trait:</span> {survivor.personality}
+          </div>
+        )}
+
+        {/* Skills toggle */}
+        <button
+          onClick={() => setShowSkills(!showSkills)}
+          className="flex items-center gap-1 text-[9px] text-primary hover:text-foreground transition-colors w-full"
+        >
+          {showSkills ? <ChevronUp className="h-2.5 w-2.5" /> : <ChevronDown className="h-2.5 w-2.5" />}
+          <span className="uppercase tracking-wider">{showSkills ? 'Hide Skills' : 'View Skills'}</span>
+          <SurvivorSkillsPanel survivor={survivor} compact />
+        </button>
+
+        {showSkills && (
+          <div className="border-t border-border/50 pt-2">
+            <SurvivorSkillsPanel survivor={survivor} />
           </div>
         )}
       </div>

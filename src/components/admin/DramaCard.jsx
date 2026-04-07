@@ -3,7 +3,23 @@ import { base44 } from "@/api/base44Client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
-import { AlertTriangle, CheckCircle, Users, Clock, Zap } from "lucide-react";
+import { AlertTriangle, CheckCircle, Users, Clock, Zap, Swords, Hammer, Heart, Crown, Mountain } from "lucide-react";
+
+const SKILL_CHECK_ICONS = {
+  combat: Swords,
+  crafting: Hammer,
+  medical: Heart,
+  leadership: Crown,
+  survival: Mountain,
+  social: Users,
+};
+
+const DIFFICULTY_COLORS = {
+  easy: "text-status-ok",
+  moderate: "text-accent",
+  hard: "text-status-warn",
+  extreme: "text-destructive",
+};
 import moment from "moment";
 
 const SEVERITY_STYLES = {
@@ -122,6 +138,17 @@ export default function DramaCard({ drama, onResolved }) {
                   </div>
                 </div>
                 <p className="text-[10px] text-muted-foreground mt-0.5">{opt.description}</p>
+                {opt.skill_check && opt.skill_check.skill && (() => {
+                  const SkIcon = SKILL_CHECK_ICONS[opt.skill_check.skill] || Zap;
+                  return (
+                    <div className="flex items-center gap-1.5 mt-1 border-t border-border/30 pt-1">
+                      <SkIcon className={`h-3 w-3 ${DIFFICULTY_COLORS[opt.skill_check.difficulty] || 'text-primary'}`} />
+                      <span className={`text-[8px] font-mono uppercase tracking-wider ${DIFFICULTY_COLORS[opt.skill_check.difficulty] || 'text-primary'}`}>
+                        {opt.skill_check.skill} check ({opt.skill_check.difficulty})
+                      </span>
+                    </div>
+                  );
+                })()}
               </button>
             ))}
           </div>

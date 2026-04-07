@@ -194,6 +194,63 @@
         }
       },
       "description": "Social connections with other survivors"
+    },
+    "skills": {
+      "type": "object",
+      "properties": {
+        "combat": {
+          "type": "number",
+          "default": 0,
+          "description": "Combat XP \u2014 earned through defending, patrolling, eliminating threats"
+        },
+        "crafting": {
+          "type": "number",
+          "default": 0,
+          "description": "Crafting XP \u2014 earned through crafting, repairing, engineering"
+        },
+        "medical": {
+          "type": "number",
+          "default": 0,
+          "description": "Medical XP \u2014 earned through healing, treating injuries"
+        },
+        "leadership": {
+          "type": "number",
+          "default": 0,
+          "description": "Leadership XP \u2014 earned through resolving dramas, managing groups"
+        },
+        "survival": {
+          "type": "number",
+          "default": 0,
+          "description": "Survival XP \u2014 earned through scavenging, farming, cooking"
+        },
+        "social": {
+          "type": "number",
+          "default": 0,
+          "description": "Social XP \u2014 earned through trading, building relationships"
+        }
+      },
+      "description": "Experience points across skill categories"
+    },
+    "skill_log": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "skill": {
+            "type": "string"
+          },
+          "xp": {
+            "type": "number"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Recent skill XP gains (last 20 entries)"
     }
   },
   "required": [

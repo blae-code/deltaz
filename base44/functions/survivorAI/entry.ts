@@ -3,6 +3,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 /**
  * survivorAI — Simulates individual survivor needs (hunger, social, rest, stress),
  * auto-assigns idle survivors to optimal tasks, evolves relationships,
+ * awards skill XP based on tasks performed,
  * and generates nuanced drama events based on needs rather than just morale.
  *
  * Actions:
@@ -32,6 +33,20 @@ const TASK_NEED_EFFECTS = {
   trade:     { hunger: -3, social: 10, rest: -4, stress: -1 },
   defend:    { hunger: -12, social: 5, rest: -18, stress: 15 },
   idle:      { hunger: -3, social: -8, rest: 15, stress: -5 },
+};
+
+// Which skills get XP from which tasks
+const TASK_SKILL_XP = {
+  scavenge: { survival: 8, combat: 2 },
+  farm:     { survival: 6 },
+  craft:    { crafting: 10 },
+  patrol:   { combat: 6, survival: 3 },
+  heal:     { medical: 10 },
+  cook:     { survival: 5, social: 3 },
+  repair:   { crafting: 8 },
+  trade:    { social: 8, leadership: 2 },
+  defend:   { combat: 12, leadership: 3 },
+  idle:     {},
 };
 
 const PERSONALITY_MODIFIERS = {
@@ -81,12 +96,10 @@ function pickBestTask(survivor, colony, baseDefenseNeeded) {
   const rest = survivor.rest ?? 70;
   const stress = survivor.stress ?? 20;
 
-  // Urgent needs override skill preference
-  if (rest < 20) return "idle"; // forced rest
+  if (rest < 20) return "idle";
   if (hunger < 25 && survivor.skill === "farmer") return "farm";
   if (hunger < 25 && survivor.skill === "cook") return "cook";
 
-  // Colony-level needs
   if (colony) {
     if ((colony.food_reserves ?? 100) < 30) {
       if (survivor.skill === "farmer") return "farm";
@@ -100,21 +113,26 @@ function pickBestTask(survivor, colony, baseDefenseNeeded) {
     if ((colony.medical_supplies ?? 100) < 30 && survivor.skill === "medic") return "heal";
   }
 
-  // Social needs — prioritize social tasks
   if (social < 25) {
     if (["cook", "trade", "heal"].includes(SKILL_TASK_MAP[survivor.skill])) {
       return SKILL_TASK_MAP[survivor.skill];
     }
-    return pick(["cook", "trade"]); // social tasks
+    return pick(["cook", "trade"]);
   }
 
-  // High stress — light duty
   if (stress > 70) {
     return pick(["idle", "cook", "farm"]);
   }
 
-  // Default — use primary skill
   return SKILL_TASK_MAP[survivor.skill] || "scavenge";
+}
+
+function getSkillLevel(xp) {
+  const thresholds = [0, 50, 150, 350, 700, 1200];
+  for (let i = thresholds.length - 1; i >= 0; i--) {
+    if (xp >= thresholds[i]) return i + 1;
+  }
+  return 1;
 }
 
 Deno.serve(async (req) => {
@@ -137,7 +155,6 @@ Deno.serve(async (req) => {
     const colony = colonies[0] || null;
     const now = new Date().toISOString();
 
-    // Check if any territory has active threats (affects stress + defense needs)
     const threatenedSectors = territories.filter(t => t.active_threat_wave?.status === "incoming").map(t => t.sector);
     const basesUnderThreat = bases.filter(b => threatenedSectors.includes(b.sector));
 
@@ -165,23 +182,22 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ─── FULL TICK: Simulate needs, evolve relationships, detect drama triggers ───
+    // ─── FULL TICK ───
     const needsUpdates = [];
     const dramaTriggers = [];
     const relationshipChanges = [];
+    const skillXpAwarded = [];
 
     for (const s of survivors) {
       const task = s.current_task || "idle";
       const effects = TASK_NEED_EFFECTS[task] || TASK_NEED_EFFECTS.idle;
       const pMods = getPersonalityMods(s.personality);
 
-      // Base need changes from current task
       let hungerDelta = effects.hunger + (pMods.hunger || 0);
       let socialDelta = effects.social + (pMods.social || 0);
       let restDelta = effects.rest + (pMods.rest || 0);
       let stressDelta = effects.stress + (pMods.stress || 0);
 
-      // Health affects needs
       if (s.health === "injured" || s.health === "sick") {
         hungerDelta -= 5;
         restDelta -= 5;
@@ -193,25 +209,41 @@ Deno.serve(async (req) => {
         stressDelta += 12;
       }
 
-      // Colony food affects hunger
       if (colony && (colony.food_reserves ?? 100) < 25) {
         hungerDelta -= 8;
       }
 
-      // Threat proximity raises stress
       const sBase = bases.find(b => b.id === s.base_id);
       if (sBase && basesUnderThreat.some(b => b.id === sBase.id)) {
         stressDelta += 10;
       }
 
-      // Calculate new values
       const newHunger = clamp((s.hunger ?? 80) + hungerDelta, 0, 100);
       const newSocial = clamp((s.social ?? 60) + socialDelta, 0, 100);
       const newRest = clamp((s.rest ?? 70) + restDelta, 0, 100);
       const newStress = clamp((s.stress ?? 20) + stressDelta, 0, 100);
       const newMorale = deriveMorale(newHunger, newSocial, newRest, newStress);
 
-      // Evolve relationships — same-base survivors doing same task bond
+      // ─── AWARD SKILL XP BASED ON TASK ───
+      const taskXp = TASK_SKILL_XP[task] || {};
+      const skills = { ...(s.skills || {}) };
+      const skillLog = [...(s.skill_log || [])];
+      const xpGains = [];
+
+      for (const [skillName, baseXp] of Object.entries(taskXp)) {
+        // Skill level bonus: primary skill tasks give +50% XP
+        const primaryMatch = SKILL_TASK_MAP[s.skill] === task;
+        const xp = primaryMatch ? Math.round(baseXp * 1.5) : baseXp;
+        skills[skillName] = (skills[skillName] || 0) + xp;
+        skillLog.unshift({ skill: skillName, xp, reason: `${task} task`, date: now });
+        xpGains.push({ skill: skillName, xp });
+      }
+
+      if (xpGains.length > 0) {
+        skillXpAwarded.push({ name: s.nickname || s.name, gains: xpGains });
+      }
+
+      // Evolve relationships
       const sameBaseSameTask = survivors.filter(o =>
         o.id !== s.id && o.base_id === s.base_id && o.current_task === s.current_task && s.current_task !== "idle"
       );
@@ -231,7 +263,14 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Detect needs-based drama triggers
+      // Social tasks give social XP bonus for relationships
+      if (sameBaseSameTask.length > 0 && ['cook', 'trade', 'heal'].includes(task)) {
+        const socialBonus = Math.min(5, sameBaseSameTask.length * 2);
+        skills.social = (skills.social || 0) + socialBonus;
+        skillLog.unshift({ skill: 'social', xp: socialBonus, reason: `teamwork (${sameBaseSameTask.length} colleagues)`, date: now });
+      }
+
+      // Drama triggers
       const crises = identifyNeedCrisis({ hunger: newHunger, social: newSocial, rest: newRest, stress: newStress });
       for (const crisis of crises) {
         dramaTriggers.push({
@@ -244,16 +283,17 @@ Deno.serve(async (req) => {
           task: s.current_task,
           health: s.health,
           relationships: updatedRelationships.slice(0, 3),
+          skills,
         });
       }
 
-      // Auto-reassign if needs critical
       let newTask = s.current_task;
       if (newRest < 10 && s.current_task !== "idle") {
-        newTask = "idle"; // forced rest
+        newTask = "idle";
       }
 
-      await base44.asServiceRole.entities.Survivor.update(s.id, {
+      // Update combat_rating based on combat skill
+      const updates = {
         hunger: newHunger,
         social: newSocial,
         rest: newRest,
@@ -262,8 +302,15 @@ Deno.serve(async (req) => {
         last_needs_update: now,
         relationships: updatedRelationships.slice(0, 10),
         current_task: newTask,
+        skills,
+        skill_log: skillLog.slice(0, 20),
         ...(newTask !== s.current_task ? { task_started_at: now } : {}),
-      });
+      };
+      if (skills.combat !== undefined) {
+        updates.combat_rating = Math.min(10, getSkillLevel(skills.combat || 0) + Math.floor((skills.combat || 0) / 200));
+      }
+
+      await base44.asServiceRole.entities.Survivor.update(s.id, updates);
 
       needsUpdates.push({
         name: s.nickname || s.name,
@@ -279,13 +326,17 @@ Deno.serve(async (req) => {
     // ─── GENERATE NEEDS-BASED DRAMA ───
     let generatedDrama = null;
     if (dramaTriggers.length > 0) {
-      // Check active drama cap
       const activeDramas = await base44.asServiceRole.entities.SurvivorDrama.filter({ status: "active" });
       if (activeDramas.length < 5) {
-        // Pick the most severe trigger
         const trigger = dramaTriggers.sort((a, b) => (a.value || 0) - (b.value || 0))[0];
 
-        // Use AI to generate a nuanced drama scenario from the specific need
+        // Include skill levels in drama generation for skill-based challenges
+        const triggerSkills = trigger.skills || {};
+        const skillSummary = Object.entries(triggerSkills)
+          .filter(([, xp]) => xp > 0)
+          .map(([name, xp]) => `${name}:Lv${getSkillLevel(xp)}`)
+          .join(', ') || 'no trained skills';
+
         const dramaResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
           prompt: `You are a post-apocalyptic survival game drama writer.
 
@@ -293,24 +344,29 @@ A survivor named "${trigger.survivor_name}" (personality: "${trigger.personality
 - NEED: ${trigger.need} — ${trigger.label} (value: ${trigger.value}/100)
 - Current task: ${trigger.task}
 - Health: ${trigger.health}
+- Skill Levels: ${skillSummary}
 - Relationships: ${JSON.stringify(trigger.relationships)}
 
-Generate a DRAMATIC SCENARIO that springs from this specific need crisis. Not just a generic morale event — something deeply personal and tied to their ${trigger.need} state.
+Generate a DRAMATIC SCENARIO from this need crisis.
 
-Examples by need:
-- hunger: hoarding food, stealing rations, hunting dangerous game, refusing to share
-- social: paranoid isolation, obsessive attachment, jealousy, forming a clique, lashing out at others
-- rest: hallucinations from exhaustion, falling asleep on guard duty, stimulant abuse, dangerous mistakes
-- stress: violent outburst, catatonic episode, destroying equipment, threatening others, demanding to leave
+SKILL-BASED RESOLUTION RULES:
+- At least ONE resolution option should reference a specific skill (combat, crafting, medical, leadership, survival, or social)
+- Mark skill-based options with a skill_check field containing { skill: "skill_name", difficulty: "easy"|"moderate"|"hard"|"extreme" }
+- The skill_check determines success probability — higher skill survivors succeed more often
+- If the survivor HAS a high level in a relevant skill, create an option that uses it
+- Include a non-skill option for GMs who want to resolve without a check
 
-Include the survivor's personality and relationships in the scenario. If they have a close bond with someone, involve that person.
+Examples:
+- Medical crisis → option with medical skill check to treat symptoms
+- Fight → option with leadership check to mediate, or combat check to intervene physically
+- Theft → option with social check to negotiate, or survival check to track missing supplies
 
 Return:
 - drama_type: one of desertion, fight, mutiny, theft, breakdown, sabotage, romance, rivalry
 - severity: minor, moderate, serious, or critical
 - title: short dramatic headline
 - description: 2-3 sentence vivid narrative
-- resolution_options: array of 3 options, each with id, label, description, morale_effect (-10 to +10), and risk (none/low/medium/high)`,
+- resolution_options: array of 3 options, each with id, label, description, morale_effect (-10 to +10), risk (none/low/medium/high), and optional skill_check object { skill, difficulty }`,
           response_json_schema: {
             type: "object",
             properties: {
@@ -328,6 +384,13 @@ Return:
                     description: { type: "string" },
                     morale_effect: { type: "number" },
                     risk: { type: "string" },
+                    skill_check: {
+                      type: "object",
+                      properties: {
+                        skill: { type: "string" },
+                        difficulty: { type: "string" },
+                      },
+                    },
                   },
                 },
               },
@@ -352,12 +415,10 @@ Return:
           resolution_options: (dramaResult.resolution_options || []).slice(0, 3),
         });
 
-        // Update survivor with behavior note
         await base44.asServiceRole.entities.Survivor.update(trigger.survivor_id, {
           ai_behavior_note: `${trigger.label} — drama event generated: ${dramaResult.title}`,
         });
 
-        // Notify
         await base44.asServiceRole.entities.Notification.create({
           player_email: "broadcast",
           title: `⚠ ${dramaResult.title}`,
@@ -383,6 +444,7 @@ Return:
       needs_updates: needsUpdates.length,
       drama_triggers: dramaTriggers.length,
       relationship_changes: relationshipChanges.length,
+      skill_xp_awarded: skillXpAwarded.length,
       generated_drama: generatedDrama,
       summary: {
         avg_hunger: Math.round(needsUpdates.reduce((s, u) => s + u.hunger, 0) / (needsUpdates.length || 1)),
@@ -390,6 +452,7 @@ Return:
         avg_rest: Math.round(needsUpdates.reduce((s, u) => s + u.rest, 0) / (needsUpdates.length || 1)),
         avg_stress: Math.round(needsUpdates.reduce((s, u) => s + u.stress, 0) / (needsUpdates.length || 1)),
         in_crisis: dramaTriggers.length,
+        xp_gains: skillXpAwarded.length,
       },
     });
   } catch (error) {
