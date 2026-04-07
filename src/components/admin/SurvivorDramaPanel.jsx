@@ -4,10 +4,11 @@ import useEntityQuery from "../../hooks/useEntityQuery";
 import DramaCard from "./DramaCard";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
-import { Sparkles, Theater, Filter } from "lucide-react";
+import { Sparkles, Theater, Filter, BrainCircuit } from "lucide-react";
 
 export default function SurvivorDramaPanel() {
   const [generating, setGenerating] = useState(false);
+  const [reacting, setReacting] = useState(false);
   const [filter, setFilter] = useState("active");
 
   const dramaQuery = useEntityQuery(
@@ -25,10 +26,25 @@ export default function SurvivorDramaPanel() {
     } else if (res.data?.status === "skipped") {
       toast({ title: "No drama generated", description: res.data.reason });
     } else {
-      toast({ title: "Survivor drama generated!", description: `${res.data.drama_type} (${res.data.severity})` });
+      toast({ title: "Survivor drama generated!", description: `${res.data.drama_type} (${res.data.severity}) — ${res.data.complexity_tier}` });
       dramaQuery.refetch();
     }
     setGenerating(false);
+  };
+
+  const handleReact = async () => {
+    setReacting(true);
+    const res = await base44.functions.invoke("survivorDramaEngine", { action: "react" });
+    if (res.data?.error) {
+      toast({ title: "Reaction failed", description: res.data.error, variant: "destructive" });
+    } else if (res.data?.status === "skipped") {
+      toast({ title: "No reactions", description: res.data.reason });
+    } else {
+      const count = (res.data.results || []).reduce((s, r) => s + r.reactions_added, 0);
+      toast({ title: "Survivors reacted", description: `${count} reactions across ${res.data.dramas_processed} dramas` });
+      dramaQuery.refetch();
+    }
+    setReacting(false);
   };
 
   const filters = ["active", "resolved", "all"];
@@ -70,6 +86,18 @@ export default function SurvivorDramaPanel() {
           >
             Force Generate
           </Button>
+          {activeCount > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-[10px] uppercase tracking-wider h-7 gap-1"
+              onClick={handleReact}
+              disabled={reacting}
+            >
+              <BrainCircuit className="h-3 w-3" />
+              {reacting ? "Simulating..." : "Simulate Reactions"}
+            </Button>
+          )}
         </div>
       </div>
 

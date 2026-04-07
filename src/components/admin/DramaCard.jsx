@@ -3,7 +3,8 @@ import { base44 } from "@/api/base44Client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
-import { AlertTriangle, CheckCircle, Users, Clock, Zap, Swords, Hammer, Heart, Crown, Mountain } from "lucide-react";
+import { AlertTriangle, CheckCircle, Users, Clock, Zap, Swords, Hammer, Heart, Crown, Mountain, Layers } from "lucide-react";
+import DramaReactionsPanel from "./DramaReactionsPanel";
 
 const SKILL_CHECK_ICONS = {
   combat: Swords,
@@ -104,7 +105,27 @@ export default function DramaCard({ drama, onResolved }) {
             <Clock className="h-3 w-3" />
             {moment(drama.created_date).fromNow()}
           </span>
+          {drama.complexity_tier && (
+            <span className="flex items-center gap-1">
+              <Layers className="h-3 w-3" />
+              {drama.complexity_tier}
+            </span>
+          )}
         </div>
+
+        {/* Context factors */}
+        {drama.context_factors?.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {drama.context_factors.map((f, i) => (
+              <Badge key={i} variant="outline" className="text-[7px] uppercase">{f.replace(/_/g, ' ')}</Badge>
+            ))}
+          </div>
+        )}
+
+        {/* AI Reactions */}
+        {(drama.ai_reactions || []).length > 0 && (
+          <DramaReactionsPanel reactions={drama.ai_reactions} />
+        )}
 
         {/* Resolution options (active only) */}
         {isActive && options.length > 0 && (

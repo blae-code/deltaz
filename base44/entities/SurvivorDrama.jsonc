@@ -66,6 +66,24 @@
       ],
       "default": "active"
     },
+    "complexity_tier": {
+      "type": "string",
+      "enum": [
+        "simple",
+        "layered",
+        "complex",
+        "epic"
+      ],
+      "default": "simple",
+      "description": "AI-determined scenario complexity based on colony size and history"
+    },
+    "context_factors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "World factors that influenced this drama (e.g. 'low_food', 'recent_attack', 'faction_tension')"
+    },
     "resolution_options": {
       "type": "array",
       "items": {
@@ -85,10 +103,51 @@
           },
           "risk": {
             "type": "string"
+          },
+          "skill_check": {
+            "type": "object",
+            "properties": {
+              "skill": {
+                "type": "string"
+              },
+              "difficulty": {
+                "type": "string"
+              }
+            }
           }
         }
       },
       "description": "Available GM resolution options"
+    },
+    "ai_reactions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "survivor_id": {
+            "type": "string"
+          },
+          "survivor_name": {
+            "type": "string"
+          },
+          "reaction_type": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string"
+          },
+          "narrative": {
+            "type": "string"
+          },
+          "effect": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "AI-generated survivor reactions to this drama"
     },
     "chosen_resolution": {
       "type": "string",
