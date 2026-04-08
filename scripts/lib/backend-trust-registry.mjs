@@ -21,6 +21,7 @@ export const backendTrustRegistry = {
   missionOps: { lane: 'canonical', trigger: 'frontend', allowsLLM: false, allowsRandom: false, classification: 'deterministic_rewrite' },
   notifyMissionAndThreats: { lane: 'deterministic_projection', trigger: 'automation', allowsLLM: false, allowsRandom: false, classification: 'keep' },
   operativeAnalytics: { lane: 'advisory', trigger: 'frontend', allowsLLM: true, allowsRandom: false, classification: 'advisory_only' },
+  playerTelemetry: { lane: 'advisory', trigger: 'frontend', allowsLLM: false, allowsRandom: false, classification: 'advisory_only' },
   processReputation: { lane: 'canonical', trigger: 'automation', allowsLLM: false, allowsRandom: false, classification: 'keep' },
   processTrades: { lane: 'canonical', trigger: 'admin', allowsLLM: false, allowsRandom: false, classification: 'keep' },
   resolveJournalChoice: { lane: 'canonical', trigger: 'frontend', allowsLLM: false, allowsRandom: false, classification: 'deterministic_rewrite' },
