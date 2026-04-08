@@ -138,7 +138,7 @@ export default function TopBar({ user: propUser }) {
 
           {user && (
             <Link
-              to="/profile"
+              to="/dossier?tab=profile"
               className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors border-l border-border/40 pl-3"
             >
               <Tooltip>

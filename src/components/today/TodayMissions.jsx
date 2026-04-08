@@ -89,7 +89,7 @@ export default function TodayMissions({ jobs, userEmail }) {
       {/* Continuity cue: if player has active mission, suggest planner */}
       {myActive.length > 0 && (
         <NextStepBanner
-          to="/planner"
+          to="/ops?tab=planner"
           icon={Target}
           label="Plan your op"
           hint="Assign survivors and assess sector risk before deploying."
@@ -97,7 +97,7 @@ export default function TodayMissions({ jobs, userEmail }) {
         />
       )}
 
-      <Link to="/jobs">
+      <Link to="/ops?tab=missions">
         <Button variant="outline" size="sm" className="w-full text-[10px] uppercase tracking-wider h-8 mt-1">
           Full Mission Board <ChevronRight className="h-3 w-3 ml-1" />
         </Button>

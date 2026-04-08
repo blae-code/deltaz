@@ -25,20 +25,20 @@ import { cn } from "@/lib/utils";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
-const THREAT_LEVEL = { green: 1, yellow: 2, orange: 3, red: 4, black: 5 };
+const THREAT_LEVEL = { minimal: 1, low: 2, moderate: 3, high: 4, critical: 5 };
 const THREAT_COLOR = {
-  green:  "text-status-ok border-status-ok/30 bg-status-ok/5",
-  yellow: "text-status-warn border-status-warn/30 bg-status-warn/5",
-  orange: "text-threat-orange border-threat-orange/30 bg-threat-orange/5",
-  red:    "text-destructive border-destructive/30 bg-destructive/5",
-  black:  "text-foreground border-border bg-secondary/60",
+  minimal:  "text-status-ok border-status-ok/30 bg-status-ok/5",
+  low:      "text-status-ok border-status-ok/30 bg-status-ok/5",
+  moderate: "text-status-warn border-status-warn/30 bg-status-warn/5",
+  high:     "text-threat-orange border-threat-orange/30 bg-threat-orange/5",
+  critical: "text-destructive border-destructive/30 bg-destructive/5",
 };
 const THREAT_GLOW = {
-  green:  "",
-  yellow: "animate-glow-pulse-subtle",
-  orange: "animate-glow-pulse-subtle",
-  red:    "animate-glow-pulse-strong",
-  black:  "",
+  minimal:  "",
+  low:      "",
+  moderate: "animate-glow-pulse-subtle",
+  high:     "animate-glow-pulse-subtle",
+  critical: "animate-glow-pulse-strong",
 };
 
 function age(iso) {
@@ -91,19 +91,20 @@ function ThreatBadge({ level = "green" }) {
 
 function MissionRow({ job }) {
   const statusColor = {
-    active:    "text-status-ok",
-    pending:   "text-status-warn",
-    planning:  "text-primary",
-    completed: "text-muted-foreground",
-    failed:    "text-destructive",
+    available:             "text-primary",
+    in_progress:           "text-status-ok",
+    pending_verification:  "text-status-warn",
+    completed:             "text-muted-foreground",
+    failed:                "text-destructive",
+    expired:               "text-muted-foreground/50",
   }[job.status] || "text-muted-foreground";
 
-  const riskColor = {
-    critical: "text-destructive",
-    high:     "text-threat-orange",
-    medium:   "text-status-warn",
-    low:      "text-status-ok",
-  }[job.risk_level] || "text-muted-foreground";
+  const diffColor = {
+    suicide:    "text-destructive",
+    critical:   "text-threat-orange",
+    hazardous:  "text-status-warn",
+    routine:    "text-status-ok",
+  }[job.difficulty] || "text-muted-foreground";
 
   return (
     <div className="flex items-center gap-3 py-2.5 border-b border-border/40 last:border-0 group hover:bg-secondary/20 -mx-3 px-3 transition-colors">
@@ -115,21 +116,22 @@ function MissionRow({ job }) {
           {job.title}
         </div>
         <div className="text-[10px] text-muted-foreground truncate mt-0.5">
-          {job.location || "UNKNOWN AO"} · {age(job.deadline || job.created_date)}
+          {job.type?.toUpperCase() || "MISSION"} · {age(job.created_date)}
         </div>
       </div>
       <div className="shrink-0 text-right">
-        <div className={cn("text-[10px] uppercase tracking-wider font-mono", riskColor)}>
-          {job.risk_level || "—"}
+        <div className={cn("text-[10px] uppercase tracking-wider font-mono", diffColor)}>
+          {job.difficulty || "—"}
         </div>
-        <div className={cn("text-[9px] uppercase tracking-widest", statusColor)}>{job.status}</div>
+        <div className={cn("text-[9px] uppercase tracking-widest", statusColor)}>{job.status?.replace("_", " ")}</div>
       </div>
     </div>
   );
 }
 
-function TerritoryRow({ territory }) {
-  const lvl = territory.threat_level || "green";
+function TerritoryRow({ territory, factions }) {
+  const lvl = territory.threat_level || "minimal";
+  const faction = factions?.find(f => f.id === territory.controlling_faction_id);
   return (
     <div className={cn(
       "flex items-center gap-3 py-2.5 border-b border-border/40 last:border-0 -mx-3 px-3",
@@ -139,7 +141,7 @@ function TerritoryRow({ territory }) {
       <div className="flex-1 min-w-0">
         <div className="text-xs font-medium text-foreground truncate">{territory.name}</div>
         <div className="text-[10px] text-muted-foreground truncate mt-0.5">
-          {territory.controlling_faction || "CONTESTED"} · Stability {territory.stability_score ?? "?"}%
+          {faction?.name || "UNCONTROLLED"} · {territory.sector}
         </div>
       </div>
       <ThreatBadge level={lvl} />
@@ -147,17 +149,22 @@ function TerritoryRow({ territory }) {
   );
 }
 
-function FactionRow({ faction }) {
-  const dispositionColor = {
+function FactionRow({ faction, diplomacyList }) {
+  // Determine most hostile diplomatic stance involving this faction
+  const statuses = (diplomacyList || []).filter(
+    d => d.faction_a_id === faction.id || d.faction_b_id === faction.id
+  ).map(d => d.status);
+  const statusPriority = { war: 5, hostile: 4, neutral: 2, ceasefire: 3, non_aggression: 2, trade_agreement: 1, allied: 0 };
+  const worstStatus = statuses.sort((a, b) => (statusPriority[b] || 0) - (statusPriority[a] || 0))[0] || "neutral";
+  const statusColor = {
     allied:          "text-status-ok",
-    friendly:        "text-primary",
-    neutral:         "text-muted-foreground",
-    cold:            "text-status-warn",
-    hostile:         "text-threat-orange",
-    at_war:          "text-destructive",
     trade_agreement: "text-primary",
     ceasefire:       "text-status-warn",
-  }[faction.disposition] || "text-muted-foreground";
+    non_aggression:  "text-muted-foreground",
+    neutral:         "text-muted-foreground",
+    hostile:         "text-threat-orange",
+    war:             "text-destructive",
+  }[worstStatus] || "text-muted-foreground";
 
   return (
     <div className="flex items-center gap-3 py-2.5 border-b border-border/40 last:border-0">
@@ -165,12 +172,11 @@ function FactionRow({ faction }) {
       <div className="flex-1 min-w-0">
         <div className="text-xs font-medium text-foreground truncate">{faction.name}</div>
         <div className="text-[10px] text-muted-foreground truncate">
-          Rep {faction.reputation_score ?? "?"}
-          {faction.member_count ? ` · ${faction.member_count} operatives` : ""}
+          {faction.tag ? `[${faction.tag}]` : ""} {faction.status || "active"}
         </div>
       </div>
-      <span className={cn("text-[10px] uppercase tracking-widest font-mono", dispositionColor)}>
-        {(faction.disposition || "neutral").replace("_", " ")}
+      <span className={cn("text-[10px] uppercase tracking-widest font-mono", statusColor)}>
+        {worstStatus.replace("_", " ")}
       </span>
     </div>
   );
@@ -206,39 +212,44 @@ export default function WarRoom() {
   const [territories, setTerritories] = useState([]);
   const [factions, setFactions]     = useState([]);
   const [events, setEvents]         = useState([]);
+  const [diplomacy, setDiplomacy]   = useState([]);
   const [loading, setLoading]       = useState(true);
 
   useEffect(() => {
     Promise.allSettled([
       base44.entities.Job.list("-created_date", 20),
-      base44.entities.Territory.list("-threat_level", 15),
-      base44.entities.Faction.list("-reputation_score", 10),
+      base44.entities.Territory.list("-updated_date", 15),
+      base44.entities.Faction.list("-created_date", 10),
       base44.entities.Event.list("-created_date", 20),
-    ]).then(([j, t, f, e]) => {
+      base44.entities.Diplomacy.list("-created_date", 50),
+    ]).then(([j, t, f, e, d]) => {
       setJobs(j.status === "fulfilled" ? j.value : []);
       setTerritories(t.status === "fulfilled" ? t.value : []);
       setFactions(f.status === "fulfilled" ? f.value : []);
       setEvents(e.status === "fulfilled" ? e.value : []);
+      setDiplomacy(d.status === "fulfilled" ? d.value : []);
       setLoading(false);
     });
 
     // Real-time territory subscription
     let unsub;
     try {
-      unsub = base44.entities.Territory.subscribe((data) => {
-        if (Array.isArray(data)) setTerritories(data);
+      unsub = base44.entities.Territory.subscribe((event) => {
+        if (event.type === "create") setTerritories(prev => [...prev, event.data]);
+        else if (event.type === "update") setTerritories(prev => prev.map(t => t.id === event.id ? event.data : t));
+        else if (event.type === "delete") setTerritories(prev => prev.filter(t => t.id !== event.id));
       });
     } catch (_) {}
     return () => { if (unsub) unsub(); };
   }, []);
 
   // Derived KPIs
-  const activeJobs     = jobs.filter((j) => j.status === "active");
-  const criticalJobs   = jobs.filter((j) => j.risk_level === "critical" && j.status === "active");
+  const activeJobs     = jobs.filter((j) => j.status === "in_progress");
+  const criticalJobs   = jobs.filter((j) => j.difficulty === "critical" && j.status === "in_progress");
   const hotZones       = territories.filter((t) => THREAT_LEVEL[t.threat_level] >= 3);
-  const hostileFactions = factions.filter((f) => ["hostile", "at_war"].includes(f.disposition));
-  const recentIntel    = events.filter((e) => ["alert", "faction", "territory"].includes(e.type));
-  const priorityJobs   = jobs.filter((j) => ["active", "pending"].includes(j.status)).slice(0, 8);
+  const hostileDiplo   = diplomacy.filter((d) => ["hostile", "war"].includes(d.status));
+  const recentIntel    = events.slice(0, 15);
+  const priorityJobs   = jobs.filter((j) => ["in_progress", "available", "pending_verification"].includes(j.status)).slice(0, 8);
   const highThreatTerr = territories.filter((t) => THREAT_LEVEL[t.threat_level] >= 2).slice(0, 8);
 
   // Overall theater threat
@@ -246,7 +257,7 @@ export default function WarRoom() {
     const lvl = THREAT_LEVEL[t.threat_level] || 0;
     return lvl > max ? lvl : max;
   }, 0);
-  const theaterThreat = Object.keys(THREAT_LEVEL).find((k) => THREAT_LEVEL[k] === maxThreat) || "green";
+  const theaterThreat = Object.keys(THREAT_LEVEL).find((k) => THREAT_LEVEL[k] === maxThreat) || "minimal";
 
   return (
     <div className="space-y-5">
@@ -297,10 +308,10 @@ export default function WarRoom() {
         />
         <KpiTile
           icon={Shield}
-          label="Hostile Factions"
-          value={loading ? "—" : hostileFactions.length}
-          sub={`of ${factions.length} tracked`}
-          color={hostileFactions.length > 0 ? "text-threat-orange" : "text-status-ok"}
+          label="Hostile Relations"
+          value={loading ? "—" : hostileDiplo.length}
+          sub={`of ${diplomacy.length} diplomatic entries`}
+          color={hostileDiplo.length > 0 ? "text-threat-orange" : "text-status-ok"}
         />
         <KpiTile
           icon={Zap}
@@ -369,13 +380,13 @@ export default function WarRoom() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
                 <div>
                   {highThreatTerr.slice(0, 4).map((t) => (
-                    <TerritoryRow key={t.id} territory={t} />
+                    <TerritoryRow key={t.id} territory={t} factions={factions} />
                   ))}
                 </div>
                 {highThreatTerr.length > 4 && (
                   <div>
                     {highThreatTerr.slice(4, 8).map((t) => (
-                      <TerritoryRow key={t.id} territory={t} />
+                      <TerritoryRow key={t.id} territory={t} factions={factions} />
                     ))}
                   </div>
                 )}
@@ -394,7 +405,7 @@ export default function WarRoom() {
             ) : (
               <div>
                 {factions.slice(0, 8).map((f) => (
-                  <FactionRow key={f.id} faction={f} />
+                  <FactionRow key={f.id} faction={f} diplomacyList={diplomacy} />
                 ))}
               </div>
             )}

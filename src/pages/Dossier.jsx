@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import ActionRail from "../components/layout/ActionRail";
 import { User, BookOpen, Trophy, FileText } from "lucide-react";

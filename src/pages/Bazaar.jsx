@@ -128,7 +128,7 @@ export default function Bazaar() {
         </div>
       }
       statusStrip={<BazaarStats trades={trades} transactions={transactions} />}
-      actionRail={<ActionRail tabs={tabs} activeTab={tab} onTabChange={setTab} />}
+      actionRail={<ActionRail tabs={tabs.map(t => ({ key: t.id, label: t.label, count: t.count }))} active={tab} onChange={setTab} />}
     >
       {/* Create listing form */}
       {showForm && user && (
