@@ -5,14 +5,14 @@ import {
 } from "lucide-react";
 
 const actions = [
-  { to: "/jobs", icon: Crosshair, label: "Missions", desc: "Accept a mission" },
-  { to: "/map", icon: Map, label: "AO Map", desc: "Scout the area" },
-  { to: "/journal", icon: BookOpen, label: "Journal", desc: "Story events" },
-  { to: "/planner", icon: Target, label: "Planner", desc: "Plan an op" },
-  { to: "/factions", icon: Shield, label: "Clans", desc: "Your faction" },
-  { to: "/market", icon: TrendingUp, label: "Market", desc: "Trade goods" },
-  { to: "/events", icon: Radio, label: "Comms", desc: "News feed" },
-  { to: "/records", icon: Trophy, label: "Records", desc: "Leaderboard" },
+  { to: "/ops?tab=missions", icon: Crosshair, label: "Missions", desc: "Accept a mission" },
+  { to: "/territory?tab=map", icon: Map, label: "AO Map", desc: "Scout the area" },
+  { to: "/dossier?tab=journal", icon: BookOpen, label: "Journal", desc: "Story events" },
+  { to: "/ops?tab=planner", icon: Target, label: "Planner", desc: "Plan an op" },
+  { to: "/territory?tab=clans", icon: Shield, label: "Clans", desc: "Your faction" },
+  { to: "/economy?tab=market", icon: TrendingUp, label: "Market", desc: "Trade goods" },
+  { to: "/ops?tab=comms", icon: Radio, label: "Comms", desc: "News feed" },
+  { to: "/dossier?tab=records", icon: Trophy, label: "Records", desc: "Leaderboard" },
 ];
 
 export default function TodayActions() {

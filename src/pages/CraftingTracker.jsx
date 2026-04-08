@@ -162,7 +162,7 @@ export default function CraftingTracker() {
       {/* Blocked project hint: if any active projects have incomplete materials, suggest trading */}
       {activeProjects.length > 0 && totalGathered < totalMaterialsNeeded && (
         <NextStepBanner
-          to="/trade"
+          to="/economy?tab=trade"
           icon={ArrowLeftRight}
           label="Missing materials?"
           hint={`${totalMaterialsNeeded - totalGathered} material${(totalMaterialsNeeded - totalGathered) !== 1 ? "s" : ""} still needed — check the Trade Hub or scavenge runs.`}

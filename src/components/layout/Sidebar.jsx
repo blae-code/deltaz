@@ -2,36 +2,26 @@ import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
-  Crosshair,
   Map,
-  Radio,
-  Shield,
   User,
   Terminal,
   ChevronLeft,
   ChevronRight,
-  Eye,
   Menu,
   X,
-  TrendingUp,
   Home,
-  FileSignature,
   Package,
-  Trophy,
-  FileText,
   ScrollText,
-  Hammer,
   Truck,
   LogOut,
-  BookOpen,
-  Target,
   Flame,
   BarChart3,
   Swords,
-  ArrowLeftRight,
   Store,
-  Radar,
+  ChevronDown,
+  ChevronUp,
   Zap,
+  Crosshair,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
@@ -40,38 +30,22 @@ import { isAdminOrGM } from "../../lib/displayName";
 import SidebarLogoSvg from "../svg/SidebarLogoSvg";
 
 const coreNav = [
-  { path: "/",         label: "TODAY",      icon: Zap },
-  { path: "/sitrep",   label: "SITREP",     icon: LayoutDashboard },
-  { path: "/jobs",     label: "MISSIONS",   icon: Crosshair },
-  { path: "/map",      label: "AO MAP",     icon: Map },
-  { path: "/events",   label: "COMMS",      icon: Radio },
-  { path: "/factions", label: "CLANS",      icon: Shield },
-  { path: "/colony",   label: "COLONY",     icon: Home },
-  { path: "/inventory",label: "GEAR",       icon: Package },
-  { path: "/trade",    label: "TRADE HUB",  icon: ArrowLeftRight },
-  { path: "/bazaar",   label: "BAZAAR",     icon: Store },
-  { path: "/market",   label: "MARKET",     icon: TrendingUp },
+  { path: "/",          label: "TODAY",       icon: Zap },
+  { path: "/sitrep",    label: "SITREP",      icon: LayoutDashboard },
+  { path: "/ops",       label: "OPERATIONS",  icon: Crosshair },
+  { path: "/territory", label: "TERRITORY",   icon: Map },
+  { path: "/economy",   label: "ECONOMY",     icon: Store },
+  { path: "/colony",    label: "COLONY",      icon: Home },
+  { path: "/loadout",   label: "LOADOUT",     icon: Package },
+  { path: "/dossier",   label: "DOSSIER",     icon: User },
 ];
 
-const planningNav = [
-  { path: "/warroom",  label: "WAR ROOM",   icon: Radar },
-  { path: "/planner",  label: "PLANNER",    icon: Target },
-  { path: "/intel",    label: "INTEL",      icon: Eye },
-  { path: "/treaties", label: "TREATIES",   icon: FileSignature },
-  { path: "/ops-log",  label: "OPS LOG",    icon: ScrollText,  gmOnly: true },
-  { path: "/heatmap",  label: "HEATMAP",    icon: Flame,       gmOnly: true },
-  { path: "/logistics",label: "LOGISTICS",  icon: Truck,       gmOnly: true },
-  { path: "/ledger",   label: "LEDGER",     icon: BarChart3,   gmOnly: true },
-  { path: "/conflicts",label: "CONFLICTS",  icon: Swords,      gmOnly: true },
-];
-
-const secondaryNav = [
-  { path: "/journal",      label: "JOURNAL",      icon: BookOpen },
-  { path: "/workbench",    label: "WORKBENCH",    icon: Hammer },
-  { path: "/dossier",      label: "DOSSIER",      icon: FileText },
-  { path: "/mission-log",  label: "MISSION LOG",  icon: ScrollText },
-  { path: "/records",      label: "RECORDS",      icon: Trophy },
-  { path: "/profile",      label: "PROFILE",      icon: User },
+const gmToolsNav = [
+  { path: "/ops-log",    label: "OPS LOG",    icon: ScrollText },
+  { path: "/heatmap",    label: "HEATMAP",    icon: Flame },
+  { path: "/logistics",  label: "LOGISTICS",  icon: Truck },
+  { path: "/ledger",     label: "LEDGER",     icon: BarChart3 },
+  { path: "/conflicts",  label: "CONFLICTS",  icon: Swords },
 ];
 
 const adminNav = [
@@ -94,13 +68,11 @@ export default function Sidebar({ user: propUser }) {
 
   const isAdmin = isAdminOrGM(user);
 
-  const filterItems = (items) =>
-    isAdmin ? items : items.filter((i) => !i.gmOnly);
+  const [gmToolsOpen, setGmToolsOpen] = useState(false);
 
   const navGroups = [
-    { label: null,         items: filterItems(coreNav) },
-    { label: "TACTICAL",   items: filterItems(planningNav) },
-    { label: "PERSONAL",   items: filterItems(secondaryNav) },
+    { label: null,         items: coreNav },
+    ...(isAdmin ? [{ label: "GM TOOLS", items: gmToolsNav, collapsible: true, isOpen: gmToolsOpen, onToggle: () => setGmToolsOpen(!gmToolsOpen) }] : []),
     ...(isAdmin ? [{ label: "GM", items: adminNav }] : []),
   ].filter((g) => g.items.length > 0);
 
@@ -163,16 +135,25 @@ export default function Sidebar({ user: propUser }) {
           {navGroups.map((group, gi) => (
             <div key={gi}>
               {group.label && !collapsed && (
-                <div className="px-2.5 pt-2 pb-1 flex items-center gap-2">
+                <button
+                  onClick={group.onToggle || undefined}
+                  className={`w-full px-2.5 pt-2 pb-1 flex items-center gap-2 ${group.collapsible ? 'cursor-pointer hover:opacity-80' : ''}`}
+                >
                   <span className="text-[9px] font-mono text-primary/30 tracking-[0.25em] uppercase">
                     // {group.label}
                   </span>
                   <div className="flex-1 h-px bg-border/40" />
-                </div>
+                  {group.collapsible && (
+                    group.isOpen
+                      ? <ChevronUp className="h-3 w-3 text-primary/30" />
+                      : <ChevronDown className="h-3 w-3 text-primary/30" />
+                  )}
+                </button>
               )}
               {group.label && collapsed && (
                 <div className="mx-auto my-1.5 w-5 border-t border-border/50" />
               )}
+              {(!group.collapsible || group.isOpen || collapsed) && (
               <div className="space-y-px">
                 {group.items.map((item) => {
                   const isActive = location.pathname === item.path;
@@ -196,6 +177,7 @@ export default function Sidebar({ user: propUser }) {
                   );
                 })}
               </div>
+              )}
             </div>
           ))}
         </nav>
@@ -204,7 +186,7 @@ export default function Sidebar({ user: propUser }) {
         <div className="border-t border-border/60">
           {user && !collapsed && (
             <Link
-              to="/profile"
+              to="/dossier"
               onClick={() => setMobileOpen(false)}
               className="flex items-center gap-2 px-3 py-2.5 border-b border-border/40 hover:bg-secondary/30 transition-colors group"
             >

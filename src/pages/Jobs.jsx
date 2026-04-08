@@ -138,14 +138,14 @@ export default function Jobs() {
       {myActive.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <NextStepBanner
-            to="/inventory"
+            to="/loadout?tab=gear"
             icon={Package}
             label="Check your loadout"
             hint="Make sure your gear is ready before heading out."
             color="muted"
           />
           <NextStepBanner
-            to="/trade"
+            to="/economy?tab=trade"
             icon={ArrowLeftRight}
             label="Need supplies?"
             hint="Browse the Trade Hub for gear and materials."

@@ -89,12 +89,12 @@ export default function TodayInventory({ inventory, craftingProjects }) {
 
       {/* Quick links */}
       <div className="flex gap-1.5">
-        <Link to="/inventory" className="flex-1">
+        <Link to="/loadout?tab=gear" className="flex-1">
           <Button variant="outline" size="sm" className="w-full text-[10px] uppercase tracking-wider h-8">
             <GearCrateSvg size={14} className="mr-1" /> Inventory
           </Button>
         </Link>
-        <Link to="/workbench" className="flex-1">
+        <Link to="/loadout?tab=workbench" className="flex-1">
           <Button variant="outline" size="sm" className="w-full text-[10px] uppercase tracking-wider h-8">
             <Hammer className="h-3 w-3 mr-1" /> Workbench
             {readyProjects.length > 0 && (

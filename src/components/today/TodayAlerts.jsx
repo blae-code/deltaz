@@ -78,12 +78,12 @@ export default function TodayAlerts({ events, intel, broadcasts }) {
         </div>
       ))}
       <div className="flex gap-1.5 mt-2">
-        <Link to="/events" className="flex-1">
+        <Link to="/ops?tab=comms" className="flex-1">
           <Button variant="outline" size="sm" className="w-full text-[10px] uppercase tracking-wider h-8">
             <RadioTowerSvg size={14} className="mr-1" /> Comms
           </Button>
         </Link>
-        <Link to="/intel" className="flex-1">
+        <Link to="/ops?tab=intel" className="flex-1">
           <Button variant="outline" size="sm" className="w-full text-[10px] uppercase tracking-wider h-8">
             <IntelEyeSvg size={14} className="mr-1" /> Intel
           </Button>

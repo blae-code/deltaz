@@ -91,14 +91,14 @@ export default function Inventory() {
       {items.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <NextStepBanner
-            to="/trade"
+            to="/economy?tab=trade"
             icon={ArrowLeftRight}
             label="Trade surplus gear"
             hint="Post unwanted items on the Trade Hub for other operatives."
             color="muted"
           />
           <NextStepBanner
-            to="/workbench"
+            to="/loadout?tab=workbench"
             icon={Hammer}
             label="Craft something new"
             hint="Use your materials to start a build on the Workbench."

@@ -8,33 +8,20 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import AppShell from './components/layout/AppShell';
 import LoginSplash from './components/auth/LoginSplash';
 import AuthLoadingScreen from './components/auth/AuthLoadingScreen';
+import Today from './pages/Today';
 import Dashboard from './pages/Dashboard';
-import Jobs from './pages/Jobs';
-import WorldMap from './pages/WorldMap';
-import Events from './pages/Events';
-import Factions from './pages/Factions';
-import Profile from './pages/Profile';
-import Admin from './pages/Admin';
-import Intel from './pages/Intel';
-import Market from './pages/Market';
+import Operations from './pages/Operations';
+import Territory from './pages/Territory';
+import Economy from './pages/Economy';
 import Colony from './pages/Colony';
-import Treaties from './pages/Treaties';
-import Inventory from './pages/Inventory';
-import TradeHub from './pages/TradeHub';
-import Records from './pages/Records';
-import WeeklyDossier from './pages/WeeklyDossier';
-import MissionLog from './pages/MissionLog';
-import CraftingTracker from './pages/CraftingTracker';
-import Logistics from './pages/Logistics';
-import Journal from './pages/Journal';
-import MissionPlanner from './pages/MissionPlanner';
+import Loadout from './pages/Loadout';
+import Dossier from './pages/Dossier';
+import Admin from './pages/Admin';
+import OpsLog from './pages/OpsLog';
 import SectorHeatmap from './pages/SectorHeatmap';
 import ResourceLedger from './pages/ResourceLedger';
 import ConflictTimeline from './pages/ConflictTimeline';
-import Today from './pages/Today';
-import OpsLog from './pages/OpsLog';
-import Bazaar from './pages/Bazaar';
-import WarRoom from './pages/WarRoom';
+import Logistics from './pages/Logistics';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -59,30 +46,17 @@ const AuthenticatedApp = () => {
       <Route element={<AppShell />}>
         <Route path="/" element={<Today />} />
         <Route path="/sitrep" element={<Dashboard />} />
-        <Route path="/jobs" element={<Jobs />} />
-        <Route path="/map" element={<WorldMap />} />
-        <Route path="/events" element={<Events />} />
-        <Route path="/factions" element={<Factions />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/intel" element={<Intel />} />
-        <Route path="/market" element={<Market />} />
+        <Route path="/ops" element={<Operations />} />
+        <Route path="/territory" element={<Territory />} />
+        <Route path="/economy" element={<Economy />} />
         <Route path="/colony" element={<Colony />} />
-        <Route path="/treaties" element={<Treaties />} />
-        <Route path="/inventory" element={<Inventory />} />
-        <Route path="/trade" element={<TradeHub />} />
-        <Route path="/records" element={<Records />} />
-        <Route path="/dossier" element={<WeeklyDossier />} />
-        <Route path="/mission-log" element={<MissionLog />} />
-        <Route path="/workbench" element={<CraftingTracker />} />
-        <Route path="/logistics" element={<Logistics />} />
-        <Route path="/journal" element={<Journal />} />
-        <Route path="/planner" element={<MissionPlanner />} />
+        <Route path="/loadout" element={<Loadout />} />
+        <Route path="/dossier" element={<Dossier />} />
+        <Route path="/ops-log" element={<OpsLog />} />
         <Route path="/heatmap" element={<SectorHeatmap />} />
+        <Route path="/logistics" element={<Logistics />} />
         <Route path="/ledger" element={<ResourceLedger />} />
         <Route path="/conflicts" element={<ConflictTimeline />} />
-        <Route path="/ops-log" element={<OpsLog />} />
-        <Route path="/bazaar" element={<Bazaar />} />
-        <Route path="/warroom" element={<WarRoom />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>

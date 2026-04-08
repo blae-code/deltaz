@@ -69,7 +69,7 @@ export default function TradeHub() {
       {/* Continuity: if inventory is empty, nudge to Inventory */}
       {items.length === 0 && tab === "trade" && (
         <NextStepBanner
-          to="/inventory"
+          to="/loadout?tab=gear"
           icon={Package}
           label="Log your gear first"
           hint="Add items to your Gear Locker so you have something to trade."
