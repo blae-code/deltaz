@@ -12,10 +12,8 @@ import MissionToolsDrawer from "../components/missions/MissionToolsDrawer";
 import SkeletonGrid from "../components/terminal/SkeletonGrid";
 import EmptyState from "../components/terminal/EmptyState";
 import { Filter, Sparkles, Package, ArrowLeftRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import NextStepBanner from "../components/terminal/NextStepBanner";
 import StatusStripSkeleton from "../components/layout/StatusStripSkeleton";
-import AuthLoadingState from "../components/terminal/AuthLoadingState";
 
 export default function Jobs() {
   const { user, isAdmin } = useCurrentUser();
@@ -27,18 +25,18 @@ export default function Jobs() {
   const jobsQuery = useEntityQuery(
     "jobs",
     () => base44.entities.Job.list("-created_date", 100),
-    { subscribeEntities: ["Job"] }
+    { subscribeEntities: ["Job"], syncPolicy: "realtime" }
   );
   const { data: jobsData, isLoading: jobsLoading, syncMeta: jobsSyncMeta } = jobsQuery;
   const { data: territories } = useEntityQuery(
     "territories",
     () => base44.entities.Territory.list("-created_date", 100),
-    { subscribeEntities: ["Territory"] }
+    { subscribeEntities: ["Territory"], syncPolicy: "passive" }
   );
   const { data: factions } = useEntityQuery(
     "factions",
     () => base44.entities.Faction.list("-created_date", 50),
-    { subscribeEntities: ["Faction"] }
+    { subscribeEntities: ["Faction"], syncPolicy: "passive" }
   );
 
   const jobs = jobsData || [];

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import useEntityQuery from "../hooks/useEntityQuery";
 import { useRegisterSync } from "../hooks/useSyncRegistry";
@@ -8,7 +8,7 @@ import PageShell from "../components/layout/PageShell";
 import StatusStrip from "../components/layout/StatusStrip";
 import ActionRail from "../components/layout/ActionRail";
 import { Button } from "@/components/ui/button";
-import { Plus, Hammer, BookOpen, CheckCircle, Clock, Package, ArrowLeftRight } from "lucide-react";
+import { Plus, BookOpen, CheckCircle, Clock, Package, ArrowLeftRight } from "lucide-react";
 import NextStepBanner from "../components/terminal/NextStepBanner";
 import ProjectList from "../components/crafting/ProjectList";
 import CreateProjectForm from "../components/crafting/CreateProjectForm";
@@ -22,6 +22,7 @@ export default function CraftingTracker() {
   const [showCreate, setShowCreate] = useState(false);
   const [showRecipes, setShowRecipes] = useState(false);
   const [filter, setFilter] = useState("active");
+  const [catalogBootstrapped, setCatalogBootstrapped] = useState(false);
 
   const projectsQuery = useEntityQuery(
     ["craftingProjects", user?.email],
@@ -37,11 +38,47 @@ export default function CraftingTracker() {
     () => user ? base44.entities.InventoryItem.filter({ owner_email: user.email }, "-created_date", 200) : Promise.resolve([]),
     { subscribeEntities: ["InventoryItem"], queryOpts: { enabled: !!user?.email } }
   );
-  const { data: recipes = [] } = useEntityQuery(
+  const recipesQuery = useEntityQuery(
     "recipes",
     () => base44.entities.Recipe.filter({ is_available: true }, "name", 100),
     { subscribeEntities: ["Recipe"] }
   );
+  const { data: recipes = [] } = recipesQuery;
+
+  useEffect(() => {
+    if (!user?.email || catalogBootstrapped || recipesQuery.isLoading || recipesQuery.isError || recipes.length > 0) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const ensureCatalog = async () => {
+      try {
+        await base44.functions.invoke("craftingOps", { action: "ensure_catalog" });
+        if (!cancelled) {
+          setCatalogBootstrapped(true);
+          recipesQuery.refetch();
+        }
+      } catch {
+        if (!cancelled) {
+          setCatalogBootstrapped(true);
+        }
+      }
+    };
+
+    ensureCatalog();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    user?.email,
+    catalogBootstrapped,
+    recipes.length,
+    recipesQuery.isLoading,
+    recipesQuery.isError,
+    recipesQuery.refetch,
+  ]);
 
   if (loading) {
     return (

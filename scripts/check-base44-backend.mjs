@@ -7,6 +7,7 @@ const rootDir = process.cwd();
 const packageJsonPath = path.join(rootDir, 'package.json');
 const entitiesDir = path.join(rootDir, 'base44', 'entities');
 const functionsDir = path.join(rootDir, 'base44', 'functions');
+const srcDir = path.join(rootDir, 'src');
 
 const normalizeSemver = (value) => value?.match(/\d+\.\d+\.\d+/)?.[0] ?? null;
 
@@ -70,6 +71,17 @@ const collectEntityAccess = (sourceText) => {
   };
 };
 
+const collectReferencedNames = (sourceText, pattern, groupIndex = 1) => {
+  const names = new Set();
+  for (const match of sourceText.matchAll(pattern)) {
+    const value = match[groupIndex];
+    if (value) {
+      names.add(value);
+    }
+  }
+  return names;
+};
+
 const checkTypeScriptSyntax = (relativePath, sourceText, errors) => {
   const sourceFile = ts.createSourceFile(relativePath, sourceText, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
   const diagnostics = [];
@@ -120,6 +132,9 @@ const main = async () => {
   const entityFiles = await listFiles(entitiesDir, (filePath) => filePath.endsWith('.jsonc'));
   const functionEntries = await listFiles(functionsDir, (filePath) => filePath.endsWith(path.join('entry.ts')));
   const tsFiles = await listFiles(functionsDir, (filePath) => filePath.endsWith('.ts'));
+  const srcFiles = await listFiles(srcDir, (filePath) => /\.(js|jsx|ts|tsx)$/.test(filePath));
+  const entityNames = new Set(entityFiles.map((filePath) => path.basename(filePath, '.jsonc')));
+  const functionNames = new Set(functionEntries.map((filePath) => path.basename(path.dirname(filePath))));
 
   if (entityFiles.length === 0) {
     errors.push('No entity schema files were found under base44/entities.');
@@ -145,6 +160,40 @@ const main = async () => {
   for (const tsFile of tsFiles) {
     const sourceText = await fs.readFile(tsFile, 'utf8');
     checkTypeScriptSyntax(path.relative(rootDir, tsFile), sourceText, errors);
+  }
+
+  for (const tsFile of tsFiles) {
+    const sourceText = await fs.readFile(tsFile, 'utf8');
+    const relativePath = path.relative(rootDir, tsFile);
+    const referencedEntities = collectReferencedNames(
+      sourceText,
+      /base44\.(?:asServiceRole\.)?entities\.([A-Za-z0-9_]+)\b/g,
+    );
+
+    for (const entityName of referencedEntities) {
+      if (!entityNames.has(entityName)) {
+        errors.push(`${relativePath} references missing entity ${entityName}.`);
+      }
+    }
+  }
+
+  for (const srcFile of srcFiles) {
+    const sourceText = await fs.readFile(srcFile, 'utf8');
+    const relativePath = path.relative(rootDir, srcFile);
+    const referencedEntities = collectReferencedNames(sourceText, /base44\.entities\.([A-Za-z0-9_]+)\b/g);
+    const referencedFunctions = collectReferencedNames(sourceText, /base44\.functions\.invoke\((['"`])([A-Za-z0-9_]+)\1/g, 2);
+
+    for (const entityName of referencedEntities) {
+      if (!entityNames.has(entityName)) {
+        errors.push(`${relativePath} references missing entity ${entityName}.`);
+      }
+    }
+
+    for (const functionName of referencedFunctions) {
+      if (!functionNames.has(functionName)) {
+        errors.push(`${relativePath} invokes missing function ${functionName}.`);
+      }
+    }
   }
 
   const functionSummaries = [];

@@ -1,0 +1,72 @@
+{
+  "name": "Broadcast",
+  "type": "object",
+  "properties": {
+    "channel": {
+      "type": "string",
+      "enum": [
+        "emergency",
+        "territory_alert",
+        "conflict",
+        "faction_comm",
+        "propaganda"
+      ],
+      "default": "territory_alert"
+    },
+    "title": {
+      "type": "string",
+      "description": "Broadcast headline"
+    },
+    "content": {
+      "type": "string",
+      "description": "Broadcast body content"
+    },
+    "faction_id": {
+      "type": "string",
+      "description": "Faction associated with the broadcast"
+    },
+    "faction_name": {
+      "type": "string",
+      "description": "Faction name snapshot"
+    },
+    "faction_color": {
+      "type": "string",
+      "description": "Faction color snapshot"
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "routine",
+        "urgent",
+        "critical",
+        "emergency"
+      ],
+      "default": "urgent"
+    },
+    "territory_id": {
+      "type": "string",
+      "description": "Territory associated with the broadcast"
+    },
+    "sector": {
+      "type": "string",
+      "description": "Sector associated with the broadcast"
+    },
+    "is_pinned": {
+      "type": "boolean",
+      "default": false
+    },
+    "auto_generated": {
+      "type": "boolean",
+      "default": false
+    },
+    "expires_at": {
+      "type": "string",
+      "description": "ISO date when the broadcast expires"
+    }
+  },
+  "required": [
+    "channel",
+    "title",
+    "content"
+  ]
+}

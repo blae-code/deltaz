@@ -3,14 +3,12 @@ import { base44 } from "@/api/base44Client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   ChevronDown,
   ChevronUp,
   Check,
   X,
   Pencil,
-  ArrowLeftRight,
   Trash2,
   ShoppingCart,
 } from "lucide-react";
@@ -37,16 +35,17 @@ const statusStyle = {
 // All array/object access below uses defensive defaults.
 export default function ProjectCard({ project, inventory: rawInventory, userEmail, userCallsign }) {
   const inventory = Array.isArray(rawInventory) ? rawInventory : [];
-  // Defensive: bail on missing project
-  if (!project) return null;
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [materials, setMaterials] = useState(Array.isArray(project.materials) ? project.materials : []);
+  const [materials, setMaterials] = useState(Array.isArray(project?.materials) ? project.materials : []);
   const [showTrade, setShowTrade] = useState(false);
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["craftingProjects"] });
+
+  // Defensive: bail on missing project after hooks are declared.
+  if (!project) return null;
 
   const totalNeeded = materials.length;
   const totalComplete = materials.filter(m => (m.have || 0) >= (m.needed || 1)).length;
@@ -78,11 +77,17 @@ export default function ProjectCard({ project, inventory: rawInventory, userEmai
       return old.map((p) => p.id === project.id ? { ...p, status: "completed", completed_at: new Date().toISOString() } : p);
     });
     try {
-      await base44.entities.CraftingProject.update(project.id, {
-        status: "completed",
-        completed_at: new Date().toISOString(),
+      const res = await base44.functions.invoke("craftingOps", {
+        action: "complete_project",
+        project_id: project.id,
       });
-      toast({ title: "Project Completed!", description: `"${project.title}" marked as built` });
+      toast({
+        title: "Project Completed!",
+        description: res.data?.already_completed
+          ? `"${project.title}" was already marked built`
+          : `"${project.title}" marked as built`,
+      });
+      invalidate();
     } catch {
       invalidate();
     }

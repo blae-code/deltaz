@@ -1,0 +1,84 @@
+{
+  "name": "Recipe",
+  "type": "object",
+  "properties": {
+    "slug": {
+      "type": "string",
+      "description": "Stable recipe identifier"
+    },
+    "name": {
+      "type": "string",
+      "description": "Recipe name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Recipe description"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "weapon",
+        "armor",
+        "tool",
+        "consumable",
+        "upgrade",
+        "trade_good"
+      ],
+      "default": "tool"
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "basic",
+        "intermediate",
+        "advanced",
+        "masterwork"
+      ],
+      "default": "basic"
+    },
+    "ingredients": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "resource": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          }
+        }
+      },
+      "description": "Resources required to craft the recipe"
+    },
+    "bonus_type": {
+      "type": "string",
+      "description": "Optional bonus type granted by the output"
+    },
+    "bonus_value": {
+      "type": "number",
+      "default": 0,
+      "description": "Numeric bonus value for the output"
+    },
+    "output_value": {
+      "type": "number",
+      "default": 0,
+      "description": "Credit value of the crafted output"
+    },
+    "output_quantity": {
+      "type": "number",
+      "default": 1,
+      "description": "How many items are produced"
+    },
+    "is_available": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "slug",
+    "name",
+    "category",
+    "ingredients"
+  ]
+}

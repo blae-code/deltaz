@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Hammer, ChevronRight, ArrowLeftRight } from "lucide-react";
+import { Hammer, ArrowLeftRight } from "lucide-react";
 import GearCrateSvg from "../svg/GearCrateSvg";
 import NextStepBanner from "../terminal/NextStepBanner";
 
@@ -55,7 +55,7 @@ export default function TodayInventory({ inventory, craftingProjects }) {
                 <div key={p.id} className="flex items-center gap-2.5 border border-border rounded-sm px-3 py-2">
                   <Hammer className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-foreground truncate">{p.name}</p>
+                    <p className="text-xs text-foreground truncate">{p.title}</p>
                     <div className="flex items-center gap-2 mt-0.5">
                       <div className="flex-1 h-1 bg-secondary rounded-full overflow-hidden">
                         <div

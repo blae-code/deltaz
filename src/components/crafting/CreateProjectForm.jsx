@@ -20,7 +20,7 @@ const PRIORITIES = ["low", "normal", "high", "urgent"];
 // TODO(schema-audit): Recipe.category includes "building" and "custom" only in CraftingProject, not in Recipe.
 //   Recipe uses: weapon|armor|tool|consumable|upgrade|trade_good. The form CATEGORIES below include extras
 //   that only CraftingProject supports. This is intentional — custom/building are project-only types.
-export default function CreateProjectForm({ userEmail, recipes: rawRecipes, onCreated }) {
+export default function CreateProjectForm({ userEmail: _userEmail, recipes: rawRecipes, onCreated }) {
   const recipes = Array.isArray(rawRecipes) ? rawRecipes : [];
   const queryClient = useQueryClient();
   const [title, setTitle] = useState("");
@@ -73,8 +73,8 @@ export default function CreateProjectForm({ userEmail, recipes: rawRecipes, onCr
     }
 
     setSaving(true);
-    await base44.entities.CraftingProject.create({
-      owner_email: userEmail,
+    await base44.functions.invoke("craftingOps", {
+      action: "create_project",
       title: title.trim(),
       description: description.trim(),
       recipe_id: recipeId || undefined,

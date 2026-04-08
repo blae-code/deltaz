@@ -71,6 +71,24 @@
       },
       "description": "List of materials needed with current progress"
     },
+    "output_name": {
+      "type": "string",
+      "description": "Snapshot of the crafted output name"
+    },
+    "output_category": {
+      "type": "string",
+      "description": "Snapshot of the crafted output category"
+    },
+    "output_value": {
+      "type": "number",
+      "default": 0,
+      "description": "Snapshot of the crafted output value"
+    },
+    "output_quantity": {
+      "type": "number",
+      "default": 1,
+      "description": "Snapshot of the crafted output quantity"
+    },
     "completed_at": {
       "type": "string",
       "description": "ISO date when the project was completed"

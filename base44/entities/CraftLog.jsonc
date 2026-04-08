@@ -1,0 +1,59 @@
+{
+  "name": "CraftLog",
+  "type": "object",
+  "properties": {
+    "player_email": {
+      "type": "string",
+      "description": "Email of the player who completed the craft"
+    },
+    "project_id": {
+      "type": "string",
+      "description": "CraftingProject ID"
+    },
+    "recipe_id": {
+      "type": "string",
+      "description": "Recipe ID used for the craft"
+    },
+    "project_title": {
+      "type": "string",
+      "description": "Snapshot of the project title"
+    },
+    "output_name": {
+      "type": "string",
+      "description": "Name of the crafted output"
+    },
+    "output_category": {
+      "type": "string",
+      "description": "Category of the crafted output"
+    },
+    "output_value": {
+      "type": "number",
+      "default": 0,
+      "description": "Credit value of the crafted output"
+    },
+    "quantity": {
+      "type": "number",
+      "default": 1,
+      "description": "How many items were crafted"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "success",
+        "failed"
+      ],
+      "default": "success"
+    },
+    "completed_at": {
+      "type": "string",
+      "description": "ISO completion timestamp"
+    }
+  },
+  "required": [
+    "player_email",
+    "project_id",
+    "project_title",
+    "output_name",
+    "status"
+  ]
+}

@@ -26,77 +26,77 @@ export default function Today() {
   const jobsQuery = useEntityQuery(
     "today-jobs",
     () => base44.entities.Job.list("-created_date", 50),
-    { subscribeEntities: ["Job"] }
+    { subscribeEntities: ["Job"], syncPolicy: "realtime" }
   );
   const { data: jobs = [] } = jobsQuery;
 
   const eventsQuery = useEntityQuery(
     "today-events",
     () => base44.entities.Event.list("-created_date", 10),
-    { subscribeEntities: ["Event"] }
+    { subscribeEntities: ["Event"], syncPolicy: "realtime" }
   );
   const { data: events = [] } = eventsQuery;
 
   const intelQuery = useEntityQuery(
     "today-intel",
     () => base44.entities.IntelFeed.list("-created_date", 10),
-    { subscribeEntities: ["IntelFeed"] }
+    { subscribeEntities: ["IntelFeed"], syncPolicy: "realtime" }
   );
   const { data: intel = [] } = intelQuery;
 
   const broadcastQuery = useEntityQuery(
     "today-broadcasts",
     () => base44.entities.Broadcast.list("-created_date", 5),
-    { subscribeEntities: ["Broadcast"] }
+    { subscribeEntities: ["Broadcast"], syncPolicy: "realtime" }
   );
   const { data: broadcasts = [] } = broadcastQuery;
 
   const inventoryQuery = useEntityQuery(
     ["today-inventory", user?.email],
     () => user ? base44.entities.InventoryItem.filter({ owner_email: user.email }, "-created_date", 200) : Promise.resolve([]),
-    { subscribeEntities: ["InventoryItem"], queryOpts: { enabled: !!user?.email } }
+    { subscribeEntities: ["InventoryItem"], syncPolicy: "active", queryOpts: { enabled: !!user?.email } }
   );
   const { data: inventory = [] } = inventoryQuery;
 
   const craftQuery = useEntityQuery(
     ["today-crafting", user?.email],
     () => user ? base44.entities.CraftingProject.filter({ owner_email: user.email }, "-created_date", 50) : Promise.resolve([]),
-    { subscribeEntities: ["CraftingProject"], queryOpts: { enabled: !!user?.email } }
+    { subscribeEntities: ["CraftingProject"], syncPolicy: "active", queryOpts: { enabled: !!user?.email } }
   );
   const { data: craftingProjects = [] } = craftQuery;
 
   const colonyQuery = useEntityQuery(
     "today-colony",
     () => base44.entities.ColonyStatus.list("-updated_date", 1).then(r => r[0] || null),
-    { subscribeEntities: ["ColonyStatus"] }
+    { subscribeEntities: ["ColonyStatus"], syncPolicy: "realtime" }
   );
   const { data: colony } = colonyQuery;
 
   const factionsQuery = useEntityQuery(
     "today-factions",
     () => base44.entities.Faction.list("-created_date", 50),
-    { subscribeEntities: ["Faction"] }
+    { subscribeEntities: ["Faction"], syncPolicy: "passive" }
   );
   const { data: factions = [] } = factionsQuery;
 
   const reputationsQuery = useEntityQuery(
     ["today-reputations", user?.email],
     () => user ? base44.entities.Reputation.filter({ player_email: user.email }) : Promise.resolve([]),
-    { subscribeEntities: ["Reputation"], queryOpts: { enabled: !!user?.email } }
+    { subscribeEntities: ["Reputation"], syncPolicy: "active", queryOpts: { enabled: !!user?.email } }
   );
   const { data: reputations = [] } = reputationsQuery;
 
   const worldQuery = useEntityQuery(
     "today-world",
     () => base44.entities.WorldConditions.list("-updated_date", 1).then(r => r[0] || null),
-    { subscribeEntities: ["WorldConditions"] }
+    { subscribeEntities: ["WorldConditions"], syncPolicy: "realtime" }
   );
   const { data: worldConditions } = worldQuery;
 
   const survivorsQuery = useEntityQuery(
     "today-survivors",
     () => base44.entities.Survivor.list("-created_date", 200),
-    { subscribeEntities: ["Survivor"] }
+    { subscribeEntities: ["Survivor"], syncPolicy: "active" }
   );
   const { data: survivors = [] } = survivorsQuery;
 

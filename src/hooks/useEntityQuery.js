@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { getEntityQueryPolicy } from "@/lib/entity-query-policy";
 
 /**
  * Fetches entity data via useQuery and keeps it in sync using
@@ -15,30 +16,61 @@ import { base44 } from "@/api/base44Client";
 export default function useEntityQuery(key, fetcher, opts = {}) {
   const queryClient = useQueryClient();
   const queryKey = Array.isArray(key) ? key : [key];
-  const { subscribeEntities = [], queryOpts = {} } = opts;
+  const {
+    subscribeEntities = [],
+    queryOpts = {},
+    syncPolicy,
+    subscriptionDebounceMs: overrideSubscriptionDebounceMs,
+  } = opts;
+  const isEnabled = queryOpts.enabled ?? true;
+  const subscribeKey = subscribeEntities.join("|");
+  const { queryOptions: policyQueryOptions, subscriptionDebounceMs } = getEntityQueryPolicy(syncPolicy, {
+    hasSubscriptions: subscribeEntities.length > 0,
+  });
+  const effectiveSubscriptionDebounceMs = overrideSubscriptionDebounceMs ?? subscriptionDebounceMs;
 
   const query = useQuery({
     queryKey,
     queryFn: fetcher,
-    staleTime: 30_000,
     // Keep showing previous data while refetching (partial rendering)
     placeholderData: (prev) => prev,
+    ...policyQueryOptions,
     ...queryOpts,
   });
 
   useEffect(() => {
-    if (subscribeEntities.length === 0) return;
+    if (!isEnabled || subscribeEntities.length === 0) return;
+
+    let invalidateTimer = null;
+
+    const invalidateQuery = () => {
+      queryClient.invalidateQueries({
+        queryKey,
+        refetchType: typeof document !== "undefined" && document.hidden ? "none" : "active",
+      });
+    };
+
+    const scheduleInvalidate = () => {
+      if (invalidateTimer) return;
+      invalidateTimer = window.setTimeout(() => {
+        invalidateTimer = null;
+        invalidateQuery();
+      }, effectiveSubscriptionDebounceMs);
+    };
 
     const unsubs = subscribeEntities.map((entityName) => {
       const entity = base44.entities[entityName];
       if (!entity?.subscribe) return null;
-      return entity.subscribe(() => {
-        queryClient.invalidateQueries({ queryKey });
-      });
+      return entity.subscribe(scheduleInvalidate);
     });
 
-    return () => unsubs.forEach((u) => u?.());
-  }, [queryClient, ...queryKey]);
+    return () => {
+      if (invalidateTimer) {
+        window.clearTimeout(invalidateTimer);
+      }
+      unsubs.forEach((u) => u?.());
+    };
+  }, [queryClient, isEnabled, subscribeKey, effectiveSubscriptionDebounceMs, ...queryKey]);
 
   // Expose sync metadata alongside standard query fields
   return {

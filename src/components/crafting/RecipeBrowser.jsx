@@ -2,11 +2,9 @@ import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQueryClient } from "@tanstack/react-query";
 import DataCard from "../terminal/DataCard";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Hammer, Search, Plus, Check, X, BookOpen } from "lucide-react";
-import EmptyState from "../terminal/EmptyState";
+import { Search, Plus, Check, X } from "lucide-react";
 import GuidanceBox from "../terminal/GuidanceBox";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -17,7 +15,7 @@ const diffColor = {
   masterwork: "text-status-danger",
 };
 
-export default function RecipeBrowser({ recipes, inventory, userEmail, onProjectCreated }) {
+export default function RecipeBrowser({ recipes, inventory, userEmail: _userEmail, onProjectCreated }) {
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("all");
   const { toast } = useToast();
@@ -40,8 +38,8 @@ export default function RecipeBrowser({ recipes, inventory, userEmail, onProject
   };
 
   const startProject = async (recipe) => {
-    await base44.entities.CraftingProject.create({
-      owner_email: userEmail,
+    await base44.functions.invoke("craftingOps", {
+      action: "create_project",
       title: recipe.name,
       description: recipe.description || "",
       recipe_id: recipe.id,

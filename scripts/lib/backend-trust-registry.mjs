@@ -4,6 +4,7 @@ export const backendTrustRegistry = {
   colonyAlertMonitor: { lane: 'deterministic_projection', trigger: 'automation', allowsLLM: false, allowsRandom: false, classification: 'keep' },
   colonyThreatMonitor: { lane: 'canonical', trigger: 'automation', allowsLLM: false, allowsRandom: false, classification: 'keep' },
   commodityPriceEngine: { lane: 'canonical', trigger: 'automation', allowsLLM: false, allowsRandom: false, classification: 'keep' },
+  craftingOps: { lane: 'canonical', trigger: 'frontend', allowsLLM: false, allowsRandom: false, classification: 'keep' },
   deployMissionPlan: { lane: 'canonical', trigger: 'frontend', allowsLLM: false, allowsRandom: false, classification: 'keep' },
   diplomacyActions: { lane: 'canonical', trigger: 'frontend', allowsLLM: false, allowsRandom: false, classification: 'keep' },
   economyCycle: { lane: 'canonical', trigger: 'automation', allowsLLM: false, allowsRandom: false, classification: 'keep' },
