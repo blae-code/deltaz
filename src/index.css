@@ -199,6 +199,11 @@
   }
 }
 
+@keyframes lightning-fade {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 .terminal-flicker {
   animation: flicker 5s infinite;
 }
