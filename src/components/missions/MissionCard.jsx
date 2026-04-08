@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { base44 } from "@/api/base44Client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
@@ -15,10 +16,17 @@ import CrosshairTargetSvg from "../svg/CrosshairTargetSvg";
 import moment from "moment";
 
 const difficultyColor = {
-  routine: "text-primary border-primary/30",
+  routine:   "text-primary border-primary/30",
   hazardous: "text-accent border-accent/30",
-  critical: "text-status-danger border-status-danger/30",
-  suicide: "text-status-danger border-status-danger/50 font-bold",
+  critical:  "text-status-danger border-status-danger/30",
+  suicide:   "text-status-danger border-status-danger/50 font-bold",
+};
+
+const difficultyMeta = {
+  routine:   { label: "ROUTINE",   tip: "Standard engagement — low risk, standard reward. Suitable for new operatives." },
+  hazardous: { label: "HAZARDOUS", tip: "Elevated threat — armed resistance expected. x1.5 credit/rep multiplier." },
+  critical:  { label: "CRITICAL",  tip: "High-risk operation — casualties probable. x2 reward. Requires proven field record." },
+  suicide:   { label: "SUICIDE",   tip: "Extreme peril — survival not guaranteed. Maximum reward. No extraction guaranteed." },
 };
 
 const difficultyBg = {
@@ -98,8 +106,9 @@ export default function MissionCard({ job, faction, territory, userEmail, isAdmi
   };
 
   return (
+    <TooltipProvider delayDuration={300}>
     <div
-      className={`panel-frame overflow-hidden transition-all hover:border-primary/40 ${difficultyBg[job.difficulty] || ""}`}
+      className={`panel-frame overflow-hidden transition-all hover:border-primary/40 cursor-pointer select-none ${difficultyBg[job.difficulty] || ""}`}
       onClick={() => setExpanded(!expanded)}
     >
       {/* Header row */}
@@ -120,9 +129,23 @@ export default function MissionCard({ job, faction, territory, userEmail, isAdmi
             </div>
             <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
               <Badge variant="outline" className="text-[10px] uppercase">{job.type || "unknown"}</Badge>
-              <span className={`text-[11px] font-semibold uppercase tracking-wider ${difficultyColor[job.difficulty]?.split(" ")[0] || "text-muted-foreground"}`}>
-                {job.difficulty || "unknown"}
-              </span>
+              {job.difficulty ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className={cn("text-[11px] font-semibold uppercase tracking-wider cursor-help", difficultyColor[job.difficulty]?.split(" ")[0] || "text-muted-foreground")}>
+                      {difficultyMeta[job.difficulty]?.label ?? job.difficulty}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="font-mono text-[11px] bg-card border-primary/30 max-w-[240px]">
+                    <p className={cn("font-semibold text-[10px] mb-0.5", difficultyColor[job.difficulty]?.split(" ")[0])}>
+                      {difficultyMeta[job.difficulty]?.label ?? job.difficulty.toUpperCase()}
+                    </p>
+                    <p className="text-muted-foreground">{difficultyMeta[job.difficulty]?.tip ?? "Risk level unknown."}</p>
+                  </TooltipContent>
+                </Tooltip>
+              ) : (
+                <span className="text-[11px] text-muted-foreground uppercase tracking-wider">UNKNOWN</span>
+              )}
               <StatusIndicator status={statusMap[job.status] || "offline"} label={(job.status || "unknown").replace("_", " ")} />
               {faction && (
                 <span className="flex items-center gap-1 text-[10px]">
@@ -233,5 +256,6 @@ export default function MissionCard({ job, faction, territory, userEmail, isAdmi
         </div>
       )}
     </div>
+    </TooltipProvider>
   );
 }

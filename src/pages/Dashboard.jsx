@@ -1,5 +1,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
+import useEntityQuery from "../hooks/useEntityQuery";
+import useCurrentUser from "../hooks/useCurrentUser";
+import { useRegisterSync } from "../hooks/useSyncRegistry";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import WIDGET_REGISTRY, { DEFAULT_LAYOUT } from "../components/dashboard/WidgetRegistry";
 import WidgetWrapper from "../components/dashboard/WidgetWrapper";
@@ -7,47 +10,57 @@ import DashboardCustomizer from "../components/dashboard/DashboardCustomizer";
 import WorldPulseStatus from "../components/dashboard/WorldPulseStatus";
 import LiveEventWatcher from "../components/dashboard/LiveEventWatcher";
 import StatCard from "../components/dashboard/StatCard";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Crosshair, Shield, Map, Settings, GripVertical } from "lucide-react";
+import TerminalLoader from "../components/terminal/TerminalLoader";
 
 export default function Dashboard() {
-  const [jobs, setJobs] = useState([]);
-  const [events, setEvents] = useState([]);
-  const [factions, setFactions] = useState([]);
-  const [territories, setTerritories] = useState([]);
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { user, loading: authLoading } = useCurrentUser();
   const [layout, setLayout] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [showCustomizer, setShowCustomizer] = useState(false);
 
+  const jobsQuery = useEntityQuery(
+    "dashboard-jobs",
+    () => base44.entities.Job.list("-created_date", 5),
+    { subscribeEntities: ["Job"], syncPolicy: "active" }
+  );
+  const { data: jobs = [] } = jobsQuery;
+
+  const eventsQuery = useEntityQuery(
+    "dashboard-events",
+    () => base44.entities.Event.list("-created_date", 5),
+    { subscribeEntities: ["Event"], syncPolicy: "active" }
+  );
+  const { data: events = [] } = eventsQuery;
+
+  const factionsQuery = useEntityQuery(
+    "dashboard-factions",
+    () => base44.entities.Faction.list("-created_date", 10),
+    { subscribeEntities: ["Faction"], syncPolicy: "passive" }
+  );
+  const { data: factions = [] } = factionsQuery;
+
+  const territoriesQuery = useEntityQuery(
+    "dashboard-territories",
+    () => base44.entities.Territory.list("-created_date", 10),
+    { subscribeEntities: ["Territory"], syncPolicy: "active" }
+  );
+  const { data: territories = [] } = territoriesQuery;
+
+  useRegisterSync("dashboard", jobsQuery);
+
   useEffect(() => {
-    Promise.all([
-      base44.entities.Job.list("-created_date", 5),
-      base44.entities.Event.list("-created_date", 5),
-      base44.entities.Faction.list("-created_date", 10),
-      base44.entities.Territory.list("-created_date", 10),
-      base44.auth.me(),
-    ])
-      .then(([j, e, f, t, u]) => {
-        setJobs(j);
-        setEvents(e);
-        setFactions(f);
-        setTerritories(t);
-        setUser(u);
-        // Load persisted layout
-        const saved = u?.dashboard_layout;
-        if (saved && Array.isArray(saved)) {
-          // Merge with registry in case new widgets were added
-          const merged = mergeLayout(saved);
-          setLayout(merged);
-        } else {
-          setLayout(DEFAULT_LAYOUT);
-        }
-      })
-      .finally(() => setLoading(false));
-  }, []);
+    if (authLoading) return;
+
+    const saved = user?.dashboard_layout;
+    if (saved && Array.isArray(saved)) {
+      setLayout(mergeLayout(saved));
+      return;
+    }
+
+    setLayout(DEFAULT_LAYOUT);
+  }, [authLoading, user?.dashboard_layout]);
 
   // Merge saved layout with current registry — keeps new widgets, removes stale
   const mergeLayout = (saved) => {
@@ -88,13 +101,25 @@ export default function Dashboard() {
     saveLayout(newLayout);
   };
 
+  const loading =
+    authLoading ||
+    jobsQuery.isLoading ||
+    eventsQuery.isLoading ||
+    factionsQuery.isLoading ||
+    territoriesQuery.isLoading;
+
   if (loading || !layout) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-primary text-xs tracking-widest animate-pulse">
-          LOADING SITUATION REPORT...
-        </div>
-      </div>
+      <TerminalLoader
+        size="lg"
+        messages={[
+          "COMPILING SITUATION REPORT...",
+          "QUERYING FACTION DATABASE...",
+          "SCANNING TERRITORY GRID...",
+          "AGGREGATING MISSION DATA...",
+          "DECRYPTING EVENT FEEDS...",
+        ]}
+      />
     );
   }
 
