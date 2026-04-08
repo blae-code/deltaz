@@ -32,7 +32,7 @@ export default function TodayMissions({ jobs, userEmail }) {
         ) : (
           <div className="space-y-1.5">
             {myActive.map(job => (
-              <div key={job.id} className="flex items-center gap-3 border border-border rounded-sm px-3 py-2 bg-primary/5 hover:bg-primary/10 transition-colors">
+              <div key={job.id} className="flex items-center gap-3 border border-primary/20 px-3 py-2 bg-primary/5 hover:bg-primary/10 transition-colors shadow-[inset_2px_0_0_0_hsl(var(--primary))]">
                 <CrosshairTargetSvg size={16} className="text-primary shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-foreground truncate">{job.title}</p>
@@ -68,7 +68,7 @@ export default function TodayMissions({ jobs, userEmail }) {
           </h4>
           <div className="space-y-1">
             {available.map(job => (
-              <div key={job.id} className="flex items-center gap-3 border border-border rounded-sm px-3 py-2 hover:bg-secondary/30 transition-colors">
+              <div key={job.id} className="flex items-center gap-3 border border-border/40 px-3 py-2 hover:bg-secondary/30 transition-colors hover:shadow-[inset_2px_0_0_0_hsl(var(--primary)/0.35)]">
                 <CrosshairTargetSvg size={16} className="text-muted-foreground shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-foreground truncate">{job.title}</p>

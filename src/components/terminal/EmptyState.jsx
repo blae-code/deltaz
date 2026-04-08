@@ -1,40 +1,42 @@
 import { cn } from "@/lib/utils";
 import { CircleOff } from "lucide-react";
-import WastelandSvg from "../svg/WastelandSvg";
 
 /**
  * EmptyState — directive empty state that answers:
  *   1. Why is this empty?
  *   2. What should I do next?
  *   3. Can the system help me start?
- *
- * @param {ReactElement} icon - Lucide icon component
- * @param {string} title - Short headline ("No missions found")
- * @param {string} why - Why it's empty ("Your filters don't match any current postings")
- * @param {string} action - What the user should do ("Try widening your filters or check back later")
- * @param {ReactNode} cta - Optional button/link to get started
  */
 export default function EmptyState({ icon: Icon = CircleOff, title, why, action, cta, className }) {
   return (
     <div className={cn(
-      "border border-border border-dashed rounded-sm py-6 sm:py-8 px-4 sm:px-6 flex flex-col items-center text-center space-y-2.5",
+      "relative border border-dashed border-border/40 py-8 sm:py-10 px-4 sm:px-6 flex flex-col items-center text-center space-y-3",
       className
     )}>
-      <div className="flex flex-col items-center gap-2">
-        <WastelandSvg size={56} className="text-muted-foreground/50" />
-        <div className="h-8 w-8 rounded-sm bg-secondary/60 flex items-center justify-center">
-          <Icon className="h-4 w-4 text-muted-foreground" />
-        </div>
+      {/* Corner bracket decorations */}
+      <span className="absolute top-2 left-2 text-[10px] font-mono text-primary/20 select-none leading-none">[</span>
+      <span className="absolute top-2 right-2 text-[10px] font-mono text-primary/20 select-none leading-none">]</span>
+      <span className="absolute bottom-2 left-2 text-[10px] font-mono text-primary/20 select-none leading-none">[</span>
+      <span className="absolute bottom-2 right-2 text-[10px] font-mono text-primary/20 select-none leading-none">]</span>
+
+      {/* Icon */}
+      <div className="h-10 w-10 rounded-sm bg-secondary/40 border border-border/50 flex items-center justify-center">
+        <Icon className="h-5 w-5 text-muted-foreground/50" />
       </div>
-      {title && (
-        <p className="text-xs sm:text-sm font-semibold text-foreground font-mono tracking-wide">{title}</p>
-      )}
-      {why && (
-        <p className="text-[11px] text-muted-foreground leading-relaxed max-w-sm">{why}</p>
-      )}
-      {action && (
-        <p className="text-[10px] text-primary/80 leading-relaxed max-w-xs">{action}</p>
-      )}
+
+      {/* Content */}
+      <div className="space-y-1.5">
+        {title && (
+          <p className="text-[11px] font-semibold text-muted-foreground font-mono tracking-widest uppercase">{title}</p>
+        )}
+        {why && (
+          <p className="text-[11px] text-muted-foreground/60 leading-relaxed max-w-sm">{why}</p>
+        )}
+        {action && (
+          <p className="text-[10px] text-primary/60 leading-relaxed max-w-xs font-mono">{action}</p>
+        )}
+      </div>
+
       {cta && <div className="pt-1">{cta}</div>}
     </div>
   );

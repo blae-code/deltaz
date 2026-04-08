@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 import { base44 } from "@/api/base44Client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
@@ -98,11 +99,16 @@ export default function MissionCard({ job, faction, territory, userEmail, isAdmi
 
   return (
     <div
-      className={`border border-border bg-card rounded-sm overflow-hidden transition-colors hover:border-primary/30 ${difficultyBg[job.difficulty] || ""}`}
+      className={`panel-frame overflow-hidden transition-all hover:border-primary/40 ${difficultyBg[job.difficulty] || ""}`}
       onClick={() => setExpanded(!expanded)}
     >
       {/* Header row */}
-      <div className="px-3 sm:px-4 py-3 cursor-pointer">
+      <div className={cn("px-3 sm:px-4 py-3 cursor-pointer border-l-2", {
+        "border-l-primary":        !job.difficulty || job.difficulty === "routine",
+        "border-l-accent":         job.difficulty === "hazardous",
+        "border-l-destructive/60": job.difficulty === "critical",
+        "border-l-destructive":    job.difficulty === "suicide",
+      })}>
         <div className="flex items-start justify-between gap-2 sm:gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1.5">
@@ -160,7 +166,7 @@ export default function MissionCard({ job, faction, territory, userEmail, isAdmi
             <p className="text-[10px] text-accent italic">Reward: {job.reward_description}</p>
           )}
           {job.completion_notes && (
-            <div className="bg-secondary/30 border border-border rounded-sm px-3 py-2">
+            <div className="bg-secondary/30 border border-border/50 px-3 py-2 shadow-[inset_2px_0_0_0_hsl(var(--muted-foreground)/0.2)]">
               <p className="text-[9px] text-muted-foreground tracking-wider uppercase mb-0.5">MISSION REPORT</p>
               <p className="text-xs text-foreground">{job.completion_notes}</p>
             </div>

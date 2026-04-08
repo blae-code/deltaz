@@ -58,7 +58,11 @@ export default function TodayAlerts({ events, intel, broadcasts }) {
       {display.map(item => (
         <div
           key={item.id}
-          className={`flex items-start gap-2.5 border rounded-sm px-3 py-2 ${severityStyle[item.severity] || "border-border"}`}
+          className={`flex items-start gap-2.5 border px-3 py-2 ${severityStyle[item.severity] || "border-border"} ${
+            item.severity === "emergency" || item.severity === "critical" ? "shadow-[inset_2px_0_0_0_hsl(var(--destructive))]" :
+            item.severity === "warning"   || item.severity === "urgent"   ? "shadow-[inset_2px_0_0_0_hsl(var(--accent))]" :
+            "shadow-[inset_2px_0_0_0_hsl(var(--border))]"
+          }`}
         >
           <div className={`h-2 w-2 rounded-full mt-1.5 shrink-0 ${severityDot[item.severity] || "bg-muted-foreground"}`} />
           <div className="flex-1 min-w-0">

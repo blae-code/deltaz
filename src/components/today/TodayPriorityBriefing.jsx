@@ -116,7 +116,12 @@ export default function TodayPriorityBriefing({ jobs, userEmail, inventory, craf
           <Link
             key={idx}
             to={item.to}
-            className={`flex items-center gap-2.5 rounded-sm px-3 py-2.5 border transition-colors hover:opacity-90 ${urgencyStyles[item.urgency]}`}
+            className={`flex items-center gap-2.5 px-3 py-2.5 border transition-all hover:opacity-90 ${urgencyStyles[item.urgency]} ${
+            item.urgency === "critical" ? "shadow-[inset_2px_0_0_0_hsl(var(--destructive))]" :
+            item.urgency === "warning"  ? "shadow-[inset_2px_0_0_0_hsl(var(--accent))]" :
+            item.urgency === "action"   ? "shadow-[inset_2px_0_0_0_hsl(var(--primary))]" :
+            ""
+          }`}
           >
             <div className={`h-1.5 w-1.5 rounded-full shrink-0 ${urgencyDot[item.urgency]}`} />
             <Icon className="h-3.5 w-3.5 shrink-0" />
