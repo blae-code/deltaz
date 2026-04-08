@@ -1,64 +1,77 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.24';
+import { deterministicBoolean, stableHash } from '../_shared/deterministic.ts';
+import {
+  buildDramaDraft,
+  buildDramaReactions,
+  buildDramaContextFactors,
+  getComplexityTier,
+  getMoraleBand,
+} from '../_shared/survivorDramaRules.ts';
+import { buildSkillLogEntry, computeCombatRating } from '../_shared/survivorSkillRules.ts';
+import { DATA_ORIGINS, buildSourceRef, getCycleKey, hasSourceRef, withProvenance } from '../_shared/provenance.ts';
 
-/**
- * survivorDramaEngine v2 — AI-powered drama generation that dynamically scales
- * complexity and narrative based on colony size, recent events, survivor
- * relationships, skills, and world state.
- *
- * Actions:
- *   { force: true/false } — generate drama (force bypasses probability)
- *   { action: "react" }   — simulate survivor AI reactions to active dramas
- */
+const reactionXpAwards: Record<string, Record<string, number>> = {
+  de_escalate: { leadership: 5, social: 3 },
+  morale_boost: { leadership: 5, social: 2 },
+  spread_rumor: { social: 4 },
+  form_alliance: { social: 4, leadership: 2 },
+  investigate: { survival: 4 },
+  offer_help: { medical: 3, social: 3 },
+  exploit: { social: 4 },
+  avoid: {},
+};
 
-const LEVEL_THRESHOLDS = [0, 50, 150, 350, 700, 1200];
-function getSkillLevel(xp) {
-  for (let i = LEVEL_THRESHOLDS.length - 1; i >= 0; i--) {
-    if (xp >= LEVEL_THRESHOLDS[i]) return i + 1;
+const reactionStressDelta: Record<string, number> = {
+  spread_rumor: 5,
+  exploit: 5,
+  de_escalate: -3,
+  morale_boost: -3,
+};
+
+const normalizeSeverity = (value: unknown) => {
+  const normalized = String(value || 'moderate').toLowerCase();
+  return ['minor', 'moderate', 'serious', 'critical'].includes(normalized) ? normalized : 'moderate';
+};
+
+const applyReactorUpdate = async ({
+  base44,
+  survivor,
+  drama,
+  reaction,
+  sourceRefs,
+}: {
+  base44: any;
+  survivor: any;
+  drama: any;
+  reaction: any;
+  sourceRefs: string[];
+}) => {
+  const xpAwards = reactionXpAwards[reaction.reaction_type] || {};
+  const skills = { ...(survivor.skills || {}) };
+  const skillLog = [...(survivor.skill_log || [])];
+
+  for (const [skillName, xp] of Object.entries(xpAwards)) {
+    skills[skillName] = Number(skills[skillName] || 0) + xp;
+    skillLog.unshift(buildSkillLogEntry(skillName, xp, `${reaction.reaction_type.replace(/_/g, ' ')}: ${drama.title}`));
   }
-  return 1;
-}
 
-function getMoraleBand(morale) {
-  if (morale <= 20) return 'desperate';
-  if (morale <= 40) return 'anxious';
-  if (morale <= 60) return 'neutral';
-  return 'content';
-}
-
-function pickRandom(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
-function getComplexityTier(survivorCount, dramaHistory, activeThreatCount) {
-  let score = 0;
-  if (survivorCount >= 15) score += 3;
-  else if (survivorCount >= 8) score += 2;
-  else if (survivorCount >= 4) score += 1;
-
-  if (dramaHistory >= 10) score += 2;
-  else if (dramaHistory >= 5) score += 1;
-
-  if (activeThreatCount > 0) score += 1;
-
-  if (score >= 5) return 'epic';
-  if (score >= 3) return 'complex';
-  if (score >= 1) return 'layered';
-  return 'simple';
-}
-
-function summarizeSurvivor(s) {
-  const skills = s.skills || {};
-  const topSkills = Object.entries(skills)
-    .filter(([, xp]) => xp > 0)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 3)
-    .map(([name, xp]) => `${name}:Lv${getSkillLevel(xp)}`)
-    .join(', ');
-  const rels = (s.relationships || []).slice(0, 3).map(r =>
-    `${r.name} (${r.type}, strength ${r.strength})`
-  ).join('; ');
-  return `${s.nickname || s.name} — ${s.skill} (${s.health}, morale:${s.morale}, task:${s.current_task || 'idle'}, personality:"${s.personality || 'unknown'}"${topSkills ? `, skills: ${topSkills}` : ''}${rels ? `, relationships: ${rels}` : ''})`;
-}
+  await base44.asServiceRole.entities.Survivor.update(
+    survivor.id,
+    withProvenance(
+      {
+        skills,
+        skill_log: skillLog.slice(0, 20),
+        stress: Math.max(0, Math.min(100, Number(survivor.stress ?? 20) + Number(reactionStressDelta[reaction.reaction_type] || 0))),
+        ai_behavior_note: `Reacted to drama "${drama.title}": ${reaction.action}`,
+        combat_rating: computeCombatRating(skills.combat || 0),
+      },
+      {
+        dataOrigin: DATA_ORIGINS.SYSTEM_RULE,
+        sourceRefs,
+      },
+    ),
+  );
+};
 
 Deno.serve(async (req) => {
   try {
@@ -69,9 +82,11 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { action, force = false } = body;
+    const action = String(body?.action || '').trim();
+    const force = Boolean(body?.force);
+    const cycleKey = getCycleKey(180);
+    const cycleSourceRef = buildSourceRef('SurvivorDramaCycle', cycleKey);
 
-    // ═══ REACT ACTION — Survivor AI reacts to active dramas ═══
     if (action === 'react') {
       const [activeDramas, survivors] = await Promise.all([
         base44.asServiceRole.entities.SurvivorDrama.filter({ status: 'active' }),
@@ -85,372 +100,179 @@ Deno.serve(async (req) => {
       const results = [];
 
       for (const drama of activeDramas) {
-        // Skip dramas that already have 5+ reactions
-        const existingReactions = drama.ai_reactions || [];
-        if (existingReactions.length >= 5) continue;
+        const existingReactions = Array.isArray(drama.ai_reactions) ? drama.ai_reactions : [];
+        if (existingReactions.length >= 5) {
+          continue;
+        }
 
-        // Find uninvolved survivors who might react
-        const involvedIds = new Set(drama.involved_survivor_ids || []);
-        const reactedIds = new Set(existingReactions.map(r => r.survivor_id));
-        const potentialReactors = survivors.filter(s =>
-          !involvedIds.has(s.id) && !reactedIds.has(s.id)
-        );
-
-        if (potentialReactors.length === 0) continue;
-
-        // Pick 1-3 reactors based on personality/relationships
-        const reactorCount = Math.min(
-          potentialReactors.length,
-          Math.max(1, Math.floor(Math.random() * 3) + 1)
-        );
-        const shuffled = [...potentialReactors].sort(() => Math.random() - 0.5);
-        const reactors = shuffled.slice(0, reactorCount);
-
-        const reactorSummaries = reactors.map(r => summarizeSurvivor(r)).join('\n');
-        const involvedNames = (drama.involved_survivor_names || []).join(', ');
-
-        const aiResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
-          prompt: `You simulate survivor AI behavior in a post-apocalyptic colony.
-
-ACTIVE DRAMA:
-- Title: "${drama.title}"
-- Type: ${drama.drama_type} (${drama.severity})
-- Description: "${drama.description}"
-- Involved: ${involvedNames}
-
-SURVIVORS REACTING (each has personality, skills, relationships that affect their behavior):
-${reactorSummaries}
-
-For EACH reactor, generate a realistic autonomous reaction based on their personality, skills, and relationships:
-
-REACTION TYPES:
-- de_escalate: Tries to calm the situation (high social/leadership types)
-- spread_rumor: Gossips or spreads misinformation (paranoid, anxious, social types)
-- form_alliance: Sides with one party, tries to build a faction (aggressive, charismatic types)
-- offer_help: Directly assists one of the involved parties (nurturing, medic types)
-- avoid: Withdraws and tries to stay uninvolved (loner, stoic types)
-- exploit: Tries to benefit from the chaos (aggressive, trader types)
-- investigate: Tries to uncover the real story (scavenger, guard types)
-- morale_boost: Attempts to rally others or lighten the mood (cheerful, cook types)
-
-Return an array of reactions. Each reaction has:
-- survivor_name: name of the reacting survivor
-- reaction_type: one of the types above
-- action: 1-sentence what they specifically do
-- narrative: 2-sentence vivid description of their behavior
-- effect: one of "positive" (helps resolve), "negative" (escalates), "neutral" (no direct effect)`,
-          response_json_schema: {
-            type: "object",
-            properties: {
-              reactions: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    survivor_name: { type: "string" },
-                    reaction_type: { type: "string" },
-                    action: { type: "string" },
-                    narrative: { type: "string" },
-                    effect: { type: "string" },
-                  },
-                },
-              },
-            },
-          },
+        const reactions = buildDramaReactions({
+          drama,
+          survivors,
+          cycleKey: `${cycleKey}:${drama.id}:${existingReactions.length}`,
         });
 
-        const newReactions = (aiResult.reactions || []).map((r, i) => ({
-          survivor_id: reactors[i]?.id || '',
-          survivor_name: r.survivor_name || reactors[i]?.nickname || reactors[i]?.name || 'Unknown',
-          reaction_type: r.reaction_type || 'avoid',
-          action: r.action || '',
-          narrative: r.narrative || '',
-          effect: r.effect || 'neutral',
-          timestamp: new Date().toISOString(),
-        }));
+        if (reactions.length === 0) {
+          continue;
+        }
 
-        const allReactions = [...existingReactions, ...newReactions].slice(0, 8);
-
-        // Apply reaction effects to survivors
-        for (let i = 0; i < newReactions.length; i++) {
-          const reaction = newReactions[i];
-          const reactor = reactors[i];
-          if (!reactor) continue;
-
-          const skills = { ...(reactor.skills || {}) };
-          const skillLog = [...(reactor.skill_log || [])];
-          
-          // Award XP based on reaction type
-          if (reaction.reaction_type === 'de_escalate' || reaction.reaction_type === 'morale_boost') {
-            skills.leadership = (skills.leadership || 0) + 5;
-            skills.social = (skills.social || 0) + 3;
-            skillLog.unshift({ skill: 'leadership', xp: 5, reason: `De-escalated: ${drama.title}`, date: new Date().toISOString() });
-          } else if (reaction.reaction_type === 'form_alliance' || reaction.reaction_type === 'spread_rumor') {
-            skills.social = (skills.social || 0) + 4;
-            skillLog.unshift({ skill: 'social', xp: 4, reason: `Social maneuvering: ${drama.title}`, date: new Date().toISOString() });
-          } else if (reaction.reaction_type === 'investigate') {
-            skills.survival = (skills.survival || 0) + 4;
-            skillLog.unshift({ skill: 'survival', xp: 4, reason: `Investigated: ${drama.title}`, date: new Date().toISOString() });
-          } else if (reaction.reaction_type === 'offer_help') {
-            skills.medical = (skills.medical || 0) + 3;
-            skills.social = (skills.social || 0) + 3;
-            skillLog.unshift({ skill: 'social', xp: 3, reason: `Helped during: ${drama.title}`, date: new Date().toISOString() });
+        for (const reaction of reactions) {
+          const survivor = survivors.find((entry) => entry.id === reaction.survivor_id);
+          if (!survivor) {
+            continue;
           }
 
-          // Stress changes from reacting
-          const stressDelta = ['spread_rumor', 'exploit'].includes(reaction.reaction_type) ? 5
-            : ['de_escalate', 'morale_boost'].includes(reaction.reaction_type) ? -3
-            : 0;
-
-          await base44.asServiceRole.entities.Survivor.update(reactor.id, {
-            skills,
-            skill_log: skillLog.slice(0, 20),
-            stress: Math.max(0, Math.min(100, (reactor.stress ?? 20) + stressDelta)),
-            ai_behavior_note: `Reacted to drama "${drama.title}": ${reaction.action}`,
+          await applyReactorUpdate({
+            base44,
+            survivor,
+            drama,
+            reaction,
+            sourceRefs: [
+              buildSourceRef('SurvivorDrama', drama.id, 'reaction'),
+              buildSourceRef('Survivor', survivor.id, reaction.reaction_type),
+              cycleSourceRef,
+            ].filter(Boolean),
           });
         }
 
-        // Count positive/negative reactions for escalation check
-        const negCount = allReactions.filter(r => r.effect === 'negative').length;
-        const posCount = allReactions.filter(r => r.effect === 'positive').length;
-        
-        const updates = { ai_reactions: allReactions };
-        
-        // If too many negative reactions, escalate severity
-        if (negCount >= 3 && drama.severity !== 'critical') {
-          const severityLadder = ['minor', 'moderate', 'serious', 'critical'];
-          const idx = severityLadder.indexOf(drama.severity);
-          if (idx >= 0 && idx < severityLadder.length - 1) {
-            updates.severity = severityLadder[idx + 1];
-          }
-        }
+        const allReactions = [...existingReactions, ...reactions].slice(0, 8);
+        const negativeCount = allReactions.filter((reaction) => reaction.effect === 'negative').length;
+        const positiveCount = allReactions.filter((reaction) => reaction.effect === 'positive').length;
+        const severityLadder = ['minor', 'moderate', 'serious', 'critical'];
+        const severityIndex = severityLadder.indexOf(normalizeSeverity(drama.severity));
+        const escalated = negativeCount >= 3 && severityIndex >= 0 && severityIndex < severityLadder.length - 1;
 
-        await base44.asServiceRole.entities.SurvivorDrama.update(drama.id, updates);
+        await base44.asServiceRole.entities.SurvivorDrama.update(
+          drama.id,
+          withProvenance(
+            {
+              ai_reactions: allReactions,
+              ...(escalated ? { severity: severityLadder[severityIndex + 1] } : {}),
+            },
+            {
+              dataOrigin: DATA_ORIGINS.DETERMINISTIC_PROJECTION,
+              sourceRefs: [
+                buildSourceRef('SurvivorDrama', drama.id, 'reaction_batch'),
+                cycleSourceRef,
+              ].filter(Boolean),
+            },
+          ),
+        );
+
         results.push({
           drama_id: drama.id,
           drama_title: drama.title,
-          reactions_added: newReactions.length,
-          escalated: !!updates.severity,
-          positive: posCount,
-          negative: negCount,
+          reactions_added: reactions.length,
+          escalated,
+          positive: positiveCount,
+          negative: negativeCount,
         });
       }
 
       return Response.json({ status: 'ok', dramas_processed: results.length, results });
     }
 
-    // ═══ GENERATE ACTION — AI-powered drama generation ═══
-    const [colony, survivors, recentDramas, territories, worldCondList] = await Promise.all([
-      base44.asServiceRole.entities.ColonyStatus.list('-updated_date', 1).then(r => r[0]),
+    const [colony, survivors, recentDramas, territories, world] = await Promise.all([
+      base44.asServiceRole.entities.ColonyStatus.list('-updated_date', 1).then((rows) => rows[0] || null),
       base44.asServiceRole.entities.Survivor.filter({ status: 'active' }),
       base44.asServiceRole.entities.SurvivorDrama.list('-created_date', 20),
       base44.asServiceRole.entities.Territory.filter({}),
-      base44.asServiceRole.entities.WorldConditions.list('-updated_date', 1),
+      base44.asServiceRole.entities.WorldConditions.list('-updated_date', 1).then((rows) => rows[0] || {}),
     ]);
 
     if (!colony) {
       return Response.json({ error: 'No colony found' }, { status: 404 });
     }
 
-    const morale = colony.morale ?? 50;
-    const band = getMoraleBand(morale);
-
-    const activeDramas = recentDramas.filter(d => d.status === 'active');
-    if (activeDramas.length >= 3 && !force) {
-      return Response.json({ status: 'skipped', reason: 'Too many active dramas (max 3)', active: activeDramas.length });
-    }
-
-    const probability = band === 'desperate' ? 0.9 : band === 'anxious' ? 0.65 : band === 'neutral' ? 0.3 : 0.15;
-    if (Math.random() > probability && !force) {
-      return Response.json({ status: 'skipped', reason: `Random check failed (${Math.round(probability * 100)}% chance)`, morale, band });
-    }
-
     if (survivors.length < 1) {
       return Response.json({ status: 'skipped', reason: 'Not enough survivors' });
     }
 
-    // Gather context for AI
-    const world = worldCondList[0] || {};
-    const activeThreatCount = territories.filter(t => t.active_threat_wave?.status === 'incoming').length;
-    const complexityTier = getComplexityTier(survivors.length, recentDramas.length, activeThreatCount);
+    const activeDramas = recentDramas.filter((drama) => drama.status === 'active');
+    if (activeDramas.length >= 3 && !force) {
+      return Response.json({ status: 'skipped', reason: 'Too many active dramas (max 3)', active: activeDramas.length });
+    }
 
-    // Recent drama types to avoid repetition
-    const recentTypes = recentDramas.slice(0, 5).map(d => d.drama_type);
+    if (!force && recentDramas.some((drama) => hasSourceRef(drama, cycleSourceRef))) {
+      return Response.json({ status: 'skipped', reason: 'Drama already generated for this cycle' });
+    }
 
-    // Context factors
-    const contextFactors = [];
-    if ((colony.food_reserves ?? 100) < 30) contextFactors.push('low_food');
-    if ((colony.water_supply ?? 100) < 30) contextFactors.push('low_water');
-    if ((colony.medical_supplies ?? 100) < 30) contextFactors.push('low_medical');
-    if ((colony.defense_integrity ?? 100) < 30) contextFactors.push('weak_defenses');
-    if (activeThreatCount > 0) contextFactors.push('active_threats');
-    if (world.weather === 'radiation_storm' || world.weather === 'acid_rain') contextFactors.push('hazardous_weather');
-    if (survivors.length >= 15) contextFactors.push('large_colony');
-    if (survivors.length <= 4) contextFactors.push('small_colony');
+    const morale = Number(colony.morale ?? 50);
+    const band = getMoraleBand(morale);
+    const probability = band === 'desperate' ? 0.9 : band === 'anxious' ? 0.65 : band === 'neutral' ? 0.3 : 0.15;
+    const shouldGenerate = force || deterministicBoolean(probability, 'survivor-drama-generate', cycleKey, colony.id, activeDramas.length, survivors.length);
+    if (!shouldGenerate) {
+      return Response.json({
+        status: 'skipped',
+        reason: `Deterministic check failed (${Math.round(probability * 100)}% chance)`,
+        morale,
+        band,
+      });
+    }
 
-    // Build survivor roster for AI
-    const survivorRoster = survivors.slice(0, 20).map(s => summarizeSurvivor(s)).join('\n');
-
-    // Active dramas for narrative continuity
-    const activeDramaSummary = activeDramas.map(d =>
-      `"${d.title}" (${d.drama_type}, ${d.severity}) involving ${(d.involved_survivor_names || []).join(', ')}`
-    ).join('\n') || 'None';
-
-    // Recent resolved drama outcomes
-    const recentResolved = recentDramas.filter(d => d.status === 'resolved').slice(0, 3);
-    const recentOutcomes = recentResolved.map(d =>
-      `"${d.title}" — ${d.resolution_outcome?.slice(0, 80) || 'resolved'} [${(d.consequences || []).join(', ')}]`
-    ).join('\n') || 'None';
-
-    const complexityGuide = {
-      simple: '1-2 involved survivors, straightforward scenario, 3 simple resolution options',
-      layered: '2-3 involved survivors, scenario connects to colony resources or recent events, 3 options with at least 1 skill check',
-      complex: '2-4 involved survivors with existing relationships factored in, multi-layered scenario that references recent dramas or world conditions, 3-4 nuanced options with skill checks and cascading consequences',
-      epic: '3-5 involved survivors, an intricate scenario weaving together multiple ongoing storylines, relationships, and world events. 4 options with skill checks, faction implications, and colony-wide consequences. This should feel like a turning point.',
-    };
-
-    const aiResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      prompt: `You are the drama writer for a post-apocalyptic survival colony simulation game.
-
-═══ COLONY STATE ═══
-- Colony: "${colony.colony_name}" — Population: ${colony.population || survivors.length}, Morale: ${morale}% (${band})
-- Food: ${colony.food_reserves ?? 100}%, Water: ${colony.water_supply ?? 100}%, Medical: ${colony.medical_supplies ?? 100}%, Defense: ${colony.defense_integrity ?? 100}%, Power: ${colony.power_level ?? 100}%
-- Weather: ${world.weather || 'unknown'}, Season: ${world.season || 'unknown'}
-- Active threats: ${activeThreatCount}
-- Context factors: ${contextFactors.join(', ') || 'none'}
-
-═══ ACTIVE DRAMAS (avoid overlap) ═══
-${activeDramaSummary}
-
-═══ RECENT OUTCOMES (build on these) ═══
-${recentOutcomes}
-
-═══ SURVIVOR ROSTER ═══
-${survivorRoster}
-
-═══ RECENT DRAMA TYPES (avoid repeating) ═══
-${recentTypes.join(', ') || 'none'}
-
-═══ COMPLEXITY TIER: ${complexityTier.toUpperCase()} ═══
-${complexityGuide[complexityTier]}
-
-GENERATE a NEW drama scenario. Requirements:
-1. Pick real survivors from the roster — use their actual names, personalities, skills, and relationships
-2. The scenario must connect to at least one context factor or recent event
-3. Avoid repeating recent drama types
-4. Match the complexity tier — ${complexityTier} means ${complexityGuide[complexityTier]}
-5. Resolution options should include at least one skill check (combat/crafting/medical/leadership/survival/social) with difficulty matching the severity
-6. Each option should have realistic morale consequences and risk levels
-7. Reference specific colony conditions in the narrative (e.g., if food is low, dramas about rationing)
-8. If there are active dramas, the new drama can reference or interweave with them
-
-Return:
-- drama_type: desertion|fight|mutiny|theft|breakdown|sabotage|romance|rivalry
-- severity: minor|moderate|serious|critical (scale with morale band — desperate=serious/critical, content=minor/moderate)
-- title: punchy headline
-- description: vivid narrative (3-5 sentences for complex/epic, 2-3 for simple/layered)
-- involved_survivor_names: array of names from the roster
-- context_factors: which context factors influenced this drama
-- resolution_options: array of 3-4 options, each with:
-  - id (snake_case), label, description, morale_effect (-10 to +10), risk (none/low/medium/high)
-  - optional skill_check: { skill: "combat"|"crafting"|"medical"|"leadership"|"survival"|"social", difficulty: "easy"|"moderate"|"hard"|"extreme" }`,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          drama_type: { type: "string" },
-          severity: { type: "string" },
-          title: { type: "string" },
-          description: { type: "string" },
-          involved_survivor_names: { type: "array", items: { type: "string" } },
-          context_factors: { type: "array", items: { type: "string" } },
-          resolution_options: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                id: { type: "string" },
-                label: { type: "string" },
-                description: { type: "string" },
-                morale_effect: { type: "number" },
-                risk: { type: "string" },
-                skill_check: {
-                  type: "object",
-                  properties: {
-                    skill: { type: "string" },
-                    difficulty: { type: "string" },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
+    const draft = buildDramaDraft({
+      colony,
+      survivors,
+      recentDramas,
+      territories,
+      world,
+      cycleKey,
     });
 
-    // Validate and normalize AI output
-    const validTypes = ['desertion', 'fight', 'mutiny', 'theft', 'breakdown', 'sabotage', 'romance', 'rivalry'];
-    const validSeverities = ['minor', 'moderate', 'serious', 'critical'];
-    const dramaType = validTypes.includes(aiResult.drama_type) ? aiResult.drama_type : 'breakdown';
-    const severity = validSeverities.includes(aiResult.severity) ? aiResult.severity : 'moderate';
-
-    // Match AI-returned names to actual survivor IDs
-    const involvedNames = (aiResult.involved_survivor_names || []).slice(0, 5);
-    const involvedIds = [];
-    for (const name of involvedNames) {
-      const match = survivors.find(s =>
-        (s.nickname || '').toLowerCase() === name.toLowerCase() ||
-        s.name.toLowerCase() === name.toLowerCase()
-      );
-      if (match) involvedIds.push(match.id);
-    }
-    // Fallback: if no matches, pick random survivors
-    if (involvedIds.length === 0) {
-      const shuffled = [...survivors].sort(() => Math.random() - 0.5);
-      involvedIds.push(shuffled[0].id);
-      involvedNames.length = 0;
-      involvedNames.push(shuffled[0].nickname || shuffled[0].name);
-      if (shuffled[1]) {
-        involvedIds.push(shuffled[1].id);
-        involvedNames.push(shuffled[1].nickname || shuffled[1].name);
-      }
+    if (!draft) {
+      return Response.json({ status: 'skipped', reason: 'No eligible drama scenario found' });
     }
 
-    const drama = await base44.asServiceRole.entities.SurvivorDrama.create({
-      title: aiResult.title || 'Unrest in the colony',
-      description: aiResult.description || 'Something is brewing among the survivors.',
-      drama_type: dramaType,
-      severity,
+    const contextFactors = buildDramaContextFactors(colony, world, territories, survivors);
+    const activeThreatCount = territories.filter((territory) => territory?.active_threat_wave?.status === 'incoming').length;
+    const complexityTier = draft.complexity_tier || getComplexityTier(survivors.length, recentDramas.length, activeThreatCount);
+    const sourceRefs = [
+      cycleSourceRef,
+      buildSourceRef('ColonyStatus', colony.id, `morale:${band}`),
+      ...draft.involved_survivor_ids.map((id: string) => buildSourceRef('Survivor', id, draft.drama_type)),
+    ].filter(Boolean);
+
+    const drama = await base44.asServiceRole.entities.SurvivorDrama.create(withProvenance({
+      title: draft.title,
+      description: draft.description,
+      drama_type: draft.drama_type,
+      severity: normalizeSeverity(draft.severity),
       morale_trigger: morale,
-      involved_survivor_ids: involvedIds,
-      involved_survivor_names: involvedNames,
+      involved_survivor_ids: draft.involved_survivor_ids,
+      involved_survivor_names: draft.involved_survivor_names,
       colony_id: colony.id,
       status: 'active',
       complexity_tier: complexityTier,
-      context_factors: aiResult.context_factors || contextFactors,
-      resolution_options: (aiResult.resolution_options || []).slice(0, 4),
+      context_factors: draft.context_factors || contextFactors,
+      resolution_options: draft.resolution_options,
       ai_reactions: [],
-    });
+    }, {
+      dataOrigin: DATA_ORIGINS.SYSTEM_RULE,
+      sourceRefs,
+    }));
 
-    await base44.asServiceRole.entities.Notification.create({
+    await base44.asServiceRole.entities.Notification.create(withProvenance({
       player_email: 'broadcast',
-      title: `Survivor Drama: ${aiResult.title || 'Unrest'}`,
-      message: `A ${severity} ${dramaType} scenario requires GM attention. Complexity: ${complexityTier}. Colony morale: ${morale}%.`,
+      title: `Survivor Drama: ${draft.title}`,
+      message: `A ${draft.severity} ${draft.drama_type} scenario requires GM attention. Complexity: ${complexityTier}. Colony morale: ${morale}%.`,
       type: 'colony_alert',
-      priority: severity === 'critical' ? 'critical' : 'normal',
-    });
+      priority: draft.severity === 'critical' ? 'critical' : 'normal',
+    }, {
+      dataOrigin: DATA_ORIGINS.DETERMINISTIC_PROJECTION,
+      sourceRefs: sourceRefs.concat(buildSourceRef('SurvivorDrama', drama.id)),
+    }));
 
     return Response.json({
       status: 'ok',
       drama_id: drama.id,
-      drama_type: dramaType,
-      severity,
+      drama_type: draft.drama_type,
+      severity: draft.severity,
       complexity_tier: complexityTier,
-      context_factors: aiResult.context_factors || contextFactors,
+      context_factors: draft.context_factors || contextFactors,
       morale,
       band,
     });
   } catch (error) {
-    console.error('survivorDramaEngine v2 error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('survivorDramaEngine error:', error);
+    return Response.json({ error: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
   }
 });
