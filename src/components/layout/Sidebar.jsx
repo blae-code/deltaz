@@ -31,47 +31,47 @@ import {
   ArrowLeftRight,
   Store,
   Radar,
+  Zap,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import NavTooltip from "./NavTooltip";
 import { isAdminOrGM } from "../../lib/displayName";
-import { Zap } from "lucide-react";
 import SidebarLogoSvg from "../svg/SidebarLogoSvg";
 
 const coreNav = [
-  { path: "/", label: "TODAY", icon: Zap },
-  { path: "/sitrep", label: "SITREP", icon: LayoutDashboard },
-  { path: "/jobs", label: "MISSIONS", icon: Crosshair },
-  { path: "/map", label: "AO MAP", icon: Map },
-  { path: "/events", label: "COMMS", icon: Radio },
-  { path: "/factions", label: "CLANS", icon: Shield },
-  { path: "/colony", label: "COLONY", icon: Home },
-  { path: "/inventory", label: "GEAR", icon: Package },
-  { path: "/trade", label: "TRADE HUB", icon: ArrowLeftRight },
-  { path: "/bazaar", label: "BAZAAR", icon: Store },
-  { path: "/market", label: "MARKET", icon: TrendingUp },
+  { path: "/",         label: "TODAY",      icon: Zap },
+  { path: "/sitrep",   label: "SITREP",     icon: LayoutDashboard },
+  { path: "/jobs",     label: "MISSIONS",   icon: Crosshair },
+  { path: "/map",      label: "AO MAP",     icon: Map },
+  { path: "/events",   label: "COMMS",      icon: Radio },
+  { path: "/factions", label: "CLANS",      icon: Shield },
+  { path: "/colony",   label: "COLONY",     icon: Home },
+  { path: "/inventory",label: "GEAR",       icon: Package },
+  { path: "/trade",    label: "TRADE HUB",  icon: ArrowLeftRight },
+  { path: "/bazaar",   label: "BAZAAR",     icon: Store },
+  { path: "/market",   label: "MARKET",     icon: TrendingUp },
 ];
 
 const planningNav = [
-  { path: "/warroom", label: "WAR ROOM", icon: Radar },
-  { path: "/planner", label: "PLANNER", icon: Target },
-  { path: "/intel", label: "INTEL", icon: Eye },
-  { path: "/treaties", label: "TREATIES", icon: FileSignature },
-  { path: "/ops-log", label: "OPS LOG", icon: ScrollText, gmOnly: true },
-  { path: "/heatmap", label: "HEATMAP", icon: Flame, gmOnly: true },
-  { path: "/logistics", label: "LOGISTICS", icon: Truck, gmOnly: true },
-  { path: "/ledger", label: "LEDGER", icon: BarChart3, gmOnly: true },
-  { path: "/conflicts", label: "CONFLICTS", icon: Swords, gmOnly: true },
+  { path: "/warroom",  label: "WAR ROOM",   icon: Radar },
+  { path: "/planner",  label: "PLANNER",    icon: Target },
+  { path: "/intel",    label: "INTEL",      icon: Eye },
+  { path: "/treaties", label: "TREATIES",   icon: FileSignature },
+  { path: "/ops-log",  label: "OPS LOG",    icon: ScrollText,  gmOnly: true },
+  { path: "/heatmap",  label: "HEATMAP",    icon: Flame,       gmOnly: true },
+  { path: "/logistics",label: "LOGISTICS",  icon: Truck,       gmOnly: true },
+  { path: "/ledger",   label: "LEDGER",     icon: BarChart3,   gmOnly: true },
+  { path: "/conflicts",label: "CONFLICTS",  icon: Swords,      gmOnly: true },
 ];
 
 const secondaryNav = [
-  { path: "/journal", label: "JOURNAL", icon: BookOpen },
-  { path: "/workbench", label: "WORKBENCH", icon: Hammer },
-  { path: "/dossier", label: "DOSSIER", icon: FileText },
-  { path: "/mission-log", label: "MISSION LOG", icon: ScrollText },
-  { path: "/records", label: "RECORDS", icon: Trophy },
-  { path: "/profile", label: "PROFILE", icon: User },
+  { path: "/journal",      label: "JOURNAL",      icon: BookOpen },
+  { path: "/workbench",    label: "WORKBENCH",    icon: Hammer },
+  { path: "/dossier",      label: "DOSSIER",      icon: FileText },
+  { path: "/mission-log",  label: "MISSION LOG",  icon: ScrollText },
+  { path: "/records",      label: "RECORDS",      icon: Trophy },
+  { path: "/profile",      label: "PROFILE",      icon: User },
 ];
 
 const adminNav = [
@@ -94,20 +94,19 @@ export default function Sidebar({ user: propUser }) {
 
   const isAdmin = isAdminOrGM(user);
 
-  // Filter out gmOnly items for regular players
   const filterItems = (items) =>
     isAdmin ? items : items.filter((i) => !i.gmOnly);
 
   const navGroups = [
-    { label: null, items: filterItems(coreNav) },
-    { label: "PLANNING & INTEL", items: filterItems(planningNav) },
-    { label: "PERSONAL", items: filterItems(secondaryNav) },
-    ...(isAdmin ? [{ label: "GM TOOLS", items: adminNav }] : []),
+    { label: null,         items: filterItems(coreNav) },
+    { label: "TACTICAL",   items: filterItems(planningNav) },
+    { label: "PERSONAL",   items: filterItems(secondaryNav) },
+    ...(isAdmin ? [{ label: "GM", items: adminNav }] : []),
   ].filter((g) => g.items.length > 0);
 
   return (
     <>
-      {/* Mobile hamburger button */}
+      {/* Mobile hamburger */}
       <button
         onClick={() => setMobileOpen(true)}
         className="fixed top-3 left-3 z-50 md:hidden p-2.5 rounded-sm bg-card border border-border text-muted-foreground hover:text-foreground shadow-lg"
@@ -119,7 +118,7 @@ export default function Sidebar({ user: propUser }) {
       {/* Mobile overlay */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/60 md:hidden"
+          className="fixed inset-0 z-40 bg-black/70 md:hidden backdrop-blur-[1px]"
           onClick={() => setMobileOpen(false)}
         />
       )}
@@ -127,130 +126,131 @@ export default function Sidebar({ user: propUser }) {
       <aside
         className={cn(
           "flex flex-col border-r border-border bg-sidebar h-full transition-all duration-200",
-          // Desktop: normal sidebar
           "hidden md:flex",
-          collapsed ? "w-16" : "w-56",
-          // Mobile: slide-over
-          mobileOpen && "!flex fixed inset-y-0 left-0 z-50 w-56"
+          collapsed ? "w-14" : "w-52",
+          mobileOpen && "!flex fixed inset-y-0 left-0 z-50 w-52"
         )}
       >
-      {/* Logo */}
-      <div className="relative flex items-center justify-between border-b border-border px-4 py-4">
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/70 via-primary/25 to-transparent pointer-events-none" />
-        <div className="flex items-center gap-3">
-        <div className="h-8 w-8 rounded-sm bg-primary/20 border border-primary/40 flex items-center justify-center">
-          <SidebarLogoSvg size={18} className="text-primary" />
-        </div>
-          {!collapsed && (
-            <div>
-              <h1 className="text-sm font-bold font-display tracking-wider text-primary">
-                DEAD SIGNAL
-              </h1>
-              <p className="text-[10px] text-muted-foreground tracking-widest">
-                FIELD TERMINAL v2.1
-              </p>
+        {/* Logo */}
+        <div className="relative flex items-center justify-between border-b border-border px-3 py-3.5">
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/80 via-primary/30 to-transparent pointer-events-none" />
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="h-7 w-7 rounded-sm bg-primary/15 border border-primary/35 flex items-center justify-center shrink-0">
+              <SidebarLogoSvg size={16} className="text-primary" />
             </div>
-          )}
-        </div>
-        {/* Mobile close button */}
-        <button
-          onClick={() => setMobileOpen(false)}
-          className="md:hidden text-muted-foreground hover:text-foreground"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
-
-      {/* Nav */}
-      <nav className="flex-1 py-2 px-2 overflow-y-auto space-y-4">
-        {navGroups.map((group, gi) => (
-          <div key={gi}>
-            {group.label && !collapsed && (
-              <div className="px-3 pt-2 pb-1">
-                <span className="text-[10px] font-mono text-muted-foreground/60 tracking-[0.2em] uppercase">
-                  {group.label}
-                </span>
+            {!collapsed && (
+              <div className="min-w-0">
+                <div className="text-[8px] text-primary/40 font-mono tracking-[0.4em] leading-none mb-0.5">[ DS ]</div>
+                <h1 className="text-[13px] font-bold font-display tracking-[0.18em] text-primary leading-none">
+                  DEAD SIGNAL
+                </h1>
+                <p className="text-[8px] text-muted-foreground/50 tracking-[0.3em] font-mono mt-0.5">
+                  FIELD TERMINAL
+                </p>
               </div>
             )}
-            {group.label && collapsed && (
-              <div className="mx-auto my-1 w-6 border-t border-border/50" />
-            )}
-            <div className="space-y-0.5">
-              {group.items.map((item) => {
-                const isActive = location.pathname === item.path;
-                return (
-                  <NavTooltip key={item.path} path={item.path} collapsed={collapsed}>
-                    <Link
-                      to={item.path}
-                      onClick={() => setMobileOpen(false)}
-                      className={cn(
-                        "flex items-center gap-3 rounded-sm px-3 py-2.5 text-[11px] font-medium tracking-wider transition-colors",
-                        isActive
-                          ? "bg-primary/10 text-primary border border-primary/20 border-l-2 border-l-primary"
-                          : "text-muted-foreground hover:text-foreground hover:bg-secondary/50 border border-transparent"
-                      )}
-                    >
-                      <item.icon className="h-4 w-4 shrink-0" />
-                      {!collapsed && <span>{item.label}</span>}
-                    </Link>
-                  </NavTooltip>
-                );
-              })}
-            </div>
           </div>
-        ))}
-      </nav>
-
-      {/* User identity + Logout + Collapse */}
-      <div className="border-t border-border">
-        {user && !collapsed && (
-          <Link
-            to="/profile"
-            onClick={() => setMobileOpen(false)}
-            className="flex items-center gap-2.5 px-4 py-3 border-b border-border/50 hover:bg-secondary/30 transition-colors group"
-          >
-            <div className="h-7 w-7 rounded-sm bg-primary/10 border border-primary/30 flex items-center justify-center shrink-0 group-hover:border-primary/50 transition-colors">
-              <span className="text-[10px] font-bold text-primary font-display">
-                {(user.callsign || user.full_name || "?")[0].toUpperCase()}
-              </span>
-            </div>
-            <div className="min-w-0">
-              <span className="text-[10px] font-semibold text-foreground truncate block leading-tight">
-                {user.callsign || user.full_name || "Operative"}
-              </span>
-              <span className="text-[10px] text-muted-foreground uppercase tracking-widest leading-tight">
-                {user.role || "player"}
-              </span>
-            </div>
-          </Link>
-        )}
-        <NavTooltip path="#logout" collapsed={collapsed}>
           <button
-            onClick={() => {
-              setMobileOpen(false);
-              base44.auth.logout();
-            }}
-            className={cn(
-              "flex items-center gap-3 w-full px-5 py-2.5 text-xs font-medium tracking-wider text-destructive/70 hover:text-destructive hover:bg-destructive/5 transition-colors",
-              collapsed && "justify-center px-0"
-            )}
+            onClick={() => setMobileOpen(false)}
+            className="md:hidden text-muted-foreground hover:text-foreground shrink-0"
           >
-            <LogOut className="h-4 w-4 shrink-0" />
-            {!collapsed && <span>DISCONNECT</span>}
+            <X className="h-4 w-4" />
           </button>
-        </NavTooltip>
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="w-full p-3 text-muted-foreground hover:text-foreground transition-colors hidden md:block"
-        >
-          {collapsed ? (
-            <ChevronRight className="h-4 w-4 mx-auto" />
-          ) : (
-            <ChevronLeft className="h-4 w-4" />
+        </div>
+
+        {/* Nav */}
+        <nav className="flex-1 py-2 px-1.5 overflow-y-auto space-y-3 scrollbar-none">
+          {navGroups.map((group, gi) => (
+            <div key={gi}>
+              {group.label && !collapsed && (
+                <div className="px-2.5 pt-2 pb-1 flex items-center gap-2">
+                  <span className="text-[9px] font-mono text-primary/30 tracking-[0.25em] uppercase">
+                    // {group.label}
+                  </span>
+                  <div className="flex-1 h-px bg-border/40" />
+                </div>
+              )}
+              {group.label && collapsed && (
+                <div className="mx-auto my-1.5 w-5 border-t border-border/50" />
+              )}
+              <div className="space-y-px">
+                {group.items.map((item) => {
+                  const isActive = location.pathname === item.path;
+                  return (
+                    <NavTooltip key={item.path} path={item.path} collapsed={collapsed}>
+                      <Link
+                        to={item.path}
+                        onClick={() => setMobileOpen(false)}
+                        className={cn(
+                          "flex items-center gap-2.5 rounded-sm px-2.5 py-2 text-[11px] font-medium tracking-wider transition-colors",
+                          collapsed && "justify-center px-0 py-2.5",
+                          isActive
+                            ? "bg-primary/10 text-primary shadow-[inset_2px_0_0_0_hsl(var(--primary))]"
+                            : "text-muted-foreground/70 hover:text-foreground hover:bg-secondary/40"
+                        )}
+                      >
+                        <item.icon className={cn("shrink-0", collapsed ? "h-4 w-4" : "h-3.5 w-3.5")} />
+                        {!collapsed && <span className="truncate">{item.label}</span>}
+                      </Link>
+                    </NavTooltip>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </nav>
+
+        {/* Footer — user identity + logout + collapse toggle */}
+        <div className="border-t border-border/60">
+          {user && !collapsed && (
+            <Link
+              to="/profile"
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center gap-2 px-3 py-2.5 border-b border-border/40 hover:bg-secondary/30 transition-colors group"
+            >
+              <div className="h-6 w-6 rounded-sm bg-primary/10 border border-primary/25 flex items-center justify-center shrink-0 group-hover:border-primary/45 transition-colors">
+                <span className="text-[10px] font-bold text-primary font-display">
+                  {(user.callsign || user.full_name || "?")[0].toUpperCase()}
+                </span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <span className="text-[10px] font-semibold text-foreground truncate block leading-tight">
+                  {user.callsign || user.full_name || "Operative"}
+                </span>
+                <span className="text-[9px] text-muted-foreground/60 uppercase tracking-widest leading-tight font-mono">
+                  {user.role || "PLAYER"}
+                </span>
+              </div>
+            </Link>
           )}
-        </button>
-      </div>
-    </aside>
+
+          <div className="flex items-center">
+            <NavTooltip path="#logout" collapsed={collapsed}>
+              <button
+                onClick={() => { setMobileOpen(false); base44.auth.logout(); }}
+                className={cn(
+                  "flex items-center gap-2 flex-1 px-3 py-2.5 text-[10px] font-mono tracking-widest text-destructive/50 hover:text-destructive hover:bg-destructive/5 transition-colors",
+                  collapsed && "justify-center px-0"
+                )}
+              >
+                <LogOut className="h-3.5 w-3.5 shrink-0" />
+                {!collapsed && <span>DISCONNECT</span>}
+              </button>
+            </NavTooltip>
+
+            <button
+              onClick={() => setCollapsed(!collapsed)}
+              className="hidden md:flex items-center justify-center h-full px-3 py-2.5 text-muted-foreground/40 hover:text-muted-foreground border-l border-border/40 transition-colors"
+              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {collapsed
+                ? <ChevronRight className="h-3.5 w-3.5" />
+                : <ChevronLeft className="h-3.5 w-3.5" />
+              }
+            </button>
+          </div>
+        </div>
+      </aside>
     </>
   );
 }

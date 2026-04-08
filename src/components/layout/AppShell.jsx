@@ -16,7 +16,6 @@ export default function AppShell() {
   useEffect(() => {
     base44.auth.me().then((u) => {
       setUser(u);
-      // Auto-onboard the Game Master account
       if (isGameMaster(u) && !u.is_onboarded) {
         base44.auth.updateMe({
           callsign: "Game Master",
@@ -30,18 +29,21 @@ export default function AppShell() {
   if (checking) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background">
-        <div className="text-primary text-xs tracking-widest animate-pulse font-mono">AUTHENTICATING...</div>
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-px w-24 bg-gradient-to-r from-transparent via-primary to-transparent animate-pulse" />
+          <div className="text-primary text-[11px] tracking-[0.4em] animate-pulse font-mono uppercase">
+            Authenticating
+          </div>
+          <div className="h-px w-24 bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+        </div>
       </div>
     );
   }
 
-  // Show onboarding if user hasn't completed it
   if (user && !user.is_onboarded) {
     return (
       <Onboarding
-        onComplete={() => {
-          base44.auth.me().then(setUser);
-        }}
+        onComplete={() => { base44.auth.me().then(setUser); }}
       />
     );
   }
@@ -49,18 +51,24 @@ export default function AppShell() {
   const isAdmin = isAdminOrGM(user);
 
   return (
-    <div className="flex h-screen overflow-hidden terminal-flicker">
+    <div className="flex h-screen overflow-hidden">
       <ScanlineOverlay />
       <Sidebar user={user} />
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-hidden min-w-0">
         <TopBar user={user} />
-        <main className="flex-1 overflow-auto px-3 py-4 sm:px-4 sm:py-5 md:px-6 md:py-6 pt-14 md:pt-6 tech-grid-bg">
-          <div className="max-w-[1400px] mx-auto">
+        <main className="flex-1 overflow-auto px-4 py-4 sm:px-5 sm:py-5 md:px-6 md:py-6 tech-grid-bg">
+          <div className="max-w-[1440px] mx-auto">
             <Outlet context={{ user, isAdmin }} />
           </div>
         </main>
-        <footer className="border-t border-border/30 px-4 py-1.5 flex items-center justify-between bg-card/50 shrink-0">
-          <span className="text-[10px] text-muted-foreground/50 font-mono tracking-widest">DEAD SIGNAL v2.1.7b</span>
+        <footer className="border-t border-border/30 px-4 py-1 flex items-center justify-between bg-card/40 shrink-0 h-[26px]">
+          <div className="flex items-center gap-3 text-[9px] text-muted-foreground/35 font-mono tracking-widest">
+            <span>DEAD SIGNAL</span>
+            <span className="text-muted-foreground/20">·</span>
+            <span>v2.1.7b</span>
+            <span className="text-muted-foreground/20">·</span>
+            <span className="hidden sm:inline">PROTO·2</span>
+          </div>
           <SyncStatusFooter />
         </footer>
       </div>

@@ -3,7 +3,7 @@ import QueryErrorBanner from "../terminal/QueryErrorBanner";
 
 /**
  * PageShell — Standardized page anatomy:
- *  1. Header (title + subtitle + live sync indicator)
+ *  1. Header (amber accent bar + title + subtitle + live sync)
  *  2. Error banner (if syncMeta reports error)
  *  3. Status strip (optional summary stats)
  *  4. Action rail (tabs, filters, primary actions)
@@ -15,12 +15,14 @@ export default function PageShell({ title, subtitle, actions, statusStrip, actio
       {/* 1. Header */}
       <div className="flex items-start justify-between flex-wrap gap-2">
         <div className="flex items-center gap-3 min-w-0">
+          {/* Amber left accent — EVE-style page identity bar */}
+          <div className="shrink-0 w-[3px] h-8 bg-gradient-to-b from-primary via-primary/60 to-transparent rounded-full" />
           <div className="min-w-0">
-            <h2 className="text-base sm:text-lg font-bold font-display tracking-wider text-primary uppercase truncate">
+            <h2 className="text-base sm:text-lg font-bold font-display tracking-wider text-primary uppercase truncate leading-tight">
               {title}
             </h2>
             {subtitle && (
-              <p className="text-[11px] sm:text-xs text-muted-foreground mt-1 line-clamp-2">{subtitle}</p>
+              <p className="text-[11px] text-muted-foreground/70 font-mono mt-0.5 line-clamp-2 tracking-wide">{subtitle}</p>
             )}
           </div>
           {syncMeta && (
@@ -35,7 +37,7 @@ export default function PageShell({ title, subtitle, actions, statusStrip, actio
         {actions && <div className="flex gap-1.5 flex-wrap shrink-0">{actions}</div>}
       </div>
 
-      {/* 2. Error banner — only if syncMeta reports error */}
+      {/* 2. Error banner */}
       {syncMeta?.isError && (
         <QueryErrorBanner
           message={syncMeta.error?.message}
