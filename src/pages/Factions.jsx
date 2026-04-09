@@ -1,19 +1,16 @@
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
+import PageShell from "../components/layout/PageShell";
 import DataCard from "../components/terminal/DataCard";
 import FactionCard from "../components/factions/FactionCard";
 import FactionDetailPanel from "../components/factions/FactionDetailPanel";
-import DiplomacyTensionChart from "../components/factions/DiplomacyTensionChart";
+import TerminalLoader from "../components/terminal/TerminalLoader";
 import { X } from "lucide-react";
 
 export default function Factions() {
   const [factions, setFactions] = useState([]);
-  const [diplomacy, setDiplomacy] = useState([]);
-  const [economies, setEconomies] = useState([]);
-  const [territories, setTerritories] = useState([]);
   const [users, setUsers] = useState([]);
   const [reputations, setReputations] = useState([]);
-  const [jobs, setJobs] = useState([]);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState(null);
@@ -21,100 +18,56 @@ export default function Factions() {
   useEffect(() => {
     Promise.all([
       base44.entities.Faction.list("-created_date", 50),
-      base44.entities.Diplomacy.list("-created_date", 50),
-      base44.entities.FactionEconomy.list("-created_date", 50),
-      base44.entities.Territory.list("-created_date", 100),
       base44.entities.User.list("-created_date", 200),
       base44.entities.Reputation.list("-created_date", 500),
-      base44.entities.Job.list("-created_date", 200),
       base44.auth.me(),
     ])
-      .then(([f, d, e, t, u, r, j, me]) => {
+      .then(([f, u, r, me]) => {
         setFactions(f);
-        setDiplomacy(d);
-        setEconomies(e);
-        setTerritories(t);
         setUsers(u);
         setReputations(r);
-        setJobs(j);
         setUser(me);
       })
       .finally(() => setLoading(false));
   }, []);
 
-  const selectedFaction = factions.find((f) => f.id === selectedId);
-  const selectedEconomy = economies.find((e) => e.faction_id === selectedId);
-
-  // Determine faction members: users whose reputation with this faction is "trusted" or better, or who declared loyalty
+  // Members = players with trusted+ rep with this faction
   const getFactionMembers = (factionId) => {
-    const loyalReps = reputations.filter(
-      (r) => r.faction_id === factionId && ["trusted", "allied", "revered"].includes(r.rank)
+    const memberEmails = new Set(
+      reputations
+        .filter(r => r.faction_id === factionId && ["trusted", "allied", "revered"].includes(r.rank))
+        .map(r => r.player_email)
     );
-    const memberEmails = new Set(loyalReps.map((r) => r.player_email));
-    return users.filter((u) => memberEmails.has(u.email));
+    return users.filter(u => memberEmails.has(u.email));
   };
+
+  const selectedFaction = factions.find(f => f.id === selectedId);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-primary text-xs tracking-widest animate-pulse">DECRYPTING CLAN DATA...</div>
-      </div>
+      <PageShell title="Clan Registry" subtitle="Known factions on the server">
+        <TerminalLoader size="md" messages={["DECRYPTING CLAN DATA...", "LOADING ROSTER...", "READING STANDING ORDERS..."]} />
+      </PageShell>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h2 className="text-lg font-bold font-display tracking-wider text-primary uppercase">
-          Clan Registry
-        </h2>
-        <p className="text-xs text-muted-foreground mt-1">
-          Known clans, their standings, and diplomatic relationships
-        </p>
-      </div>
+    <PageShell title="Clan Registry" subtitle="Known factions and their registered members">
 
-      {/* Diplomatic Tension Chart */}
-      <DataCard
-        title="Diplomatic Tension Map"
-        headerRight={
-          selectedFaction && (
-            <button
-              onClick={() => setSelectedId(null)}
-              className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground"
-            >
-              <X className="h-3 w-3" /> CLEAR
-            </button>
-          )
-        }
-      >
-        <DiplomacyTensionChart
-          factions={factions}
-          relations={diplomacy}
-          selectedFactionId={selectedId}
-          onSelectFaction={setSelectedId}
-        />
-      </DataCard>
-
-      {/* Main Content: Cards + Detail */}
       <div className="grid lg:grid-cols-5 gap-4">
-        {/* Faction Cards List */}
+        {/* Faction card list */}
         <div className={`space-y-3 ${selectedId ? "lg:col-span-2" : "lg:col-span-5"}`}>
           {factions.length === 0 ? (
-            <DataCard title="No Clans">
-              <p className="text-xs text-muted-foreground">No clans registered in the system.</p>
+            <DataCard title="No Clans Registered">
+              <p className="text-xs text-muted-foreground">No factions have been registered yet.</p>
             </DataCard>
           ) : (
             <div className={`grid gap-3 ${selectedId ? "grid-cols-1" : "md:grid-cols-2 xl:grid-cols-3"}`}>
-              {factions.map((faction) => (
+              {factions.map(faction => (
                 <FactionCard
                   key={faction.id}
                   faction={faction}
-                  economy={economies.find((e) => e.faction_id === faction.id)}
-                  territories={territories}
                   members={getFactionMembers(faction.id)}
-                  diplomacy={diplomacy}
-                  factions={factions}
                   selected={selectedId === faction.id}
                   onSelect={setSelectedId}
                 />
@@ -123,22 +76,19 @@ export default function Factions() {
           )}
         </div>
 
-        {/* Detail Panel */}
+        {/* Detail panel */}
         {selectedId && selectedFaction && (
           <div className="lg:col-span-3">
             <FactionDetailPanel
               faction={selectedFaction}
-              economy={selectedEconomy}
-              territories={territories}
               members={getFactionMembers(selectedId)}
-              diplomacy={diplomacy}
-              factions={factions}
-              jobs={jobs}
+              reputations={reputations}
               userEmail={user?.email}
+              onClose={() => setSelectedId(null)}
             />
           </div>
         )}
       </div>
-    </div>
+    </PageShell>
   );
 }

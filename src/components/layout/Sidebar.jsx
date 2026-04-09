@@ -2,8 +2,8 @@ import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
-  Crosshair,
   Map,
+  Crosshair,
   Radio,
   Shield,
   User,
@@ -42,7 +42,6 @@ import SidebarLogoSvg from "../svg/SidebarLogoSvg";
 // ── Active v1 player tools ───────────────────────────────────────────────────
 const coreNav = [
   { path: "/",            label: "TODAY",       icon: Zap },
-  { path: "/jobs",        label: "MISSIONS",    icon: Crosshair },
   { path: "/map",         label: "AO MAP",      icon: Map },
   { path: "/factions",    label: "CLANS",       icon: Shield },
   { path: "/colony",      label: "COLONY",      icon: Home },
@@ -50,7 +49,6 @@ const coreNav = [
 ];
 
 const personalNav = [
-  { path: "/mission-log", label: "MISSION LOG", icon: ScrollText },
   { path: "/journal",     label: "JOURNAL",     icon: BookOpen },
   { path: "/profile",     label: "PROFILE",     icon: User },
 ];
@@ -61,6 +59,8 @@ const adminNav = [
 
 // ── Future features — visible but locked ────────────────────────────────────
 const futureNav = [
+  { path: "/jobs",      label: "MISSIONS",    icon: Crosshair },
+  { path: "/mission-log", label: "MISSION LOG", icon: ScrollText },
   { path: "/sitrep",    label: "SITREP",      icon: LayoutDashboard },
   { path: "/ops",       label: "OPERATIONS",  icon: Radar },
   { path: "/territory", label: "TERRITORY",   icon: Map },

@@ -1,23 +1,19 @@
 import { Link } from "react-router-dom";
-import {
-  Crosshair, Map, Search, BookOpen, Shield, Target,
-  TrendingUp, Trophy, Radio
-} from "lucide-react";
+import { Map, BookOpen, Shield, Home, Package, Hammer, User } from "lucide-react";
 
 const actions = [
-  { to: "/ops?tab=missions", icon: Crosshair, label: "Missions", desc: "Accept a mission" },
-  { to: "/territory?tab=map", icon: Map, label: "AO Map", desc: "Scout the area" },
-  { to: "/dossier?tab=journal", icon: BookOpen, label: "Journal", desc: "Story events" },
-  { to: "/ops?tab=planner", icon: Target, label: "Planner", desc: "Plan an op" },
-  { to: "/territory?tab=clans", icon: Shield, label: "Clans", desc: "Your faction" },
-  { to: "/economy?tab=market", icon: TrendingUp, label: "Market", desc: "Trade goods" },
-  { to: "/ops?tab=comms", icon: Radio, label: "Comms", desc: "News feed" },
-  { to: "/dossier?tab=records", icon: Trophy, label: "Records", desc: "Leaderboard" },
+  { to: "/map",              icon: Map,     label: "AO Map",   desc: "Scout the area" },
+  { to: "/factions",         icon: Shield,  label: "Clans",    desc: "Known factions" },
+  { to: "/colony",           icon: Home,    label: "Colony",   desc: "Base & survivors" },
+  { to: "/loadout?tab=gear", icon: Package, label: "Gear",     desc: "Inventory" },
+  { to: "/loadout?tab=workbench", icon: Hammer, label: "Craft", desc: "Workbench" },
+  { to: "/journal",          icon: BookOpen,label: "Journal",  desc: "Field notes" },
+  { to: "/profile",          icon: User,    label: "Profile",  desc: "Your dossier" },
 ];
 
 export default function TodayActions() {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+    <div className="grid grid-cols-3 sm:grid-cols-7 gap-1.5">
       {actions.map(a => (
         <Link
           key={a.to}

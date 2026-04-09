@@ -12,12 +12,10 @@ import FutureFeaturePage from './components/terminal/FutureFeaturePage';
 
 // ── Active v1 pages ──────────────────────────────────────────────────────────
 import Today from './pages/Today';
-import Jobs from './pages/Jobs';
 import WorldMap from './pages/WorldMap';
 import Factions from './pages/Factions';
 import Colony from './pages/Colony';
 import Loadout from './pages/Loadout';      // Inventory + Workbench tabs
-import MissionLog from './pages/MissionLog';
 import Journal from './pages/Journal';
 import Profile from './pages/Profile';
 import Admin from './pages/Admin';
@@ -46,14 +44,14 @@ const AuthenticatedApp = () => {
       <Route element={<AppShell />}>
         {/* ── Active v1 routes ────────────────────────────────────────────── */}
         <Route path="/"            element={<Today />} />
-        <Route path="/jobs"        element={<Jobs />} />
+        <Route path="/jobs"        element={<FutureFeaturePage name="MISSIONS"     description="AI-generated mission board — contracts, objectives, and faction assignments." />} />
         <Route path="/map"         element={<WorldMap />} />
         <Route path="/factions"    element={<Factions />} />
         <Route path="/colony"      element={<Colony />} />
         <Route path="/loadout"     element={<Loadout />} />
         <Route path="/inventory"   element={<Inventory />} />
         <Route path="/workbench"   element={<CraftingTracker />} />
-        <Route path="/mission-log" element={<MissionLog />} />
+        <Route path="/mission-log" element={<FutureFeaturePage name="MISSION LOG"  description="Persistent record of all completed missions, outcomes, and reputation deltas." />} />
         <Route path="/journal"     element={<Journal />} />
         <Route path="/profile"     element={<Profile />} />
         <Route path="/admin"       element={<Admin />} />

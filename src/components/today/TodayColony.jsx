@@ -1,73 +1,63 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Home, Users } from "lucide-react";
 import SettlementSvg from "../svg/SettlementSvg";
-import SupplyForecast from "../colony/SupplyForecast";
 
-const gaugeColor = (val) => {
-  if (val >= 70) return "bg-status-ok";
-  if (val >= 40) return "bg-accent";
-  return "bg-destructive";
-};
-
-const gaugeLabel = (val) => {
-  if (val >= 70) return "text-status-ok";
-  if (val >= 40) return "text-accent";
-  return "text-destructive";
-};
-
-export default function TodayColony({ colony, survivors }) {
-  if (!colony) {
+export default function TodayColony({ bases = [], survivors = [] }) {
+  if (bases.length === 0) {
     return (
       <div className="text-center py-4">
         <SettlementSvg size={32} className="text-muted-foreground/30 mx-auto mb-2" />
-        <p className="text-xs text-muted-foreground/60 italic">No settlement data yet.</p>
-        <p className="text-[10px] text-muted-foreground/40 mt-1">Colony vitals appear here once a GM initializes tracking.</p>
+        <p className="text-xs text-muted-foreground/60 italic">No bases registered yet.</p>
+        <p className="text-[10px] text-muted-foreground/40 mt-1">Register your first base in the Colony section.</p>
         <Link to="/colony">
           <Button variant="outline" size="sm" className="text-[10px] uppercase tracking-wider h-8 mt-2">
-            <SettlementSvg size={14} className="mr-1" /> Colony
+            <SettlementSvg size={14} className="mr-1" /> Go to Colony
           </Button>
         </Link>
       </div>
     );
   }
 
-  const metrics = [
-    { label: "Food", value: colony.food_reserves ?? 0 },
-    { label: "Water", value: colony.water_supply ?? 0 },
-    { label: "Power", value: colony.power_level ?? 0 },
-    { label: "Defense", value: colony.defense_integrity ?? 0 },
-    { label: "Morale", value: colony.morale ?? 0 },
-    { label: "Medical", value: colony.medical_supplies ?? 0 },
-  ];
+  const activeBases = bases.filter(b => b.status !== "abandoned" && b.status !== "destroyed");
+  const assignedSurvivors = survivors.filter(s => bases.some(b => b.id === s.base_id));
 
   return (
     <div className="space-y-2.5">
-      <div className="grid grid-cols-3 gap-2">
-        {metrics.map(m => (
-          <div key={m.label} className="space-y-1">
-            <div className="flex justify-between text-[10px]">
-              <span className="text-muted-foreground uppercase tracking-wider">{m.label}</span>
-              <span className={`font-mono font-semibold ${gaugeLabel(m.value)}`}>{m.value}</span>
-            </div>
-            <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
-              <div className={`h-full rounded-full ${gaugeColor(m.value)}`} style={{ width: `${m.value}%` }} />
-            </div>
-          </div>
-        ))}
+      {/* Summary stats */}
+      <div className="grid grid-cols-2 gap-2">
+        <div className="panel-frame p-2.5 text-center">
+          <div className="text-lg font-bold font-display text-primary">{activeBases.length}</div>
+          <div className="text-[10px] text-muted-foreground tracking-widest uppercase">Active Base{activeBases.length !== 1 ? "s" : ""}</div>
+        </div>
+        <div className="panel-frame p-2.5 text-center">
+          <div className="text-lg font-bold font-display text-foreground">{assignedSurvivors.length}</div>
+          <div className="text-[10px] text-muted-foreground tracking-widest uppercase">Survivors</div>
+        </div>
       </div>
 
-      {colony.threat_level && colony.threat_level !== "minimal" && (
-        <div className="flex items-center gap-2 border border-accent/30 bg-accent/5 rounded-sm px-3 py-1.5">
-          <div className="h-2 w-2 rounded-full bg-accent animate-pulse" />
-          <span className="text-[10px] text-accent uppercase tracking-wider font-mono">
-            THREAT: {colony.threat_level}
-          </span>
-        </div>
-      )}
-
-      {/* Supply Forecast */}
-      <SupplyForecast colony={colony} survivors={survivors} compact />
+      {/* Base list (top 3) */}
+      <div className="space-y-1">
+        {activeBases.slice(0, 3).map(base => {
+          const basesurvivors = survivors.filter(s => s.base_id === base.id);
+          return (
+            <div key={base.id} className="flex items-center gap-2.5 border border-border/60 px-3 py-2">
+              <Home className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-foreground truncate">{base.name || "Unnamed Base"}</p>
+                <p className="text-[10px] text-muted-foreground">{base.sector || "Unknown sector"}</p>
+              </div>
+              <div className="flex items-center gap-1 text-[10px] text-muted-foreground shrink-0">
+                <Users className="h-3 w-3" />
+                <span>{basesurvivors.length}</span>
+              </div>
+            </div>
+          );
+        })}
+        {activeBases.length > 3 && (
+          <p className="text-[10px] text-muted-foreground/50 text-center font-mono">+{activeBases.length - 3} more</p>
+        )}
+      </div>
 
       <Link to="/colony">
         <Button variant="outline" size="sm" className="w-full text-[10px] uppercase tracking-wider h-8">
