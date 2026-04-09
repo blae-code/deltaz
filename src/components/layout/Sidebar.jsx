@@ -2,26 +2,36 @@ import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
+  Crosshair,
   Map,
+  Radio,
+  Shield,
   User,
   Terminal,
   ChevronLeft,
   ChevronRight,
+  Eye,
   Menu,
   X,
+  TrendingUp,
   Home,
+  FileSignature,
   Package,
+  Trophy,
+  FileText,
   ScrollText,
   Truck,
   LogOut,
+  BookOpen,
+  Target,
   Flame,
   BarChart3,
   Swords,
+  ArrowLeftRight,
   Store,
-  ChevronDown,
-  ChevronUp,
+  Radar,
   Zap,
-  Crosshair,
+  Lock,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
@@ -29,27 +39,47 @@ import NavTooltip from "./NavTooltip";
 import { isAdminOrGM } from "../../lib/displayName";
 import SidebarLogoSvg from "../svg/SidebarLogoSvg";
 
+// ── Active v1 player tools ───────────────────────────────────────────────────
 const coreNav = [
-  { path: "/",          label: "TODAY",       icon: Zap },
-  { path: "/sitrep",    label: "SITREP",      icon: LayoutDashboard },
-  { path: "/ops",       label: "OPERATIONS",  icon: Crosshair },
-  { path: "/territory", label: "TERRITORY",   icon: Map },
-  { path: "/economy",   label: "ECONOMY",     icon: Store },
-  { path: "/colony",    label: "COLONY",      icon: Home },
-  { path: "/loadout",   label: "LOADOUT",     icon: Package },
-  { path: "/dossier",   label: "DOSSIER",     icon: User },
+  { path: "/",            label: "TODAY",       icon: Zap },
+  { path: "/jobs",        label: "MISSIONS",    icon: Crosshair },
+  { path: "/map",         label: "AO MAP",      icon: Map },
+  { path: "/factions",    label: "CLANS",       icon: Shield },
+  { path: "/colony",      label: "COLONY",      icon: Home },
+  { path: "/loadout",     label: "LOADOUT",     icon: Package },
 ];
 
-const gmToolsNav = [
-  { path: "/ops-log",    label: "OPS LOG",    icon: ScrollText },
-  { path: "/heatmap",    label: "HEATMAP",    icon: Flame },
-  { path: "/logistics",  label: "LOGISTICS",  icon: Truck },
-  { path: "/ledger",     label: "LEDGER",     icon: BarChart3 },
-  { path: "/conflicts",  label: "CONFLICTS",  icon: Swords },
+const personalNav = [
+  { path: "/mission-log", label: "MISSION LOG", icon: ScrollText },
+  { path: "/journal",     label: "JOURNAL",     icon: BookOpen },
+  { path: "/profile",     label: "PROFILE",     icon: User },
 ];
 
 const adminNav = [
   { path: "/admin", label: "COMMAND", icon: Terminal },
+];
+
+// ── Future features — visible but locked ────────────────────────────────────
+const futureNav = [
+  { path: "/sitrep",    label: "SITREP",      icon: LayoutDashboard },
+  { path: "/ops",       label: "OPERATIONS",  icon: Radar },
+  { path: "/territory", label: "TERRITORY",   icon: Map },
+  { path: "/economy",   label: "ECONOMY",     icon: TrendingUp },
+  { path: "/dossier",   label: "DOSSIER",     icon: FileText },
+  { path: "/intel",     label: "INTEL",       icon: Eye },
+  { path: "/events",    label: "COMMS",       icon: Radio },
+  { path: "/trade",     label: "TRADE HUB",   icon: ArrowLeftRight },
+  { path: "/bazaar",    label: "BAZAAR",       icon: Store },
+  { path: "/market",    label: "MARKET",      icon: TrendingUp },
+  { path: "/warroom",   label: "WAR ROOM",    icon: Radar },
+  { path: "/planner",   label: "PLANNER",     icon: Target },
+  { path: "/treaties",  label: "TREATIES",    icon: FileSignature },
+  { path: "/logistics", label: "LOGISTICS",   icon: Truck },
+  { path: "/ledger",    label: "LEDGER",      icon: BarChart3 },
+  { path: "/heatmap",   label: "HEATMAP",     icon: Flame },
+  { path: "/conflicts", label: "CONFLICTS",   icon: Swords },
+  { path: "/ops-log",   label: "OPS LOG",     icon: ScrollText },
+  { path: "/records",   label: "RECORDS",     icon: Trophy },
 ];
 
 export default function Sidebar({ user: propUser }) {
@@ -68,13 +98,11 @@ export default function Sidebar({ user: propUser }) {
 
   const isAdmin = isAdminOrGM(user);
 
-  const [gmToolsOpen, setGmToolsOpen] = useState(false);
-
-  const navGroups = [
-    { label: null,         items: coreNav },
-    ...(isAdmin ? [{ label: "GM TOOLS", items: gmToolsNav, collapsible: true, isOpen: gmToolsOpen, onToggle: () => setGmToolsOpen(!gmToolsOpen) }] : []),
+  const activeGroups = [
+    { label: null,       items: coreNav },
+    { label: "PERSONAL", items: personalNav },
     ...(isAdmin ? [{ label: "GM", items: adminNav }] : []),
-  ].filter((g) => g.items.length > 0);
+  ];
 
   return (
     <>
@@ -132,31 +160,25 @@ export default function Sidebar({ user: propUser }) {
 
         {/* Nav */}
         <nav className="flex-1 py-2 px-1.5 overflow-y-auto space-y-3 scrollbar-none">
-          {navGroups.map((group, gi) => (
+
+          {/* Active groups */}
+          {activeGroups.map((group, gi) => (
             <div key={gi}>
               {group.label && !collapsed && (
-                <button
-                  onClick={group.onToggle || undefined}
-                  className={`w-full px-2.5 pt-2 pb-1 flex items-center gap-2 ${group.collapsible ? 'cursor-pointer hover:opacity-80' : ''}`}
-                >
+                <div className="px-2.5 pt-2 pb-1 flex items-center gap-2">
                   <span className="text-[9px] font-mono text-primary/30 tracking-[0.25em] uppercase">
                     // {group.label}
                   </span>
                   <div className="flex-1 h-px bg-border/40" />
-                  {group.collapsible && (
-                    group.isOpen
-                      ? <ChevronUp className="h-3 w-3 text-primary/30" />
-                      : <ChevronDown className="h-3 w-3 text-primary/30" />
-                  )}
-                </button>
+                </div>
               )}
               {group.label && collapsed && (
                 <div className="mx-auto my-1.5 w-5 border-t border-border/50" />
               )}
-              {(!group.collapsible || group.isOpen || collapsed) && (
               <div className="space-y-px">
                 {group.items.map((item) => {
-                  const isActive = location.pathname === item.path;
+                  const isActive = location.pathname === item.path
+                    || (item.path !== "/" && location.pathname.startsWith(item.path));
                   return (
                     <NavTooltip key={item.path} path={item.path} collapsed={collapsed}>
                       <Link
@@ -177,16 +199,52 @@ export default function Sidebar({ user: propUser }) {
                   );
                 })}
               </div>
-              )}
             </div>
           ))}
+
+          {/* Future Features section */}
+          <div>
+            {!collapsed && (
+              <div className="px-2.5 pt-2 pb-1 flex items-center gap-2">
+                <span className="text-[9px] font-mono text-muted-foreground/20 tracking-[0.25em] uppercase">
+                  // FUTURE
+                </span>
+                <div className="flex-1 h-px bg-border/20" />
+              </div>
+            )}
+            {collapsed && (
+              <div className="mx-auto my-1.5 w-5 border-t border-border/30" />
+            )}
+            <div className="space-y-px">
+              {futureNav.map((item) => (
+                <div
+                  key={item.path}
+                  title={collapsed ? item.label : undefined}
+                  className={cn(
+                    "flex items-center gap-2.5 rounded-sm px-2.5 py-2 text-[11px] font-medium tracking-wider",
+                    "opacity-30 cursor-not-allowed select-none",
+                    collapsed && "justify-center px-0 py-2.5"
+                  )}
+                >
+                  <item.icon className={cn("shrink-0 text-muted-foreground", collapsed ? "h-4 w-4" : "h-3.5 w-3.5")} />
+                  {!collapsed && (
+                    <>
+                      <span className="truncate flex-1 text-muted-foreground">{item.label}</span>
+                      <Lock className="h-2.5 w-2.5 shrink-0 text-muted-foreground/60" />
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
         </nav>
 
         {/* Footer — user identity + logout + collapse toggle */}
         <div className="border-t border-border/60">
           {user && !collapsed && (
             <Link
-              to="/dossier"
+              to="/profile"
               onClick={() => setMobileOpen(false)}
               className="flex items-center gap-2 px-3 py-2.5 border-b border-border/40 hover:bg-secondary/30 transition-colors group"
             >
