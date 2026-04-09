@@ -12,6 +12,7 @@ import BasePinOverlay from "../components/map/BasePinOverlay";
 import BaseInfluencePanel from "../components/map/BaseInfluencePanel";
 import SectorDetailPanel from "../components/map/SectorDetailPanel";
 import StatusStripSkeleton from "../components/layout/StatusStripSkeleton";
+import TerminalLoader from "../components/terminal/TerminalLoader";
 
 export default function WorldMap() {
   const { user } = useCurrentUser();
@@ -71,7 +72,10 @@ export default function WorldMap() {
     return (
       <PageShell title="Area of Operations" subtitle="Loading tactical map...">
         <StatusStripSkeleton count={3} />
-        <div className="aspect-square max-h-[600px] bg-card border border-border animate-pulse" />
+        <TerminalLoader
+          size="lg"
+          messages={["LOADING GRID MAP...", "PLOTTING MARKER POSITIONS...", "TRIANGULATING BASE COORDINATES..."]}
+        />
       </PageShell>
     );
   }
@@ -150,7 +154,10 @@ export default function WorldMap() {
 
           {/* Hint when nothing selected */}
           {!selectedMarker && !pendingPosition && !selectedSector && !influencePanel && (
-            <div className="border border-dashed border-border/50 py-6 px-4 text-center">
+            <div className="panel-frame py-6 px-4 text-center">
+              <p className="text-[9px] text-primary/30 font-mono tracking-[0.3em] uppercase mb-1">
+                // AWAITING INPUT
+              </p>
               <p className="text-[11px] text-muted-foreground/60 font-mono">
                 Click any sector to drop a marker or view sector info.
               </p>

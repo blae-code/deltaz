@@ -41,7 +41,7 @@ export default function TodayColony({ bases = [], survivors = [] }) {
         {activeBases.slice(0, 3).map(base => {
           const basesurvivors = survivors.filter(s => s.base_id === base.id);
           return (
-            <div key={base.id} className="flex items-center gap-2.5 border border-border/60 px-3 py-2">
+            <div key={base.id} className="panel-frame flex items-center gap-2.5 px-3 py-2">
               <Home className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-foreground truncate">{base.name || "Unnamed Base"}</p>
