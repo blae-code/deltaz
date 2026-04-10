@@ -23,10 +23,10 @@ export default function MobileSummaryCard({ icon, title, subtitle, status, statu
         glow
       )}
     >
-      {icon && <div className="shrink-0 text-muted-foreground">{icon}</div>}
+      {icon && <div className="shrink-0 text-muted-foreground/80">{icon}</div>}
       <div className="flex-1 min-w-0">
         <div className="text-xs font-medium text-foreground truncate leading-tight">{title}</div>
-        {subtitle && <div className="text-[10px] text-muted-foreground truncate mt-0.5">{subtitle}</div>}
+        {subtitle && <div className="text-[10px] text-muted-foreground/80 truncate mt-0.5">{subtitle}</div>}
         {children}
       </div>
       <div className="shrink-0 text-right">

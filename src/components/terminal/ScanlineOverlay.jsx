@@ -6,12 +6,12 @@
 export default function ScanlineOverlay() {
   return (
     <div className="pointer-events-none fixed inset-0 z-50 overflow-hidden">
-      {/* Static raster lines */}
+      {/* Static raster lines — very subtle */}
       <div
-        className="absolute inset-0 opacity-[0.03]"
+        className="absolute inset-0 opacity-[0.02]"
         style={{
           backgroundImage:
-            "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(223,129,22,0.035) 2px, rgba(223,129,22,0.035) 4px)",
+            "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(223,145,30,0.03) 2px, rgba(223,145,30,0.03) 4px)",
         }}
       />
       {/* Animated sweep band */}

@@ -21,8 +21,8 @@ export default function EmptyState({ icon: Icon = CircleOff, title, why, action,
       <div className="absolute bottom-0 right-0 pointer-events-none"><CornerAccentSvg corner="br" size={14} /></div>
 
       {/* Icon */}
-      <div className="h-10 w-10 bg-secondary/40 border border-border/50 flex items-center justify-center">
-        <Icon className="h-5 w-5 text-muted-foreground/50" />
+      <div className="h-10 w-10 bg-secondary/50 border border-border/60 flex items-center justify-center">
+        <Icon className="h-5 w-5 text-muted-foreground/60" />
       </div>
 
       {/* Content */}
@@ -31,10 +31,10 @@ export default function EmptyState({ icon: Icon = CircleOff, title, why, action,
           <p className="text-[11px] font-semibold text-muted-foreground font-mono tracking-widest uppercase">{title}</p>
         )}
         {why && (
-          <p className="text-[11px] text-muted-foreground/60 leading-relaxed max-w-sm">{why}</p>
+          <p className="text-[11px] text-muted-foreground/70 leading-relaxed max-w-sm">{why}</p>
         )}
         {action && (
-          <p className="text-[10px] text-primary/60 leading-relaxed max-w-xs font-mono">{action}</p>
+          <p className="text-[10px] text-primary/70 leading-relaxed max-w-xs font-mono">{action}</p>
         )}
       </div>
 

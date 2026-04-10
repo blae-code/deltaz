@@ -77,8 +77,8 @@ export default function TopBar({ user: propUser }) {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <header className="relative flex items-center justify-between border-b border-border bg-card px-3 sm:px-4 h-[42px] shrink-0">
-        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-primary/50 via-primary/15 to-transparent pointer-events-none" />
+      <header className="relative flex items-center justify-between border-b border-border bg-card/80 backdrop-blur-sm px-3 sm:px-4 h-[44px] shrink-0">
+        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-primary/60 via-primary/20 to-transparent pointer-events-none" />
 
         {/* Left cluster */}
         <div className="flex items-center gap-3 sm:gap-4">
@@ -94,13 +94,13 @@ export default function TopBar({ user: propUser }) {
             </TooltipContent>
           </Tooltip>
 
-          <div className="hidden sm:flex items-center gap-1.5 text-[10px] text-muted-foreground/60 font-mono">
-            <Lock className="h-3 w-3 text-muted-foreground/40" />
+          <div className="hidden sm:flex items-center gap-1.5 text-[10px] text-muted-foreground/70 font-mono">
+            <Lock className="h-3 w-3 text-muted-foreground/50" />
             <span className="tracking-wider">ENCRYPTED</span>
           </div>
 
           {/* Session telemetry */}
-          <div className="hidden lg:flex items-center gap-3 text-[10px] font-mono text-muted-foreground/40 tracking-wider border-l border-border/40 pl-3">
+          <div className="hidden lg:flex items-center gap-3 text-[10px] font-mono text-muted-foreground/50 tracking-wider border-l border-border/50 pl-3">
             <Tooltip>
               <TooltipTrigger asChild>
                 <span className="cursor-help hover:text-muted-foreground/70 transition-colors">

@@ -31,13 +31,13 @@ export default function TerminalLoader({ messages = DEFAULT_MESSAGES, className,
 
   return (
     <div className={cn("flex flex-col items-center justify-center gap-4", py, className)}>
-      <ScanPulseSvg size={iconSize} className="text-primary/50" />
+      <ScanPulseSvg size={iconSize} className="text-primary/60" />
 
       <div className="text-center space-y-1">
-        <p className="text-[10px] font-mono tracking-[0.3em] text-primary/60 uppercase transition-opacity duration-500">
+        <p className="text-[10px] font-mono tracking-[0.3em] text-primary/70 uppercase transition-opacity duration-500">
           {messages[idx]}
         </p>
-        <p className="text-[9px] font-mono tracking-widest text-muted-foreground/30 uppercase">
+        <p className="text-[9px] font-mono tracking-widest text-muted-foreground/40 uppercase">
           DEAD SIGNAL · FIELD TERMINAL
         </p>
       </div>

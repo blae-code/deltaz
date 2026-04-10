@@ -18,7 +18,7 @@ export default function MobileKpiRow({ items }) {
           <div className={cn("text-lg font-bold font-display leading-none", item.color || "text-foreground")}>
             {item.value}
           </div>
-          <div className="text-[8px] text-muted-foreground tracking-[0.15em] uppercase mt-1 whitespace-nowrap">
+          <div className="text-[8px] text-muted-foreground/80 tracking-[0.15em] uppercase mt-1 whitespace-nowrap">
             {item.label}
           </div>
         </div>

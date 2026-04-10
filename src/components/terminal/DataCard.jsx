@@ -10,14 +10,14 @@ export default function DataCard({ title, subtitle, children, className, headerR
           <div className="card-header-sweep" aria-hidden="true" />
 
           <div className="flex items-center gap-2 min-w-0 relative">
-            <span className="text-primary/30 font-mono text-[10px] shrink-0 select-none">//</span>
+            <span className="text-primary/40 font-mono text-[10px] shrink-0 select-none">//</span>
             <h3 className="text-[11px] font-semibold uppercase tracking-widest text-primary font-display truncate">
               {title}
             </h3>
           </div>
 
           {subtitle && !headerRight && (
-            <span className="text-[9px] text-muted-foreground/50 font-mono tracking-wider shrink-0 relative">
+            <span className="text-[9px] text-muted-foreground/60 font-mono tracking-wider shrink-0 relative">
               {subtitle}
             </span>
           )}

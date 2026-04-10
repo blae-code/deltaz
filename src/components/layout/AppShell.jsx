@@ -83,12 +83,12 @@ export default function AppShell() {
             <Outlet context={{ user, isAdmin }} />
           </div>
         </main>
-        <footer className="border-t border-border/30 px-4 py-1 flex items-center justify-between bg-card/40 shrink-0 h-[26px]">
-          <div className="flex items-center gap-3 text-[9px] text-muted-foreground/35 font-mono tracking-widest">
+        <footer className="border-t border-border/40 px-4 py-1 flex items-center justify-between bg-card/50 shrink-0 h-[26px]">
+          <div className="flex items-center gap-3 text-[9px] text-muted-foreground/45 font-mono tracking-widest">
             <span>DEAD SIGNAL</span>
-            <span className="text-muted-foreground/20">·</span>
+            <span className="text-muted-foreground/25">·</span>
             <span>v2.1.7b</span>
-            <span className="text-muted-foreground/20">·</span>
+            <span className="text-muted-foreground/25">·</span>
             <span className="hidden sm:inline">PROTO·2</span>
           </div>
           <SyncStatusFooter />

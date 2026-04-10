@@ -79,22 +79,22 @@ export default function Sidebar({ user: propUser }) {
       >
         {/* Logo */}
         <div className="relative flex items-center justify-between border-b border-border px-3 py-3.5">
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/80 via-primary/30 to-transparent pointer-events-none" />
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/90 via-primary/40 to-transparent pointer-events-none" />
           {/* Top-right corner accent */}
           <div className="absolute right-0 top-0 pointer-events-none">
             <CornerAccentSvg corner="tr" size={12} />
           </div>
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="h-7 w-7 rounded-sm bg-primary/15 border border-primary/35 flex items-center justify-center shrink-0">
+            <div className="h-7 w-7 rounded-sm bg-primary/20 border border-primary/40 flex items-center justify-center shrink-0 shadow-[0_0_8px_hsl(var(--primary)/0.15)]">
               <SidebarLogoSvg size={16} className="text-primary" />
             </div>
             {!collapsed && (
               <div className="min-w-0">
-                <div className="text-[8px] text-primary/40 font-mono tracking-[0.4em] leading-none mb-0.5">[ DS ]</div>
+                <div className="text-[8px] text-primary/50 font-mono tracking-[0.4em] leading-none mb-0.5">[ DS ]</div>
                 <h1 className="text-[13px] font-bold font-display tracking-[0.18em] text-primary leading-none">
                   DEAD SIGNAL
                 </h1>
-                <p className="text-[8px] text-muted-foreground/50 tracking-[0.3em] font-mono mt-0.5">
+                <p className="text-[8px] text-muted-foreground/60 tracking-[0.3em] font-mono mt-0.5">
                   FIELD TERMINAL
                 </p>
               </div>
@@ -171,7 +171,7 @@ export default function Sidebar({ user: propUser }) {
                 <span className="text-[10px] font-semibold text-foreground truncate block leading-tight">
                   {user.callsign || user.full_name || "Operative"}
                 </span>
-                <span className="text-[9px] text-muted-foreground/60 uppercase tracking-widest leading-tight font-mono">
+                <span className="text-[9px] text-muted-foreground/70 uppercase tracking-widest leading-tight font-mono">
                   {user.role || "PLAYER"}
                 </span>
               </div>

@@ -6,84 +6,84 @@
 
 @layer base {
   :root {
-    /* === MINMATAR PALETTE — warm amber/rust on near-black === */
-    --background: 24 12% 5%;
-    --foreground: 30 12% 88%;
-    --card: 24 10% 9%;
-    --card-foreground: 30 12% 88%;
-    --popover: 24 10% 9%;
-    --popover-foreground: 30 12% 88%;
-    --primary: 32 90% 52%;
+    /* === MINMATAR PALETTE — warm amber on dark charcoal (brightened) === */
+    --background: 24 10% 8%;
+    --foreground: 30 14% 90%;
+    --card: 24 9% 12%;
+    --card-foreground: 30 14% 90%;
+    --popover: 24 9% 12%;
+    --popover-foreground: 30 14% 90%;
+    --primary: 34 92% 55%;
     --primary-foreground: 24 12% 5%;
-    --secondary: 24 8% 12%;
-    --secondary-foreground: 30 10% 70%;
-    --muted: 24 7% 10%;
-    --muted-foreground: 30 8% 52%;
-    --accent: 4 78% 50%;
+    --secondary: 24 8% 16%;
+    --secondary-foreground: 30 12% 75%;
+    --muted: 24 7% 14%;
+    --muted-foreground: 30 10% 58%;
+    --accent: 6 80% 54%;
     --accent-foreground: 24 12% 5%;
-    --destructive: 0 75% 52%;
+    --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 98%;
-    --border: 24 10% 18%;
-    --input: 24 10% 18%;
-    --ring: 32 90% 52%;
-    --chart-1: 32 90% 52%;
-    --chart-2: 4 78% 50%;
-    --chart-3: 0 75% 52%;
-    --chart-4: 48 75% 54%;
-    --chart-5: 16 70% 48%;
-    --status-ok: 142 60% 42%;
-    --status-warn: 38 90% 52%;
-    --status-danger: 4 78% 50%;
+    --border: 24 10% 22%;
+    --input: 24 10% 22%;
+    --ring: 34 92% 55%;
+    --chart-1: 34 92% 55%;
+    --chart-2: 6 80% 54%;
+    --chart-3: 0 72% 55%;
+    --chart-4: 48 80% 58%;
+    --chart-5: 16 72% 52%;
+    --status-ok: 145 65% 48%;
+    --status-warn: 38 92% 55%;
+    --status-danger: 6 80% 54%;
     --radius: 0rem;
-    --sidebar-background: 24 12% 4%;
-    --sidebar-foreground: 30 10% 65%;
-    --sidebar-primary: 32 90% 52%;
+    --sidebar-background: 24 10% 6%;
+    --sidebar-foreground: 30 12% 70%;
+    --sidebar-primary: 34 92% 55%;
     --sidebar-primary-foreground: 24 12% 5%;
-    --sidebar-accent: 24 8% 10%;
-    --sidebar-accent-foreground: 30 12% 88%;
-    --sidebar-border: 24 10% 14%;
-    --sidebar-ring: 32 90% 52%;
+    --sidebar-accent: 24 8% 14%;
+    --sidebar-accent-foreground: 30 14% 90%;
+    --sidebar-border: 24 10% 18%;
+    --sidebar-ring: 34 92% 55%;
     --font-mono: 'JetBrains Mono', monospace;
     --font-display: 'Rajdhani', sans-serif;
   }
 
   .dark {
-    --background: 24 12% 5%;
-    --foreground: 30 12% 88%;
-    --card: 24 10% 9%;
-    --card-foreground: 30 12% 88%;
-    --popover: 24 10% 9%;
-    --popover-foreground: 30 12% 88%;
-    --primary: 32 90% 52%;
+    --background: 24 10% 8%;
+    --foreground: 30 14% 90%;
+    --card: 24 9% 12%;
+    --card-foreground: 30 14% 90%;
+    --popover: 24 9% 12%;
+    --popover-foreground: 30 14% 90%;
+    --primary: 34 92% 55%;
     --primary-foreground: 24 12% 5%;
-    --secondary: 24 8% 12%;
-    --secondary-foreground: 30 10% 70%;
-    --muted: 24 7% 10%;
-    --muted-foreground: 30 8% 52%;
-    --accent: 4 78% 50%;
+    --secondary: 24 8% 16%;
+    --secondary-foreground: 30 12% 75%;
+    --muted: 24 7% 14%;
+    --muted-foreground: 30 10% 58%;
+    --accent: 6 80% 54%;
     --accent-foreground: 24 12% 5%;
-    --destructive: 0 75% 52%;
+    --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 98%;
-    --border: 24 10% 18%;
-    --input: 24 10% 18%;
-    --ring: 32 90% 52%;
-    --chart-1: 32 90% 52%;
-    --chart-2: 4 78% 50%;
-    --chart-3: 0 75% 52%;
-    --chart-4: 48 75% 54%;
-    --chart-5: 16 70% 48%;
-    --status-ok: 142 60% 42%;
-    --status-warn: 38 90% 52%;
-    --status-danger: 4 78% 50%;
+    --border: 24 10% 22%;
+    --input: 24 10% 22%;
+    --ring: 34 92% 55%;
+    --chart-1: 34 92% 55%;
+    --chart-2: 6 80% 54%;
+    --chart-3: 0 72% 55%;
+    --chart-4: 48 80% 58%;
+    --chart-5: 16 72% 52%;
+    --status-ok: 145 65% 48%;
+    --status-warn: 38 92% 55%;
+    --status-danger: 6 80% 54%;
     --radius: 0rem;
-    --sidebar-background: 24 12% 4%;
-    --sidebar-foreground: 30 10% 65%;
-    --sidebar-primary: 32 90% 52%;
+    --sidebar-background: 24 10% 6%;
+    --sidebar-foreground: 30 12% 70%;
+    --sidebar-primary: 34 92% 55%;
     --sidebar-primary-foreground: 24 12% 5%;
-    --sidebar-accent: 24 8% 10%;
-    --sidebar-accent-foreground: 30 12% 88%;
-    --sidebar-border: 24 10% 14%;
-    --sidebar-ring: 32 90% 52%;
+    --sidebar-accent: 24 8% 14%;
+    --sidebar-accent-foreground: 30 14% 90%;
+    --sidebar-border: 24 10% 18%;
+    --sidebar-ring: 34 92% 55%;
   }
 }
 
@@ -141,6 +141,7 @@
   position: relative;
   border: 1px solid hsl(var(--border));
   background: hsl(var(--card));
+  box-shadow: 0 1px 3px 0 hsl(0 0% 0% / 0.25);
 }
 .panel-frame::before {
   content: '';
@@ -151,8 +152,8 @@
   height: 1px;
   background: linear-gradient(
     to right,
-    hsl(var(--primary) / 1) 0%,
-    hsl(var(--primary) / 0.4) 50%,
+    hsl(var(--primary) / 0.85) 0%,
+    hsl(var(--primary) / 0.35) 50%,
     transparent 100%
   );
   pointer-events: none;
@@ -161,7 +162,7 @@
 
 /* Subtle amber dot-matrix grid on content areas */
 .tech-grid-bg {
-  background-image: radial-gradient(circle, hsl(var(--primary) / 0.09) 1px, transparent 1px);
+  background-image: radial-gradient(circle, hsl(var(--primary) / 0.06) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 
@@ -216,7 +217,7 @@
   100% { opacity: 0; }
 }
 
-/* App-level CRT scan line — sweeps the full viewport every 18s */
+/* App-level CRT scan line — sweeps the full viewport every 22s (slowed for subtlety) */
 @keyframes crt-scan {
   0%   { transform: translateY(-100vh); }
   100% { transform: translateY(100vh); }
@@ -228,12 +229,12 @@
   background: linear-gradient(
     to bottom,
     transparent 0%,
-    hsl(var(--primary) / 0.04) 50%,
+    hsl(var(--primary) / 0.03) 50%,
     transparent 100%
   );
   pointer-events: none;
   z-index: 9999;
-  animation: crt-scan 18s linear infinite;
+  animation: crt-scan 22s linear infinite;
   will-change: transform;
 }
 
@@ -291,7 +292,7 @@
 /* Accessibility: boost muted foreground contrast */
 @media (prefers-contrast: more) {
   :root {
-    --muted-foreground: 30 10% 65%;
+    --muted-foreground: 30 12% 72%;
   }
 }
 
@@ -306,16 +307,16 @@
    SCROLLBARS — amber-tinted Minmatar chrome
    ========================================================= */
 ::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: hsl(24 12% 5%);
+  background: hsl(24 10% 7%);
 }
 ::-webkit-scrollbar-thumb {
-  background: hsl(24 10% 18%);
+  background: hsl(24 10% 24%);
   border-radius: 2px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(32 82% 48% / 0.45);
+  background: hsl(34 80% 50% / 0.5);
 }
