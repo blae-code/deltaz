@@ -296,11 +296,17 @@ export default function TodayWorldConditions({ conditions }) {
 
 function WorldClockReadout({ clock }) {
   const pulseActive = clock.isTicking && clock.secondsOfDay !== null && clock.secondsOfDay % 2 === 0;
+  // When not ticking, show the static world_time with a "STATIC" indicator
+  const isStatic = !clock.isTicking;
   return (
     <span className="flex items-center gap-1 text-[11px] font-mono text-foreground">
-      <WorldClockSvg size={14} className="text-primary" animated={clock.isTicking} />
-      <span>{clock.displayTimeWithSeconds}</span>
-      <span className={`inline-block h-1.5 w-1.5 rounded-full bg-primary transition-opacity duration-500 ${pulseActive ? "opacity-100" : "opacity-20"}`} />
+      <WorldClockSvg size={14} className={clock.isTicking ? "text-primary" : "text-muted-foreground"} animated={clock.isTicking} />
+      <span className={isStatic ? "text-muted-foreground" : ""}>{clock.displayTimeWithSeconds}</span>
+      {clock.isTicking ? (
+        <span className={`inline-block h-1.5 w-1.5 rounded-full bg-primary transition-opacity duration-500 ${pulseActive ? "opacity-100" : "opacity-20"}`} />
+      ) : (
+        <span className="text-[8px] text-muted-foreground/50 tracking-widest uppercase ml-0.5">STATIC</span>
+      )}
     </span>
   );
 }

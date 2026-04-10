@@ -2,63 +2,6 @@
   "name": "WorldConditions",
   "type": "object",
   "properties": {
-    "authority_status": {
-      "type": "string",
-      "enum": [
-        "verified",
-        "stale",
-        "unavailable",
-        "error"
-      ],
-      "default": "unavailable",
-      "description": "Current telemetry authority state for this world snapshot"
-    },
-    "authoritative_source_kind": {
-      "type": "string",
-      "enum": [
-        "pterodactyl_file",
-        "rcon_command"
-      ],
-      "description": "Backend source used for the most recent sync attempt"
-    },
-    "authoritative_source_ref": {
-      "type": "string",
-      "description": "Path or command identifier for the authoritative world state source"
-    },
-    "last_verified_at": {
-      "type": "string",
-      "description": "ISO timestamp of the last successful authoritative sync"
-    },
-    "last_sync_attempt_at": {
-      "type": "string",
-      "description": "ISO timestamp of the most recent sync attempt"
-    },
-    "last_sync_error": {
-      "type": "string",
-      "description": "Last sync/read/parse error message, if any"
-    },
-    "stale_after_seconds": {
-      "type": "number",
-      "default": 180,
-      "description": "How long a verified sample remains fresh before clients should freeze it as stale"
-    },
-    "world_day_number": {
-      "type": "number",
-      "description": "Authoritative in-game day number from the server snapshot"
-    },
-    "world_minute_of_day": {
-      "type": "number",
-      "description": "Authoritative minute-of-day anchor from the server snapshot"
-    },
-    "clock_observed_at": {
-      "type": "string",
-      "description": "ISO timestamp when the current clock anchor was observed on the server"
-    },
-    "clock_rate_multiplier": {
-      "type": "number",
-      "default": 1,
-      "description": "In-game seconds advanced per real second for the anchored world clock"
-    },
     "world_date": {
       "type": "string",
       "description": "In-game date display (e.g. 'Day 147' or 'March 12, 2089')"
@@ -166,24 +109,62 @@
       "type": "string",
       "description": "Optional GM-authored atmospheric description"
     },
-    "data_origin": {
-      "type": "string",
-      "description": "Provenance origin for the current authoritative snapshot"
+    "world_day_number": {
+      "type": "number",
+      "description": "In-game day number for the ticking clock (e.g. 147)"
     },
-    "source_refs": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "Source references backing the current snapshot"
+    "world_minute_of_day": {
+      "type": "number",
+      "description": "In-game minute of the day 0-1439 for the ticking clock"
     },
-    "rule_version": {
+    "clock_observed_at": {
       "type": "string",
-      "description": "Provenance rule version for the current authoritative snapshot"
+      "description": "ISO timestamp when world_minute_of_day was observed on the server"
     },
-    "generated_at": {
+    "clock_rate_multiplier": {
+      "type": "number",
+      "default": 1,
+      "description": "Game clock speed multiplier (e.g. 12 = 12x real time)"
+    },
+    "authority_status": {
       "type": "string",
-      "description": "ISO timestamp when the authoritative snapshot payload was generated"
+      "enum": [
+        "verified",
+        "stale",
+        "error",
+        "unavailable"
+      ],
+      "default": "unavailable",
+      "description": "Telemetry authority status"
+    },
+    "authoritative_source_kind": {
+      "type": "string",
+      "description": "How the telemetry was obtained (e.g. 'pterodactyl_file', 'rcon_command')"
+    },
+    "authoritative_source_ref": {
+      "type": "string",
+      "description": "Reference identifier for the telemetry source"
+    },
+    "last_verified_at": {
+      "type": "string",
+      "description": "ISO timestamp of last successful telemetry verification"
+    },
+    "last_sync_attempt_at": {
+      "type": "string",
+      "description": "ISO timestamp of last sync attempt"
+    },
+    "last_sync_error": {
+      "type": "string",
+      "description": "Error message from last failed sync attempt"
+    },
+    "stale_after_seconds": {
+      "type": "number",
+      "default": 180,
+      "description": "Seconds after last_verified_at before data is considered stale"
     }
-  }
+  },
+  "required": [
+    "season",
+    "weather"
+  ]
 }
