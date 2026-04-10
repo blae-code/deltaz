@@ -19,6 +19,7 @@ import Loadout from './pages/Loadout';      // Inventory + Workbench tabs
 import Journal from './pages/Journal';
 import Profile from './pages/Profile';
 import Admin from './pages/Admin';
+import TradeHub from './pages/TradeHub';
 
 // ── Sub-pages (used internally by hub pages; keep routes valid) ──────────────
 import Inventory from './pages/Inventory';
@@ -55,6 +56,7 @@ const AuthenticatedApp = () => {
         <Route path="/journal"     element={<Journal />} />
         <Route path="/profile"     element={<Profile />} />
         <Route path="/admin"       element={<Admin />} />
+        <Route path="/trade"       element={<TradeHub />} />
 
         {/* ── Future feature routes ───────────────────────────────────────── */}
         <Route path="/sitrep"    element={<FutureFeaturePage name="SITREP"      description="Customizable situation-report dashboard with live widget feeds and world-state overview." />} />
@@ -63,8 +65,7 @@ const AuthenticatedApp = () => {
         <Route path="/economy"   element={<FutureFeaturePage name="ECONOMY"     description="Server-wide economic layer — bazaar, trade hub, and faction market pricing." />} />
         <Route path="/dossier"   element={<FutureFeaturePage name="DOSSIER"     description="Weekly situation summary — personal performance, notable events, and server-wide highlights." />} />
         <Route path="/events"    element={<FutureFeaturePage name="COMMS"       description="Server-wide broadcast feed — faction dispatches, world events, and emergency alerts." />} />
-        <Route path="/trade"     element={<FutureFeaturePage name="TRADE HUB"   description="Player-to-player barter system with deal proposals, escrow, and trade history." />} />
-        <Route path="/bazaar"    element={<FutureFeaturePage name="BAZAAR"      description="NPC vendor marketplace for exchanging scavenged goods and surplus supplies." />} />
+<Route path="/bazaar"    element={<FutureFeaturePage name="BAZAAR"      description="NPC vendor marketplace for exchanging scavenged goods and surplus supplies." />} />
         <Route path="/market"    element={<FutureFeaturePage name="MARKET"      description="Faction-driven commodity exchange with live pricing, scarcity modifiers, and trade ledger." />} />
         <Route path="/intel"     element={<FutureFeaturePage name="INTEL FEED"  description="Curated intelligence reports — faction movements, anomalies, and field dispatches." />} />
         <Route path="/planner"   element={<FutureFeaturePage name="PLANNER"     description="Collaborative mission planning board with route mapping and resource allocation." />} />

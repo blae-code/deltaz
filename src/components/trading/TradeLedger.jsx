@@ -1,22 +1,23 @@
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import DataCard from "../terminal/DataCard";
+import TerminalLoader from "../terminal/TerminalLoader";
 import EmptyState from "../terminal/EmptyState";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Coins, Package, Check, X, ScrollText } from "lucide-react";
 import moment from "moment";
 
 const statusIcon = {
-  accepted: <Check className="h-3 w-3 text-status-ok" />,
-  rejected: <X className="h-3 w-3 text-destructive" />,
+  accepted:  <Check className="h-3 w-3 text-status-ok" />,
+  rejected:  <X className="h-3 w-3 text-destructive" />,
   cancelled: <X className="h-3 w-3 text-muted-foreground" />,
 };
 
 const statusLabel = {
-  accepted: "COMPLETED",
-  rejected: "REJECTED",
+  accepted:  "COMPLETED",
+  rejected:  "REJECTED",
   cancelled: "CANCELLED",
-  expired: "EXPIRED",
+  expired:   "EXPIRED",
 };
 
 export default function TradeLedger({ userEmail }) {
@@ -41,27 +42,28 @@ export default function TradeLedger({ userEmail }) {
     load();
   }, [userEmail]);
 
-  const completed = records.filter(r => r.status === "accepted").length;
-  const totalVolume = records.filter(r => r.status === "accepted")
-    .reduce((s, r) => s + (r.offer_credits || 0) + (r.request_credits || 0), 0);
-
   if (loading) {
-    return <p className="text-[10px] text-muted-foreground animate-pulse">Loading trade ledger...</p>;
+    return <TerminalLoader size="sm" messages={["LOADING LEDGER...", "COMPILING TRADE HISTORY...", "TALLYING RECORDS..."]} />;
   }
+
+  const completed = records.filter(r => r.status === "accepted").length;
+  const totalVolume = records
+    .filter(r => r.status === "accepted")
+    .reduce((s, r) => s + (r.offer_credits || 0) + (r.request_credits || 0), 0);
 
   return (
     <div className="space-y-3">
       {/* Stats */}
       <div className="grid grid-cols-3 gap-2">
-        <div className="border border-border rounded-sm p-2 bg-card text-center">
+        <div className="panel-frame p-2 text-center">
           <p className="text-lg font-bold font-display text-primary">{records.length}</p>
           <p className="text-[8px] text-muted-foreground uppercase tracking-wider">Total Trades</p>
         </div>
-        <div className="border border-border rounded-sm p-2 bg-card text-center">
+        <div className="panel-frame p-2 text-center">
           <p className="text-lg font-bold font-display text-status-ok">{completed}</p>
           <p className="text-[8px] text-muted-foreground uppercase tracking-wider">Completed</p>
         </div>
-        <div className="border border-border rounded-sm p-2 bg-card text-center">
+        <div className="panel-frame p-2 text-center">
           <p className="text-lg font-bold font-display text-accent">{totalVolume}c</p>
           <p className="text-[8px] text-muted-foreground uppercase tracking-wider">Credit Volume</p>
         </div>
@@ -73,7 +75,7 @@ export default function TradeLedger({ userEmail }) {
           <EmptyState
             icon={ScrollText}
             title="Ledger Empty"
-            why="You have no resolved trades. Every completed, rejected, or expired deal will be permanently recorded here."
+            why="No resolved trades yet. Every completed, rejected, or expired deal is permanently recorded here."
             action="Head to the Trade Post or P2P Deals tab to initiate your first transaction."
           />
         ) : (
@@ -81,7 +83,7 @@ export default function TradeLedger({ userEmail }) {
             {records.map(r => {
               const isSender = r.sender_email === userEmail;
               return (
-                <div key={r.id} className="flex items-center gap-2 border border-border rounded-sm p-2 bg-secondary/20 text-[10px]">
+                <div key={r.id} className="panel-frame flex items-center gap-2 p-2 text-[10px]">
                   {statusIcon[r.status] || <X className="h-3 w-3 text-muted-foreground" />}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1 font-mono">

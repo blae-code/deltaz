@@ -13,6 +13,7 @@ import { isGameMaster } from "../../lib/displayName";
 export default function AppShell() {
   const [user, setUser] = useState(null);
   const [checking, setChecking] = useState(true);
+  const [catalogBootstrapped, setCatalogBootstrapped] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then((u) => {
@@ -26,6 +27,32 @@ export default function AppShell() {
       }
     }).catch(() => {}).finally(() => setChecking(false));
   }, []);
+
+  useEffect(() => {
+    if (!user?.email || catalogBootstrapped) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const ensureCatalog = async () => {
+      try {
+        await base44.functions.invoke("gameDataOps", { action: "ensure_catalog" });
+      } catch (error) {
+        console.warn("gameDataOps bootstrap failed", error);
+      } finally {
+        if (!cancelled) {
+          setCatalogBootstrapped(true);
+        }
+      }
+    };
+
+    ensureCatalog();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.email, catalogBootstrapped]);
 
   if (checking) {
     return (

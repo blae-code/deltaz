@@ -3,29 +3,41 @@ import { base44 } from "@/api/base44Client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Check, X, ArrowRight, Coins, Package, Clock, MessageCircle } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Check, X, ArrowRight, Coins, Package, Clock, MessageCircle, RefreshCw } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import InlineConfirm from "../terminal/InlineConfirm";
 import moment from "moment";
 
 const statusColors = {
-  pending: "bg-accent/20 text-accent border-accent/30",
-  accepted: "bg-status-ok/20 text-status-ok border-status-ok/30",
-  rejected: "bg-destructive/20 text-destructive border-destructive/30",
+  pending:   "bg-accent/20 text-accent border-accent/30",
+  accepted:  "bg-status-ok/20 text-status-ok border-status-ok/30",
+  rejected:  "bg-destructive/20 text-destructive border-destructive/30",
   cancelled: "bg-muted text-muted-foreground border-border",
-  expired: "bg-muted text-muted-foreground border-border",
+  expired:   "bg-muted text-muted-foreground border-border",
+  countered: "bg-chart-4/20 text-chart-4 border-chart-4/30",
 };
 
 export default function TradeRequestCard({ trade, userEmail, onUpdate }) {
   const [responding, setResponding] = useState(false);
   const [responseMsg, setResponseMsg] = useState("");
   const [showResponse, setShowResponse] = useState(false);
+  const [showCounter, setShowCounter] = useState(false);
+
+  // Counter-offer state — pre-filled from the original proposal (swapped)
+  const [counterOfferItems, setCounterOfferItems] = useState(trade.request_items || "");
+  const [counterOfferCredits, setCounterOfferCredits] = useState(trade.request_credits || 0);
+  const [counterRequestItems, setCounterRequestItems] = useState(trade.offer_items || "");
+  const [counterRequestCredits, setCounterRequestCredits] = useState(trade.offer_credits || 0);
+  const [counterMessage, setCounterMessage] = useState("");
+
   const { toast } = useToast();
 
   const isSender = trade.sender_email === userEmail;
   const isReceiver = trade.receiver_email === userEmail;
   const isPending = trade.status === "pending";
   const isExpired = trade.expires_at && new Date(trade.expires_at) < new Date() && isPending;
+  const displayStatus = isExpired ? "expired" : trade.status;
 
   const respond = async (action) => {
     setResponding(true);
@@ -51,10 +63,42 @@ export default function TradeRequestCard({ trade, userEmail, onUpdate }) {
     setResponding(false);
   };
 
-  const displayStatus = isExpired ? "expired" : trade.status;
+  const submitCounter = async () => {
+    const hasOffer = counterOfferItems.trim() || counterOfferCredits > 0;
+    const hasRequest = counterRequestItems.trim() || counterRequestCredits > 0;
+    if (!hasOffer && !hasRequest) {
+      toast({ title: "Invalid Counter", description: "Must offer or request something.", variant: "destructive" });
+      return;
+    }
+    setResponding(true);
+    // Cancel the original proposal
+    await base44.entities.TradeRequest.update(trade.id, {
+      status: "cancelled",
+      response_message: "Counter-offer sent",
+      resolved_at: new Date().toISOString(),
+    });
+    // Create the counter as a new proposal (sender/receiver swapped)
+    await base44.entities.TradeRequest.create({
+      sender_email: trade.receiver_email,
+      sender_callsign: trade.receiver_callsign,
+      receiver_email: trade.sender_email,
+      receiver_callsign: trade.sender_callsign,
+      offer_items: counterOfferItems.trim(),
+      offer_credits: counterOfferCredits,
+      request_items: counterRequestItems.trim(),
+      request_credits: counterRequestCredits,
+      message: counterMessage.trim() || `Counter-offer to your proposal`,
+      status: "pending",
+      expires_at: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
+    });
+    toast({ title: "Counter-Offer Sent", description: `${trade.sender_callsign} has been notified.` });
+    onUpdate?.();
+    setResponding(false);
+    setShowCounter(false);
+  };
 
   return (
-    <div className="border border-border rounded-sm p-3 bg-card space-y-2">
+    <div className="panel-frame p-3 space-y-2">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5 text-[10px] font-mono">
@@ -69,7 +113,7 @@ export default function TradeRequestCard({ trade, userEmail, onUpdate }) {
 
       {/* Trade contents */}
       <div className="grid grid-cols-2 gap-2">
-        <div className="bg-primary/5 border border-primary/10 rounded-sm p-1.5">
+        <div className="bg-primary/5 border border-primary/10 p-1.5">
           <p className="text-[8px] text-primary font-mono uppercase tracking-wider mb-1">Offering</p>
           {trade.offer_items && (
             <div className="flex items-start gap-1 text-[10px] text-foreground">
@@ -86,7 +130,7 @@ export default function TradeRequestCard({ trade, userEmail, onUpdate }) {
             <span className="text-[9px] text-muted-foreground italic">Nothing</span>
           )}
         </div>
-        <div className="bg-accent/5 border border-accent/10 rounded-sm p-1.5">
+        <div className="bg-accent/5 border border-accent/10 p-1.5">
           <p className="text-[8px] text-accent font-mono uppercase tracking-wider mb-1">Requesting</p>
           {trade.request_items && (
             <div className="flex items-start gap-1 text-[10px] text-foreground">
@@ -107,7 +151,7 @@ export default function TradeRequestCard({ trade, userEmail, onUpdate }) {
 
       {/* Message */}
       {trade.message && (
-        <div className="flex items-start gap-1.5 text-[9px] text-muted-foreground bg-secondary/30 rounded-sm p-1.5">
+        <div className="flex items-start gap-1.5 text-[9px] text-muted-foreground bg-secondary/30 p-1.5">
           <MessageCircle className="h-3 w-3 shrink-0 mt-0.5" />
           <span>"{trade.message}"</span>
         </div>
@@ -115,7 +159,7 @@ export default function TradeRequestCard({ trade, userEmail, onUpdate }) {
 
       {/* Response message */}
       {trade.response_message && (
-        <div className="flex items-start gap-1.5 text-[9px] text-foreground bg-secondary/50 rounded-sm p-1.5">
+        <div className="flex items-start gap-1.5 text-[9px] text-foreground bg-secondary/50 p-1.5">
           <MessageCircle className="h-3 w-3 shrink-0 mt-0.5 text-primary" />
           <span>Reply: "{trade.response_message}"</span>
         </div>
@@ -136,8 +180,8 @@ export default function TradeRequestCard({ trade, userEmail, onUpdate }) {
 
       {/* Actions */}
       {isPending && !isExpired && (
-        <div className="pt-1 space-y-1.5">
-          {isReceiver && (
+        <div className="pt-1 space-y-2">
+          {isReceiver && !showCounter && (
             <>
               {showResponse && (
                 <Input
@@ -151,17 +195,26 @@ export default function TradeRequestCard({ trade, userEmail, onUpdate }) {
                 <Button
                   size="sm"
                   className="flex-1 h-6 text-[9px] uppercase tracking-wider"
-                  onClick={() => { showResponse ? respond("accepted") : setShowResponse(true); }}
+                  onClick={() => showResponse ? respond("accepted") : setShowResponse(true)}
                   disabled={responding}
                 >
                   <Check className="h-3 w-3 mr-1" /> ACCEPT
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1 h-6 text-[9px] uppercase tracking-wider"
+                  onClick={() => { setShowCounter(true); setShowResponse(false); }}
+                  disabled={responding}
+                >
+                  <RefreshCw className="h-3 w-3 mr-1" /> COUNTER
                 </Button>
                 <InlineConfirm
                   variant="outline"
                   size="sm"
                   className="flex-1 h-6 text-[9px] uppercase tracking-wider text-destructive border-destructive/20"
                   confirmLabel="REJECT TRADE"
-                  warning="The sender will be notified that you rejected their proposal."
+                  warning="The sender will be notified."
                   severity="warning"
                   onConfirm={() => respond("rejected")}
                   disabled={responding}
@@ -171,7 +224,8 @@ export default function TradeRequestCard({ trade, userEmail, onUpdate }) {
               </div>
             </>
           )}
-          {isSender && (
+
+          {isSender && !showCounter && (
             <Button
               variant="outline"
               size="sm"
@@ -181,6 +235,76 @@ export default function TradeRequestCard({ trade, userEmail, onUpdate }) {
             >
               <X className="h-3 w-3 mr-1" /> CANCEL PROPOSAL
             </Button>
+          )}
+
+          {/* Counter-offer inline form */}
+          {showCounter && isReceiver && (
+            <div className="border-t border-border/50 pt-3 space-y-2">
+              <p className="text-[9px] font-mono text-chart-4 uppercase tracking-widest">// COUNTER OFFER</p>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="border border-primary/20 bg-primary/5 p-2 space-y-1.5">
+                  <p className="text-[8px] text-primary font-mono uppercase">You Offer</p>
+                  <Input
+                    value={counterOfferItems}
+                    onChange={e => setCounterOfferItems(e.target.value)}
+                    placeholder="Items..."
+                    className="h-5 text-[9px] bg-secondary/50 border-border font-mono"
+                  />
+                  <Input
+                    type="number" min={0}
+                    value={counterOfferCredits}
+                    onChange={e => setCounterOfferCredits(parseInt(e.target.value) || 0)}
+                    placeholder="Credits"
+                    className="h-5 text-[9px] bg-secondary/50 border-border font-mono"
+                  />
+                </div>
+                <div className="border border-accent/20 bg-accent/5 p-2 space-y-1.5">
+                  <p className="text-[8px] text-accent font-mono uppercase">You Want</p>
+                  <Input
+                    value={counterRequestItems}
+                    onChange={e => setCounterRequestItems(e.target.value)}
+                    placeholder="Items..."
+                    className="h-5 text-[9px] bg-secondary/50 border-border font-mono"
+                  />
+                  <Input
+                    type="number" min={0}
+                    value={counterRequestCredits}
+                    onChange={e => setCounterRequestCredits(parseInt(e.target.value) || 0)}
+                    placeholder="Credits"
+                    className="h-5 text-[9px] bg-secondary/50 border-border font-mono"
+                  />
+                </div>
+              </div>
+
+              <Input
+                value={counterMessage}
+                onChange={e => setCounterMessage(e.target.value)}
+                placeholder="Note to sender (optional)..."
+                className="h-6 text-[10px] bg-secondary/50 border-border font-mono"
+              />
+
+              <div className="flex gap-1.5">
+                <Button
+                  size="sm"
+                  className="flex-1 h-6 text-[9px] uppercase tracking-wider"
+                  onClick={submitCounter}
+                  disabled={responding}
+                >
+                  <RefreshCw className="h-3 w-3 mr-1" />
+                  {responding ? "SENDING..." : "SEND COUNTER"}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-6 text-[9px] uppercase tracking-wider text-muted-foreground"
+                  onClick={() => setShowCounter(false)}
+                  disabled={responding}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
           )}
         </div>
       )}

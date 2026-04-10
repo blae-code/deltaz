@@ -8,76 +8,82 @@
   :root {
     /* === MINMATAR PALETTE — warm amber/rust on near-black === */
     --background: 24 12% 5%;
-    --foreground: 30 8% 76%;
-    --card: 24 10% 7%;
-    --card-foreground: 30 8% 76%;
-    --popover: 24 10% 7%;
-    --popover-foreground: 30 8% 76%;
-    --primary: 32 82% 48%;
+    --foreground: 30 12% 88%;
+    --card: 24 10% 9%;
+    --card-foreground: 30 12% 88%;
+    --popover: 24 10% 9%;
+    --popover-foreground: 30 12% 88%;
+    --primary: 32 90% 52%;
     --primary-foreground: 24 12% 5%;
-    --secondary: 24 8% 10%;
-    --secondary-foreground: 30 8% 65%;
-    --muted: 24 7% 9%;
-    --muted-foreground: 30 6% 40%;
-    --accent: 4 72% 46%;
+    --secondary: 24 8% 12%;
+    --secondary-foreground: 30 10% 70%;
+    --muted: 24 7% 10%;
+    --muted-foreground: 30 8% 52%;
+    --accent: 4 78% 50%;
     --accent-foreground: 24 12% 5%;
-    --destructive: 0 75% 48%;
+    --destructive: 0 75% 52%;
     --destructive-foreground: 0 0% 98%;
-    --border: 24 10% 13%;
-    --input: 24 10% 13%;
-    --ring: 32 82% 48%;
-    --chart-1: 32 82% 48%;
-    --chart-2: 4 72% 46%;
-    --chart-3: 0 75% 48%;
-    --chart-4: 48 70% 52%;
-    --chart-5: 16 68% 44%;
+    --border: 24 10% 18%;
+    --input: 24 10% 18%;
+    --ring: 32 90% 52%;
+    --chart-1: 32 90% 52%;
+    --chart-2: 4 78% 50%;
+    --chart-3: 0 75% 52%;
+    --chart-4: 48 75% 54%;
+    --chart-5: 16 70% 48%;
+    --status-ok: 142 60% 42%;
+    --status-warn: 38 90% 52%;
+    --status-danger: 4 78% 50%;
     --radius: 0rem;
     --sidebar-background: 24 12% 4%;
-    --sidebar-foreground: 30 8% 58%;
-    --sidebar-primary: 32 82% 48%;
+    --sidebar-foreground: 30 10% 65%;
+    --sidebar-primary: 32 90% 52%;
     --sidebar-primary-foreground: 24 12% 5%;
-    --sidebar-accent: 24 8% 9%;
-    --sidebar-accent-foreground: 30 8% 76%;
-    --sidebar-border: 24 10% 11%;
-    --sidebar-ring: 32 82% 48%;
+    --sidebar-accent: 24 8% 10%;
+    --sidebar-accent-foreground: 30 12% 88%;
+    --sidebar-border: 24 10% 14%;
+    --sidebar-ring: 32 90% 52%;
     --font-mono: 'JetBrains Mono', monospace;
     --font-display: 'Rajdhani', sans-serif;
   }
 
   .dark {
     --background: 24 12% 5%;
-    --foreground: 30 8% 76%;
-    --card: 24 10% 7%;
-    --card-foreground: 30 8% 76%;
-    --popover: 24 10% 7%;
-    --popover-foreground: 30 8% 76%;
-    --primary: 32 82% 48%;
+    --foreground: 30 12% 88%;
+    --card: 24 10% 9%;
+    --card-foreground: 30 12% 88%;
+    --popover: 24 10% 9%;
+    --popover-foreground: 30 12% 88%;
+    --primary: 32 90% 52%;
     --primary-foreground: 24 12% 5%;
-    --secondary: 24 8% 10%;
-    --secondary-foreground: 30 8% 65%;
-    --muted: 24 7% 9%;
-    --muted-foreground: 30 6% 40%;
-    --accent: 4 72% 46%;
+    --secondary: 24 8% 12%;
+    --secondary-foreground: 30 10% 70%;
+    --muted: 24 7% 10%;
+    --muted-foreground: 30 8% 52%;
+    --accent: 4 78% 50%;
     --accent-foreground: 24 12% 5%;
-    --destructive: 0 75% 48%;
+    --destructive: 0 75% 52%;
     --destructive-foreground: 0 0% 98%;
-    --border: 24 10% 13%;
-    --input: 24 10% 13%;
-    --ring: 32 82% 48%;
-    --chart-1: 32 82% 48%;
-    --chart-2: 4 72% 46%;
-    --chart-3: 0 75% 48%;
-    --chart-4: 48 70% 52%;
-    --chart-5: 16 68% 44%;
+    --border: 24 10% 18%;
+    --input: 24 10% 18%;
+    --ring: 32 90% 52%;
+    --chart-1: 32 90% 52%;
+    --chart-2: 4 78% 50%;
+    --chart-3: 0 75% 52%;
+    --chart-4: 48 75% 54%;
+    --chart-5: 16 70% 48%;
+    --status-ok: 142 60% 42%;
+    --status-warn: 38 90% 52%;
+    --status-danger: 4 78% 50%;
     --radius: 0rem;
     --sidebar-background: 24 12% 4%;
-    --sidebar-foreground: 30 8% 58%;
-    --sidebar-primary: 32 82% 48%;
+    --sidebar-foreground: 30 10% 65%;
+    --sidebar-primary: 32 90% 52%;
     --sidebar-primary-foreground: 24 12% 5%;
-    --sidebar-accent: 24 8% 9%;
-    --sidebar-accent-foreground: 30 8% 76%;
-    --sidebar-border: 24 10% 11%;
-    --sidebar-ring: 32 82% 48%;
+    --sidebar-accent: 24 8% 10%;
+    --sidebar-accent-foreground: 30 12% 88%;
+    --sidebar-border: 24 10% 14%;
+    --sidebar-ring: 32 90% 52%;
   }
 }
 
@@ -139,8 +145,8 @@
   height: 1px;
   background: linear-gradient(
     to right,
-    hsl(var(--primary) / 0.75) 0%,
-    hsl(var(--primary) / 0.3) 50%,
+    hsl(var(--primary) / 1) 0%,
+    hsl(var(--primary) / 0.4) 50%,
     transparent 100%
   );
   pointer-events: none;
@@ -149,7 +155,7 @@
 
 /* Subtle amber dot-matrix grid on content areas */
 .tech-grid-bg {
-  background-image: radial-gradient(circle, hsl(var(--primary) / 0.055) 1px, transparent 1px);
+  background-image: radial-gradient(circle, hsl(var(--primary) / 0.09) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 
@@ -220,7 +226,7 @@
 /* Accessibility: boost muted foreground contrast */
 @media (prefers-contrast: more) {
   :root {
-    --muted-foreground: 30 8% 55%;
+    --muted-foreground: 30 10% 65%;
   }
 }
 

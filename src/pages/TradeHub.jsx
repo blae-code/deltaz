@@ -3,10 +3,10 @@ import { base44 } from "@/api/base44Client";
 import useEntityQuery from "../hooks/useEntityQuery";
 import useCurrentUser from "../hooks/useCurrentUser";
 import DataCard from "../components/terminal/DataCard";
+import TerminalLoader from "../components/terminal/TerminalLoader";
 import { Button } from "@/components/ui/button";
-import { Plus, ArrowLeftRight, Handshake, ScrollText, Package } from "lucide-react";
+import { Plus, ArrowLeftRight, Handshake, ScrollText } from "lucide-react";
 import StatusStrip from "../components/layout/StatusStrip";
-import NextStepBanner from "../components/terminal/NextStepBanner";
 import SectorTradeBoard from "../components/inventory/SectorTradeBoard";
 import CreateTradeForm from "../components/inventory/CreateTradeForm";
 import CreateTradeRequest from "../components/trading/CreateTradeRequest";
@@ -14,49 +14,79 @@ import TradeRequestList from "../components/trading/TradeRequestList";
 import TradeLedger from "../components/trading/TradeLedger";
 import PageShell from "../components/layout/PageShell";
 import ActionRail from "../components/layout/ActionRail";
-import AuthLoadingState from "../components/terminal/AuthLoadingState";
 
 export default function TradeHub() {
   const { user, loading: userLoading } = useCurrentUser();
   const [tab, setTab] = useState("trade");
   const [showCreateTrade, setShowCreateTrade] = useState(false);
   const [showCreateDeal, setShowCreateDeal] = useState(false);
+  const [prefillDeal, setPrefillDeal] = useState(null);
 
-  // Need inventory items for the CreateTradeForm
+  // User's inventory — drives the gear picker and the "YOU HAVE THIS" badge
   const { data: items = [], isLoading: itemsLoading } = useEntityQuery(
     ["inventory", user?.email],
     () => user ? base44.entities.InventoryItem.filter({ owner_email: user.email }, "-created_date", 200) : Promise.resolve([]),
     { subscribeEntities: ["InventoryItem"], queryOpts: { enabled: !!user?.email } }
   );
 
+  // User's open trade offers — for the "Listed" stat
+  const { data: myOpenOffers = [] } = useEntityQuery(
+    ["my-open-offers", user?.email],
+    () => user ? base44.entities.TradeOffer.filter({ seller_email: user.email, status: "open" }, "-created_date", 50) : Promise.resolve([]),
+    { subscribeEntities: ["TradeOffer"], queryOpts: { enabled: !!user?.email } }
+  );
+
+  // Called from a Trade Post card — switches to Deals tab pre-filled for that listing
+  const handleProposeDeal = (trade) => {
+    const isWant = trade.type === "want";
+    setPrefillDeal(isWant ? {
+      // I'm supplying what they want → pre-fill my offer with their sought item
+      receiverEmail: trade.seller_email,
+      receiverCallsign: trade.seller_callsign,
+      offerItems: trade.item_name,
+      requestItems: trade.asking_items || "",
+      requestCredits: trade.asking_price || 0,
+    } : {
+      // I want what they're listing → pre-fill my request with their item
+      receiverEmail: trade.seller_email,
+      receiverCallsign: trade.seller_callsign,
+      requestItems: `${trade.quantity > 1 ? `${trade.quantity}x ` : ""}${trade.item_name}`,
+      requestCredits: 0,
+    });
+    setTab("deals");
+    setShowCreateDeal(true);
+  };
+
   if (!user || userLoading) {
     return (
       <PageShell title="Trade Hub" subtitle="Trade resources with other operatives">
-        <AuthLoadingState message="CONNECTING TO TRADE NETWORK..." />
+        <TerminalLoader size="lg" messages={["CONNECTING TO TRADE NETWORK...", "LOADING YOUR INVENTORY...", "SYNCING LISTINGS..."]} />
       </PageShell>
     );
   }
 
   const railTabs = [
-    { key: "trade", label: "Trade Post", icon: ArrowLeftRight },
-    { key: "deals", label: "P2P Deals", icon: Handshake },
-    { key: "ledger", label: "Ledger", icon: ScrollText },
+    { key: "trade", label: "Trade Post",  icon: ArrowLeftRight },
+    { key: "deals", label: "P2P Deals",  icon: Handshake },
+    { key: "ledger", label: "Ledger",     icon: ScrollText },
   ];
 
   const tabTitles = {
-    trade: "Trade Post",
-    deals: "P2P Deals",
+    trade:  "Trade Post",
+    deals:  "P2P Deals",
     ledger: "Trade Ledger",
   };
 
   const tabSubtitles = {
-    trade: "Post items or resources for other operatives to buy or barter",
-    deals: "Send and review direct trade proposals with specific operatives",
+    trade:  "Post surplus items or broadcast what you need",
+    deals:  "Send and review direct trade proposals",
     ledger: "Complete history of all your resolved trades",
   };
 
   const tradeStats = [
-    { label: "YOUR ITEMS", value: items.length, color: "text-primary" },
+    { label: "INVENTORY",  value: items.length,          color: "text-primary" },
+    { label: "LISTED",     value: myOpenOffers.length,   color: myOpenOffers.length > 0 ? "text-accent" : "text-muted-foreground" },
+    { label: "AVAILABLE",  value: items.length - myOpenOffers.length, color: "text-foreground" },
   ];
 
   return (
@@ -66,17 +96,6 @@ export default function TradeHub() {
       statusStrip={tab === "trade" ? <StatusStrip items={tradeStats} /> : null}
       actionRail={<ActionRail tabs={railTabs} active={tab} onChange={setTab} />}
     >
-      {/* Continuity: if inventory is empty, nudge to Inventory */}
-      {items.length === 0 && tab === "trade" && (
-        <NextStepBanner
-          to="/loadout?tab=gear"
-          icon={Package}
-          label="Log your gear first"
-          hint="Add items to your Gear Locker so you have something to trade."
-          color="accent"
-        />
-      )}
-
       {tab === "trade" && (
         <>
           <div className="flex justify-end">
@@ -91,7 +110,7 @@ export default function TradeHub() {
           </div>
 
           {showCreateTrade && (
-            <DataCard title="Create Trade Offer">
+            <DataCard title="Create Listing">
               <CreateTradeForm
                 items={items}
                 userEmail={user?.email}
@@ -101,7 +120,11 @@ export default function TradeHub() {
             </DataCard>
           )}
 
-          <SectorTradeBoard userEmail={user?.email} />
+          <SectorTradeBoard
+            userEmail={user?.email}
+            userInventory={items}
+            onProposeDeal={handleProposeDeal}
+          />
         </>
       )}
 
@@ -112,18 +135,23 @@ export default function TradeHub() {
               variant={showCreateDeal ? "default" : "outline"}
               size="sm"
               className="text-[10px] uppercase tracking-wider h-7"
-              onClick={() => setShowCreateDeal(!showCreateDeal)}
+              onClick={() => {
+                setShowCreateDeal(!showCreateDeal);
+                if (showCreateDeal) setPrefillDeal(null);
+              }}
             >
               <Plus className="h-3 w-3 mr-1" /> NEW PROPOSAL
             </Button>
           </div>
 
           {showCreateDeal && (
-            <DataCard title="Create Trade Proposal">
+            <DataCard title={prefillDeal ? "Trade Proposal — Pre-filled from Listing" : "Create Trade Proposal"}>
               <CreateTradeRequest
                 userEmail={user?.email}
                 userCallsign={user?.callsign || user?.full_name}
-                onCreated={() => setShowCreateDeal(false)}
+                items={items}
+                prefill={prefillDeal}
+                onCreated={() => { setShowCreateDeal(false); setPrefillDeal(null); }}
               />
             </DataCard>
           )}
