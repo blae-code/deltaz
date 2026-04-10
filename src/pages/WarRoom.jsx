@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import DataCard from "@/components/terminal/DataCard";
+import MobileCommandToggle from "@/components/mobile/MobileCommandToggle";
+import MobileWarRoom from "@/components/mobile/MobileWarRoom";
+import { useIsMobile } from "@/hooks/use-mobile";
 import StatusIndicator from "@/components/terminal/StatusIndicator";
 import {
   Radar,
@@ -208,6 +211,11 @@ function IntelItem({ event }) {
 
 export default function WarRoom() {
   const { isAdmin } = useOutletContext() || {};
+  const isMobile = useIsMobile();
+  const [mobileCommand, setMobileCommand] = useState(false);
+
+  // Auto-enable mobile command on small screens
+  useEffect(() => { if (isMobile) setMobileCommand(true); }, [isMobile]);
   const [jobs, setJobs]             = useState([]);
   const [territories, setTerritories] = useState([]);
   const [factions, setFactions]     = useState([]);
@@ -262,7 +270,7 @@ export default function WarRoom() {
   return (
     <div className="space-y-5">
       {/* Page header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <div className="flex items-center gap-2 mb-0.5">
             <Radar className="h-4 w-4 text-primary" />
@@ -274,7 +282,8 @@ export default function WarRoom() {
             TACTICAL COMMAND · THEATER OVERVIEW
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          <MobileCommandToggle active={mobileCommand} onChange={setMobileCommand} />
           <div className="flex items-center gap-1.5 text-[10px] font-mono text-muted-foreground">
             <Activity className="h-3 w-3 text-primary animate-pulse" />
             <span>LIVE</span>
@@ -288,6 +297,18 @@ export default function WarRoom() {
           </div>
         </div>
       </div>
+
+      {mobileCommand ? (
+        <MobileWarRoom
+          jobs={jobs}
+          territories={territories}
+          factions={factions}
+          diplomacy={diplomacy}
+          events={events}
+          loading={loading}
+        />
+      ) : (
+      <>
 
       {/* KPI row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -426,6 +447,8 @@ export default function WarRoom() {
           <span>REAL-TIME SYNC ACTIVE</span>
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 }

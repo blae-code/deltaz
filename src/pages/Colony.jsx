@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import PageShell from "../components/layout/PageShell";
 import DataCard from "../components/terminal/DataCard";
+import MobileCommandToggle from "../components/mobile/MobileCommandToggle";
+import MobileColony from "../components/mobile/MobileColony";
+import { useIsMobile } from "@/hooks/use-mobile";
 import TerminalLoader from "../components/terminal/TerminalLoader";
 import BaseCard from "../components/colony/BaseCard";
 import SurvivorCard from "../components/colony/SurvivorCard";
@@ -16,6 +19,8 @@ import { Home, Users, Plus, ChevronUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export default function Colony() {
+  const isMobile = useIsMobile();
+  const [mobileCommand, setMobileCommand] = useState(false);
   const [user, setUser] = useState(null);
   const [bases, setBases] = useState([]);
   const [survivors, setSurvivors] = useState([]);
@@ -45,6 +50,8 @@ export default function Colony() {
       .finally(() => setLoading(false));
   };
 
+  useEffect(() => { if (isMobile) setMobileCommand(true); }, [isMobile]);
+
   useEffect(() => {
     loadData();
     const unsub = base44.entities.Survivor.subscribe((event) => {
@@ -72,7 +79,22 @@ export default function Colony() {
   const isAdmin = user?.role === "admin";
 
   return (
-    <PageShell title="Colony" subtitle="Settlement roster & survivor assignments">
+    <PageShell
+      title="Colony"
+      subtitle="Settlement roster & survivor assignments"
+      actions={<MobileCommandToggle active={mobileCommand} onChange={setMobileCommand} />}
+    >
+      {mobileCommand ? (
+        <MobileColony
+          bases={bases}
+          survivors={survivors}
+          modules={modules}
+          user={user}
+          selectedBaseId={selectedBaseId}
+          onSelectBase={setSelectedBaseId}
+        />
+      ) : (
+      <>
       {/* Overview Stats */}
       <div className="grid grid-cols-3 gap-3">
         <div className="panel-frame p-3 text-center">
@@ -234,6 +256,8 @@ export default function Colony() {
           </div>
         )}
       </div>
+      </>
+      )}
     </PageShell>
   );
 }

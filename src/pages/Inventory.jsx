@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import useEntityQuery from "../hooks/useEntityQuery";
 import useCurrentUser from "../hooks/useCurrentUser";
+import MobileCommandToggle from "../components/mobile/MobileCommandToggle";
+import MobileInventory from "../components/mobile/MobileInventory";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useRegisterSync } from "../hooks/useSyncRegistry";
 import { Button } from "@/components/ui/button";
 import { Plus, ArrowLeftRight, Hammer } from "lucide-react";
@@ -16,7 +19,11 @@ import AuthLoadingState from "../components/terminal/AuthLoadingState";
 
 export default function Inventory() {
   const { user } = useCurrentUser();
+  const isMobile = useIsMobile();
+  const [mobileCommand, setMobileCommand] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
+
+  useEffect(() => { if (isMobile) setMobileCommand(true); }, [isMobile]);
 
   const inventoryQuery = useEntityQuery(
     ["inventory", user?.email],
@@ -68,15 +75,18 @@ export default function Inventory() {
       onRetry={() => inventoryQuery.refetch()}
       statusStrip={<StatusStrip items={statusItems} />}
       actions={
-        <Button
-          variant={showAdd ? "default" : "outline"}
-          size="sm"
-          className="text-[10px] uppercase tracking-wider h-7 font-mono"
-          onClick={() => setShowAdd(!showAdd)}
-        >
-          <Plus className="h-3 w-3 mr-1" />
-          {showAdd ? "CLOSE" : "ADD GEAR"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <MobileCommandToggle active={mobileCommand} onChange={setMobileCommand} />
+          <Button
+            variant={showAdd ? "default" : "outline"}
+            size="sm"
+            className="text-[10px] uppercase tracking-wider h-7 font-mono"
+            onClick={() => setShowAdd(!showAdd)}
+          >
+            <Plus className="h-3 w-3 mr-1" />
+            {showAdd ? "CLOSE" : "ADD GEAR"}
+          </Button>
+        </div>
       }
     >
       {/* Add gear drawer — progressive disclosure */}
@@ -84,27 +94,33 @@ export default function Inventory() {
         <AddGearDrawer userEmail={user?.email} onClose={() => setShowAdd(false)} />
       )}
 
-      {/* Main inventory grid */}
-      <InventoryGrid items={items} userEmail={user?.email} />
+      {mobileCommand ? (
+        <MobileInventory items={items} />
+      ) : (
+        <>
+          {/* Main inventory grid */}
+          <InventoryGrid items={items} userEmail={user?.email} />
 
-      {/* Continuity cues */}
-      {items.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <NextStepBanner
-            to="/economy?tab=trade"
-            icon={ArrowLeftRight}
-            label="Trade surplus gear"
-            hint="Post unwanted items on the Trade Hub for other operatives."
-            color="muted"
-          />
-          <NextStepBanner
-            to="/loadout?tab=workbench"
-            icon={Hammer}
-            label="Craft something new"
-            hint="Use your materials to start a build on the Workbench."
-            color="muted"
-          />
-        </div>
+          {/* Continuity cues */}
+          {items.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <NextStepBanner
+                to="/economy?tab=trade"
+                icon={ArrowLeftRight}
+                label="Trade surplus gear"
+                hint="Post unwanted items on the Trade Hub for other operatives."
+                color="muted"
+              />
+              <NextStepBanner
+                to="/loadout?tab=workbench"
+                icon={Hammer}
+                label="Craft something new"
+                hint="Use your materials to start a build on the Workbench."
+                color="muted"
+              />
+            </div>
+          )}
+        </>
       )}
     </PageShell>
   );

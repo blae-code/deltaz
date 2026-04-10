@@ -2,18 +2,25 @@ import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import PageShell from "../components/layout/PageShell";
 import DataCard from "../components/terminal/DataCard";
+import MobileCommandToggle from "../components/mobile/MobileCommandToggle";
+import MobileFactions from "../components/mobile/MobileFactions";
+import { useIsMobile } from "@/hooks/use-mobile";
 import FactionCard from "../components/factions/FactionCard";
 import FactionDetailPanel from "../components/factions/FactionDetailPanel";
 import TerminalLoader from "../components/terminal/TerminalLoader";
 import { X } from "lucide-react";
 
 export default function Factions() {
+  const isMobile = useIsMobile();
+  const [mobileCommand, setMobileCommand] = useState(false);
   const [factions, setFactions] = useState([]);
   const [users, setUsers] = useState([]);
   const [reputations, setReputations] = useState([]);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState(null);
+
+  useEffect(() => { if (isMobile) setMobileCommand(true); }, [isMobile]);
 
   useEffect(() => {
     Promise.all([
@@ -52,8 +59,20 @@ export default function Factions() {
   }
 
   return (
-    <PageShell title="Clan Registry" subtitle="Known factions and their registered members">
-
+    <PageShell
+      title="Clan Registry"
+      subtitle="Known factions and their registered members"
+      actions={<MobileCommandToggle active={mobileCommand} onChange={setMobileCommand} />}
+    >
+      {mobileCommand ? (
+        <MobileFactions
+          factions={factions}
+          reputations={reputations}
+          users={users}
+          user={user}
+          onSelect={setSelectedId}
+        />
+      ) : (
       <div className="grid lg:grid-cols-5 gap-4">
         {/* Faction card list */}
         <div className={`space-y-3 ${selectedId ? "lg:col-span-2" : "lg:col-span-5"}`}>
@@ -89,6 +108,7 @@ export default function Factions() {
           </div>
         )}
       </div>
+      )}
     </PageShell>
   );
 }
