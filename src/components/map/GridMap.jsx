@@ -1,5 +1,6 @@
 import { useRef, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
+import CornerAccentSvg from "../svg/CornerAccentSvg";
 
 // HumanitZ grid: 5 columns (1-5), 5 rows (A-E)
 const COLS = [1, 2, 3, 4, 5];
@@ -52,7 +53,7 @@ export default function GridMap({
     <div
       ref={mapRef}
       className={cn(
-        "relative w-full aspect-square bg-background border border-border rounded-sm overflow-hidden cursor-crosshair select-none",
+        "relative w-full aspect-square bg-background border border-border tech-grid-bg overflow-hidden cursor-crosshair select-none",
         className
       )}
       onClick={handleClick}
@@ -107,7 +108,7 @@ export default function GridMap({
         if (row < 0 || col < 0) return null;
         return (
           <div
-            className="absolute bg-primary/5 border border-primary/20 pointer-events-none z-0 transition-all duration-75"
+            className="absolute bg-primary/8 border border-primary/30 shadow-[inset_0_0_12px_hsl(var(--primary)/0.07)] pointer-events-none z-0 transition-all duration-75"
             style={{
               left: `${col * 20}%`,
               top: `${row * 20}%`,
@@ -125,7 +126,7 @@ export default function GridMap({
         if (row < 0 || col < 0) return null;
         return (
           <div
-            className="absolute bg-primary/10 border-2 border-primary/40 pointer-events-none z-0"
+            className="absolute bg-primary/12 border-2 border-primary/50 shadow-[inset_0_0_20px_hsl(var(--primary)/0.12)] pointer-events-none z-0"
             style={{
               left: `${col * 20}%`,
               top: `${row * 20}%`,
@@ -137,8 +138,16 @@ export default function GridMap({
       })()}
 
       {/* Sector label overlay in center */}
+      {/* TL + BR corner accent brackets — targeting reticle */}
+      <div className="absolute top-0 left-0 z-20 pointer-events-none">
+        <CornerAccentSvg corner="tl" size={18} color="hsl(var(--primary) / 0.35)" />
+      </div>
+      <div className="absolute bottom-0 right-0 z-20 pointer-events-none">
+        <CornerAccentSvg corner="br" size={18} color="hsl(var(--primary) / 0.35)" />
+      </div>
+
       {hoveredSector && (
-        <div className="absolute top-2 right-2 bg-card/90 border border-border rounded-sm px-2 py-1 z-20">
+        <div className="absolute top-2 right-2 bg-card/90 border border-primary/30 px-2 py-1 z-20">
           <span className="text-[10px] font-mono text-primary tracking-widest">
             SECTOR {hoveredSector}
           </span>

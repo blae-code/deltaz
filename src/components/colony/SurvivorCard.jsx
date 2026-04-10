@@ -46,7 +46,7 @@ export default function SurvivorCard({ survivor, compact }) {
 
   if (compact) {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 border border-border/50 rounded-sm bg-secondary/20 hover:bg-secondary/30 transition-colors">
+      <div className="panel-frame flex items-center gap-2 px-3 py-2 bg-secondary/20 hover:bg-secondary/30 hover:shadow-[inset_2px_0_0_0_hsl(var(--primary)/0.3)] transition-all">
         <SkillIcon className="h-3.5 w-3.5 text-primary shrink-0" />
         <div className="flex-1 min-w-0">
           <span className="text-xs font-semibold text-foreground truncate block">{survivor.name}</span>
@@ -63,7 +63,7 @@ export default function SurvivorCard({ survivor, compact }) {
   }
 
   return (
-    <div className="border border-border bg-card rounded-sm overflow-hidden hover:border-primary/30 transition-colors">
+    <div className="panel-frame overflow-hidden hover:shadow-[inset_2px_0_0_0_hsl(var(--primary)/0.25)] transition-all">
       <div className="px-3 py-2 bg-secondary/30 border-b border-border/50 flex items-center gap-2">
         <SkillIcon className="h-4 w-4 text-primary" />
         <div className="flex-1 min-w-0">
@@ -109,7 +109,7 @@ export default function SurvivorCard({ survivor, compact }) {
         {/* Combat + Tasks Stats */}
         <div className="flex items-center gap-2">
           {survivor.bonus_type && (
-            <span className="text-[9px] text-primary font-mono">
+            <span className="text-[9px] text-primary font-mono bg-primary/10 px-1.5 py-0.5">
               +{survivor.bonus_value}% {survivor.bonus_type.replace(/_/g, " ")}
             </span>
           )}

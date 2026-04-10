@@ -28,20 +28,22 @@ export default function WeatherDetailPanel({ conditions, selectedSector, onClose
       }
     >
       <div className="space-y-3">
+        {/* Telemetry pills — no rounded */}
         <div className="flex flex-wrap items-center gap-2 text-[9px] font-mono uppercase tracking-[0.18em]">
-          <span className={`inline-flex items-center gap-1.5 rounded-sm border border-border/60 bg-secondary/20 px-2 py-1 ${TONE_CLASS[tone] || TONE_CLASS.offline}`}>
+          <span className={`inline-flex items-center gap-1.5 border border-border/60 bg-secondary/20 px-2 py-1 ${TONE_CLASS[tone] || TONE_CLASS.offline}`}>
             <TelemetrySignalSvg size={12} variant={tone === "ok" ? "live" : tone === "warn" ? "stale" : tone === "error" ? "error" : "offline"} animated={clock.authorityStatus === "verified"} />
             {clock.authorityLabel}
           </span>
-          <span className="inline-flex items-center gap-1 rounded-sm border border-border/40 bg-secondary/10 px-2 py-1 text-muted-foreground">
+          <span className="inline-flex items-center gap-1 border border-border/40 bg-secondary/10 px-2 py-1 text-muted-foreground">
             {clock.sourceLabel}
           </span>
-          <span className="inline-flex items-center gap-1 rounded-sm border border-border/40 bg-secondary/10 px-2 py-1 text-muted-foreground">
+          <span className="inline-flex items-center gap-1 border border-border/40 bg-secondary/10 px-2 py-1 text-muted-foreground">
             {clock.freshnessLabel}
           </span>
         </div>
 
-        <div className="border border-border/60 rounded-sm px-3 py-3 bg-secondary/10">
+        {/* Clock + season row */}
+        <div className="border border-border/60 px-3 py-3 bg-secondary/10">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="flex items-center gap-2 text-[11px] font-mono text-foreground">
@@ -65,6 +67,7 @@ export default function WeatherDetailPanel({ conditions, selectedSector, onClose
           </div>
         </div>
 
+        {/* Metric cells — clip-corner-tr chamfer */}
         <div className="grid grid-cols-2 gap-2 text-[10px] font-mono">
           <Metric icon={Thermometer} label="Temp" value={conditions?.temperature_c !== undefined ? `${conditions.temperature_c}°C` : "--"} />
           <Metric icon={Eye} label="Visibility" value={conditions?.visibility ? String(conditions.visibility).replace("_", " ") : "--"} />
@@ -72,7 +75,8 @@ export default function WeatherDetailPanel({ conditions, selectedSector, onClose
           <Metric icon={Wind} label="Wind" value={conditions?.wind ? String(conditions.wind).replace("_", " ") : "--"} />
         </div>
 
-        <div className="rounded-sm border border-border/60 bg-card/60 px-3 py-2">
+        {/* Sector coverage note */}
+        <div className="border border-border/60 bg-card/60 px-3 py-2">
           <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-primary mb-1">
             Sector Coverage
           </p>
@@ -84,7 +88,7 @@ export default function WeatherDetailPanel({ conditions, selectedSector, onClose
         </div>
 
         {clock.lastSyncError && (
-          <div className="rounded-sm border border-destructive/30 bg-destructive/5 px-3 py-2 text-[10px] text-destructive">
+          <div className="border border-destructive/30 shadow-[inset_2px_0_0_0_hsl(var(--destructive)/0.6)] bg-destructive/5 px-3 py-2 text-[10px] text-destructive">
             {clock.lastSyncError}
           </div>
         )}
@@ -95,7 +99,7 @@ export default function WeatherDetailPanel({ conditions, selectedSector, onClose
 
 function Metric({ icon: Icon, label, value }) {
   return (
-    <div className="rounded-sm border border-border/50 bg-card/70 px-3 py-2">
+    <div className="panel-frame clip-corner-tr bg-card/70 px-3 py-2">
       <div className="flex items-center gap-1 text-[8px] uppercase tracking-[0.18em] text-muted-foreground mb-1">
         <Icon className="h-3 w-3" />
         <span>{label}</span>

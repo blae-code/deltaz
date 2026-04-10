@@ -65,7 +65,7 @@ export default function WorldPulseStatus({ isAdmin }) {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="border border-border bg-card rounded-sm px-3 py-3 space-y-3">
+      <div className="panel-frame px-3 py-3 space-y-3">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2">
             <span className="relative flex h-2 w-2">
@@ -87,7 +87,7 @@ export default function WorldPulseStatus({ isAdmin }) {
           </Tooltip>
         </div>
 
-        <div className="rounded-sm border border-border/60 bg-secondary/10 px-3 py-3">
+        <div className="border border-border/60 bg-secondary/10 px-3 py-3">
           <div className="flex items-start justify-between gap-3 flex-wrap">
             <div className="space-y-2 min-w-0">
               <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.18em]">

@@ -216,6 +216,27 @@
   100% { opacity: 0; }
 }
 
+/* App-level CRT scan line — sweeps the full viewport every 18s */
+@keyframes crt-scan {
+  0%   { transform: translateY(-100vh); }
+  100% { transform: translateY(100vh); }
+}
+.crt-scanline {
+  position: fixed;
+  inset-x: 0;
+  height: 2px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    hsl(var(--primary) / 0.04) 50%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 9999;
+  animation: crt-scan 18s linear infinite;
+  will-change: transform;
+}
+
 /* DataCard header — slow luminous sweep from left to right */
 @keyframes card-sweep {
   0%   { transform: translateX(-100%); }

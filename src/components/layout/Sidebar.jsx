@@ -16,6 +16,7 @@ import { base44 } from "@/api/base44Client";
 import NavTooltip from "./NavTooltip";
 import { isAdminOrGM } from "../../lib/displayName";
 import SidebarLogoSvg from "../svg/SidebarLogoSvg";
+import CornerAccentSvg from "../svg/CornerAccentSvg";
 
 // ── v1 nav — Today + personal ────────────────────────────────────────────────
 const playerNav = [
@@ -79,6 +80,10 @@ export default function Sidebar({ user: propUser }) {
         {/* Logo */}
         <div className="relative flex items-center justify-between border-b border-border px-3 py-3.5">
           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/80 via-primary/30 to-transparent pointer-events-none" />
+          {/* Top-right corner accent */}
+          <div className="absolute right-0 top-0 pointer-events-none">
+            <CornerAccentSvg corner="tr" size={12} />
+          </div>
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="h-7 w-7 rounded-sm bg-primary/15 border border-primary/35 flex items-center justify-center shrink-0">
               <SidebarLogoSvg size={16} className="text-primary" />
