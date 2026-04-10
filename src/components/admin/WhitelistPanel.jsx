@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { base44 } from "@/api/base44Client";
+import { addWhitelistEntry, getWhitelistEntries, removeWhitelistEntry } from "@/api/serverApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -18,8 +18,8 @@ export default function WhitelistPanel() {
   const loadWhitelist = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await base44.functions.invoke("whitelistPlayer", { action: "list" });
-      setEntries(res.data.entries || []);
+      const nextData = await getWhitelistEntries();
+      setEntries(nextData.entries || []);
     } catch (err) {
       toast({ title: "Failed to load whitelist", description: err.message, variant: "destructive" });
     } finally {
@@ -37,12 +37,11 @@ export default function WhitelistPanel() {
     }
     setAdding(true);
     try {
-      const res = await base44.functions.invoke("whitelistPlayer", {
-        action: "add",
+      const res = await addWhitelistEntry({
         steam_id: newSteamId.trim(),
         callsign: newNote.trim() || undefined,
       });
-      toast({ title: res.data.already_existed ? "Already whitelisted" : "Player whitelisted" });
+      toast({ title: res.already_existed ? "Already whitelisted" : "Player whitelisted" });
       setNewSteamId("");
       setNewNote("");
       loadWhitelist();
@@ -56,7 +55,7 @@ export default function WhitelistPanel() {
   const handleRemove = async (steamId) => {
     setRemovingId(steamId);
     try {
-      await base44.functions.invoke("whitelistPlayer", { action: "remove", steam_id: steamId });
+      await removeWhitelistEntry(steamId);
       toast({ title: "Removed from whitelist" });
       loadWhitelist();
     } catch (err) {

@@ -227,11 +227,20 @@ Deno.serve(async (req) => {
     }
 
     if (action === 'remove') {
-      if (!isAdmin) {
-        return Response.json({ error: 'Admin access required' }, { status: 403 });
-      }
       if (!steamId) {
         return Response.json({ error: 'steam_id required' }, { status: 400 });
+      }
+
+      let actorCallsign = user.callsign || user.full_name || user.email;
+      if (!isAdmin) {
+        const userData = await getUserRecord(base44, user.email);
+        if (!userData) {
+          return Response.json({ error: 'User record not found' }, { status: 404 });
+        }
+        if (userData.steam_id !== steamId) {
+          return Response.json({ error: 'You can only remove your own verified Steam account from the whitelist' }, { status: 403 });
+        }
+        actorCallsign = userData.callsign || actorCallsign;
       }
 
       const ptero = getPterodactylConfig();
@@ -255,7 +264,7 @@ Deno.serve(async (req) => {
         action: 'whitelist_remove',
         detail: `Removed Steam ID ${steamId} from whitelist`,
         actorEmail: user.email,
-        actorCallsign: user.callsign || user.full_name || user.email,
+        actorCallsign,
         severity: 'warning',
       });
 

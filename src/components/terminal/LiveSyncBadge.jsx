@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
-import { Wifi, WifiOff, RefreshCw, AlertTriangle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import TelemetrySignalSvg from "../svg/TelemetrySignalSvg";
 
 /**
  * LiveSyncBadge — inline indicator showing real-time sync state for a data source.
@@ -18,26 +18,26 @@ export default function LiveSyncBadge({ dataUpdatedAt, isFetching, isStale, isEr
 
   let status = "synced";
   let statusColor = "text-status-ok";
-  let StatusIcon = Wifi;
+  let statusVariant = "live";
   let statusLabel = "LIVE";
   let tooltip = "Data is current and receiving real-time updates.";
 
   if (isFetching) {
     status = "syncing";
     statusColor = "text-primary";
-    StatusIcon = RefreshCw;
+    statusVariant = "syncing";
     statusLabel = "SYNCING";
     tooltip = "Refreshing data from server...";
   } else if (isError) {
     status = "error";
     statusColor = "text-destructive";
-    StatusIcon = WifiOff;
+    statusVariant = "error";
     statusLabel = "ERROR";
     tooltip = "Failed to fetch latest data. Will retry automatically.";
-  } else if (isVeryStale) {
+  } else if (isVeryStale || isStale) {
     status = "stale";
     statusColor = "text-status-warn";
-    StatusIcon = AlertTriangle;
+    statusVariant = "stale";
     statusLabel = "STALE";
     tooltip = `Data is ${formatAge(age)} old. May not reflect latest changes.`;
   }
@@ -47,7 +47,7 @@ export default function LiveSyncBadge({ dataUpdatedAt, isFetching, isStale, isEr
       <Tooltip>
         <TooltipTrigger asChild>
           <div className={cn("flex items-center gap-1.5 cursor-help", statusColor)}>
-            <StatusIcon className={cn("h-3 w-3 shrink-0", isFetching && "animate-spin")} />
+            <TelemetrySignalSvg size={14} variant={statusVariant} animated={isFetching} className="shrink-0" />
             <span className="text-[10px] font-mono tracking-widest uppercase">
               {statusLabel}
             </span>

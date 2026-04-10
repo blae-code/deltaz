@@ -16,9 +16,23 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.24';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const webhookSecret = (Deno.env.get('OPS_LOG_WEBHOOK_SECRET') || '').trim();
+    const providedWebhookSecret = (req.headers.get('X-OpsLog-Webhook-Secret') || '').trim();
+
+    let user = null;
+    let isWebhookInvocation = false;
+    try {
+      user = await base44.auth.me();
+    } catch (_) {
+      user = null;
+    }
+
     if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+      isWebhookInvocation = Boolean(webhookSecret) && providedWebhookSecret === webhookSecret;
+    }
+
+    if (!user && !isWebhookInvocation) {
+      return Response.json({ error: 'Unauthorized: authenticated user or valid webhook secret required' }, { status: 401 });
     }
 
     const body = await req.json().catch(() => null);
@@ -65,7 +79,7 @@ Deno.serve(async (req) => {
         distance: typeof e.distance === 'number' ? e.distance : undefined,
         coordinates: e.coordinates || undefined,
         metadata: e.metadata ? (typeof e.metadata === 'string' ? e.metadata : JSON.stringify(e.metadata)) : undefined,
-        source: e.source || 'manual',
+        source: e.source || (isWebhookInvocation ? 'webhook' : 'manual'),
       });
     }
 

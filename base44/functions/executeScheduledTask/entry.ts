@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.24';
+import { requireAdminOrServiceRole } from '../_shared/trustedInvocation.ts';
 
 /**
  * executeScheduledTask — Called by a scheduled automation every 5 minutes.
@@ -8,6 +9,10 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.24';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const auth = await requireAdminOrServiceRole(req, base44, 'Forbidden: Admin or trusted automation required for scheduled task execution.');
+    if (!auth.ok) {
+      return auth.response;
+    }
 
     const tasks = await base44.asServiceRole.entities.ScheduledTask.filter(
       { status: 'active' },

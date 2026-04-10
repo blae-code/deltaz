@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { runScheduledTaskExecutor } from "@/api/serverApi";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -51,7 +52,7 @@ export default function ScheduledTaskCard({ task, onUpdate }) {
 
   const runNow = async () => {
     setActing(true);
-    await base44.functions.invoke("executeScheduledTask", {});
+    await runScheduledTaskExecutor();
     toast({ title: "Executor Triggered", description: "Checking all due tasks now..." });
     setActing(false);
     onUpdate?.();

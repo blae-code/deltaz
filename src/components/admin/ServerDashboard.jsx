@@ -1,12 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { base44 } from "@/api/base44Client";
+import { getConnectedPlayers, getServerStatus } from "@/api/serverApi";
 import ServerStatusPanel from "./ServerStatusPanel";
 import ServerPowerControls from "./ServerPowerControls";
 import ServerBroadcast from "./ServerBroadcast";
 import ServerPlayerList from "./ServerPlayerList";
 import ServerResourceGauges from "./ServerResourceGauges";
 import RconConsole from "./RconConsole";
-import { Activity } from "lucide-react";
 
 export default function ServerDashboard() {
   const [status, setStatus] = useState(null);
@@ -14,13 +13,13 @@ export default function ServerDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
-  const [tick, setTick] = useState(0);
+  const [, setTick] = useState(0);
   const tickRef = useRef(null);
 
   const fetchStatus = useCallback(async () => {
     try {
-      const res = await base44.functions.invoke("serverManager", { action: "status" });
-      setStatus(res.data);
+      const nextStatus = await getServerStatus();
+      setStatus(nextStatus);
       setError(null);
     } catch (err) {
       setError(err.message || "Failed to fetch server status");
@@ -29,8 +28,8 @@ export default function ServerDashboard() {
 
   const fetchPlayers = useCallback(async () => {
     try {
-      const res = await base44.functions.invoke("serverManager", { action: "players" });
-      setPlayers(res.data.raw);
+      const nextPlayers = await getConnectedPlayers();
+      setPlayers(nextPlayers);
     } catch {
       // RCON may not be available if server is offline
       setPlayers(null);
@@ -96,7 +95,12 @@ export default function ServerDashboard() {
         <ServerBroadcast />
       </div>
 
-      <ServerPlayerList raw={players} loading={loading} onRefresh={fetchPlayers} />
+      <ServerPlayerList
+        players={players?.players || []}
+        raw={players?.raw ?? null}
+        loading={loading}
+        onRefresh={fetchPlayers}
+      />
 
       <RconConsole />
     </div>

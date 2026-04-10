@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import AuthLoadingState from "../components/terminal/AuthLoadingState";
+import PageShell from "../components/layout/PageShell";
 import DataCard from "../components/terminal/DataCard";
+import TerminalLoader from "../components/terminal/TerminalLoader";
 import BaseCard from "../components/colony/BaseCard";
 import SurvivorCard from "../components/colony/SurvivorCard";
 import ColonyBonusSummary from "../components/colony/ColonyBonusSummary";
@@ -9,24 +10,19 @@ import BaseRegistrationForm from "../components/colony/BaseRegistrationForm";
 import TaskAssigner from "../components/colony/TaskAssigner";
 import TaskFeed from "../components/colony/TaskFeed";
 import BaseDefenseStatus from "../components/colony/BaseDefenseStatus";
-import ColonyVitalsPanel from "../components/colony/ColonyVitalsPanel";
-import ResourceHistoryFeed from "../components/colony/ResourceHistoryFeed";
-import SkillGapDashboard from "../components/colony/SkillGapDashboard";
 import BaseModulesPanel from "../components/colony/BaseModulesPanel";
-import { Home, Users, Plus, ChevronDown, ChevronUp, Shield, ClipboardList } from "lucide-react";
+import SkillGapDashboard from "../components/colony/SkillGapDashboard";
+import { Home, Users, Plus, ChevronUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export default function Colony() {
   const [user, setUser] = useState(null);
   const [bases, setBases] = useState([]);
   const [survivors, setSurvivors] = useState([]);
-  const [territories, setTerritories] = useState([]);
+  const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedBaseId, setSelectedBaseId] = useState(null);
   const [showForm, setShowForm] = useState(false);
-  const [colony, setColony] = useState(null);
-
-  const [modules, setModules] = useState([]);
 
   const loadData = () => {
     setLoading(true);
@@ -34,16 +30,12 @@ export default function Colony() {
       base44.auth.me(),
       base44.entities.PlayerBase.list("-created_date", 50),
       base44.entities.Survivor.list("-created_date", 200),
-      base44.entities.Territory.list("-created_date", 100),
-      base44.entities.ColonyStatus.list("-updated_date", 1).then(r => r[0] || null),
       base44.entities.BaseModule.list("-created_date", 200),
     ])
-      .then(([u, b, s, t, c, m]) => {
+      .then(([u, b, s, m]) => {
         setUser(u);
         setBases(b);
         setSurvivors(s);
-        setTerritories(t);
-        setColony(c);
         setModules(m || []);
         const myBases = b.filter((base) => base.owner_email === u.email);
         if (myBases.length > 0 && !selectedBaseId) {
@@ -56,80 +48,44 @@ export default function Colony() {
   useEffect(() => {
     loadData();
     const unsub = base44.entities.Survivor.subscribe((event) => {
-      if (event.type === "create") {
-        setSurvivors((prev) => [event.data, ...prev]);
-      } else if (event.type === "update") {
-        setSurvivors((prev) => prev.map((s) => (s.id === event.id ? event.data : s)));
-      }
+      if (event.type === "create") setSurvivors((prev) => [event.data, ...prev]);
+      else if (event.type === "update") setSurvivors((prev) => prev.map((s) => s.id === event.id ? event.data : s));
     });
-    const unsubColony = base44.entities.ColonyStatus.subscribe((event) => {
-      if (event.type === "update" || event.type === "create") {
-        setColony(event.data);
-      }
-    });
-    return () => { unsub(); unsubColony(); };
+    return () => unsub();
   }, []);
 
   if (loading) {
-    return <AuthLoadingState message="SCANNING SETTLEMENT DATA..." />;
+    return (
+      <PageShell title="Colony" subtitle="Settlement roster & survivor assignments">
+        <TerminalLoader size="lg" messages={["SCANNING SETTLEMENT DATA...", "LOADING SURVIVOR ROSTER...", "MAPPING BASE LOCATIONS..."]} />
+      </PageShell>
+    );
   }
 
   const myBases = bases.filter((b) => b.owner_email === user?.email);
   const selectedBase = bases.find((b) => b.id === selectedBaseId);
   const baseSurvivors = survivors.filter((s) => s.base_id === selectedBaseId);
   const activeSurvivors = baseSurvivors.filter((s) => s.status === "active");
-
-  const totalSurvivors = survivors.filter((s) => s.status === "active" && myBases.some((b) => b.id === s.base_id)).length;
-  const busyCount = survivors.filter(s => s.status === "active" && s.current_task && s.current_task !== "idle" && myBases.some(b => b.id === s.base_id)).length;
+  const totalSurvivors = survivors.filter(
+    (s) => s.status === "active" && myBases.some((b) => b.id === s.base_id)
+  ).length;
   const isAdmin = user?.role === "admin";
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h2 className="text-lg font-bold font-display tracking-wider text-primary uppercase">
-          Survivor Colony
-        </h2>
-        <p className="text-xs text-muted-foreground mt-1">
-          Your bases and the survivors who call them home
-        </p>
-      </div>
-
-      {/* Colony Vitals Dashboard */}
-      <DataCard title="Colony Vitals" subtitle={colony?.colony_name || "Settlement Status"}>
-        <ColonyVitalsPanel
-          colony={colony}
-          isAdmin={isAdmin}
-          survivors={survivors}
-          onTaskAssigned={loadData}
-        />
-      </DataCard>
-
-      {/* Skill Gap Dashboard */}
-      <DataCard title="Skill Coverage" subtitle="Colony-wide skill distribution & gaps">
-        <SkillGapDashboard survivors={survivors} />
-      </DataCard>
-
-      {/* Resource Change History */}
-      {colony && (
-        <DataCard title="Resource History" subtitle="Tracked changes over time">
-          <ResourceHistoryFeed colonyId={colony.id} />
-        </DataCard>
-      )}
-
+    <PageShell title="Colony" subtitle="Settlement roster & survivor assignments">
       {/* Overview Stats */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="border border-border bg-card rounded-sm p-3 text-center">
+        <div className="panel-frame p-3 text-center">
           <Home className="h-4 w-4 mx-auto text-primary mb-1" />
           <div className="text-[9px] text-muted-foreground tracking-wider">YOUR BASES</div>
           <div className="text-lg font-bold text-foreground font-display">{myBases.length}</div>
         </div>
-        <div className="border border-border bg-card rounded-sm p-3 text-center">
+        <div className="panel-frame p-3 text-center">
           <Users className="h-4 w-4 mx-auto text-accent mb-1" />
           <div className="text-[9px] text-muted-foreground tracking-wider">TOTAL SURVIVORS</div>
           <div className="text-lg font-bold text-foreground font-display">{totalSurvivors}</div>
         </div>
-        <div className="border border-border bg-card rounded-sm p-3 text-center">
+        <div className="panel-frame p-3 text-center">
           <div className="text-[9px] text-muted-foreground tracking-wider">TOTAL CAPACITY</div>
           <div className="text-lg font-bold text-foreground font-display">
             {totalSurvivors}/{myBases.reduce((s, b) => s + (b.capacity || 5), 0)}
@@ -137,7 +93,12 @@ export default function Colony() {
         </div>
       </div>
 
-      {/* New Base Form Toggle */}
+      {/* Skill Coverage */}
+      <DataCard title="Skill Coverage" subtitle="Colony-wide skill distribution & gaps">
+        <SkillGapDashboard survivors={survivors} />
+      </DataCard>
+
+      {/* New Base Toggle */}
       <button
         onClick={() => setShowForm(!showForm)}
         className="flex items-center gap-2 text-[10px] font-mono text-primary hover:text-foreground transition-colors uppercase tracking-wider"
@@ -147,10 +108,10 @@ export default function Colony() {
       </button>
 
       {showForm && (
-        <div className="border border-border bg-card rounded-sm p-4">
+        <div className="panel-frame p-4">
           <BaseRegistrationForm
             userEmail={user?.email}
-            territories={territories}
+            territories={[]}
             onCreated={() => { loadData(); setShowForm(false); }}
           />
         </div>
@@ -163,7 +124,7 @@ export default function Colony() {
           {myBases.length === 0 ? (
             <DataCard title="No Bases">
               <p className="text-xs text-muted-foreground">
-                You haven't established any bases yet. Use the form above to claim your first settlement.
+                No bases established yet. Use the form above to claim your first settlement.
               </p>
             </DataCard>
           ) : (
@@ -173,7 +134,7 @@ export default function Colony() {
                   key={base.id}
                   base={base}
                   survivors={survivors.filter((s) => s.base_id === base.id)}
-                  territory={territories.find((t) => t.id === base.territory_id)}
+                  territory={null}
                   selected={selectedBaseId === base.id}
                   onSelect={setSelectedBaseId}
                   moduleCount={modules.filter(m => m.base_id === base.id && m.status !== "destroyed").length}
@@ -197,8 +158,6 @@ export default function Colony() {
                     {selectedBase.status}
                   </Badge>
                 </div>
-
-                {/* Capacity Bar */}
                 <div className="h-2 bg-secondary rounded-full overflow-hidden">
                   <div
                     className="h-full bg-primary transition-all"
@@ -251,7 +210,7 @@ export default function Colony() {
             >
               {activeSurvivors.length === 0 ? (
                 <p className="text-[10px] text-muted-foreground py-4 text-center">
-                  No survivors yet. Build up your reputation and defenses to attract them.
+                  No survivors assigned. Build up your defenses to attract them.
                 </p>
               ) : (
                 <div className="grid md:grid-cols-2 gap-3">
@@ -261,7 +220,6 @@ export default function Colony() {
                 </div>
               )}
 
-              {/* Departed / Injured */}
               {baseSurvivors.filter((s) => s.status !== "active").length > 0 && (
                 <div className="mt-4 pt-3 border-t border-border/50">
                   <div className="text-[9px] text-muted-foreground tracking-wider uppercase mb-2">INACTIVE</div>
@@ -276,6 +234,6 @@ export default function Colony() {
           </div>
         )}
       </div>
-    </div>
+    </PageShell>
   );
 }

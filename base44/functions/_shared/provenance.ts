@@ -6,6 +6,7 @@ export const DATA_ORIGINS = {
   DETERMINISTIC_PROJECTION: 'deterministic_projection',
   MIGRATION: 'migration',
   ADVISORY: 'advisory',
+  SERVER_TELEMETRY: 'server_telemetry',
 } as const;
 
 type DataOrigin = (typeof DATA_ORIGINS)[keyof typeof DATA_ORIGINS];

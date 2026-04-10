@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { performServerPowerAction } from "@/api/serverApi";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Play, Square, RotateCcw, Skull, Loader2 } from "lucide-react";
@@ -25,7 +25,7 @@ export default function ServerPowerControls({ currentState, onActionComplete }) 
     setConfirming(null);
     setPending(actionId);
     try {
-      await base44.functions.invoke("serverManager", { action: actionId });
+      await performServerPowerAction(actionId);
       toast({ title: `Server ${actionId} signal sent` });
       setTimeout(() => onActionComplete(), 3000);
     } catch (err) {

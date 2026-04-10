@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronRight } from "lucide-react";
 import AlertSirenSvg from "../svg/AlertSirenSvg";
+import BroadcastBeaconSvg from "../svg/BroadcastBeaconSvg";
 import RadioTowerSvg from "../svg/RadioTowerSvg";
 import IntelEyeSvg from "../svg/IntelEyeSvg";
 import moment from "moment";
@@ -64,7 +64,15 @@ export default function TodayAlerts({ events, intel, broadcasts }) {
             "shadow-[inset_2px_0_0_0_hsl(var(--border))]"
           }`}
         >
-          <div className={`h-2 w-2 rounded-full mt-1.5 shrink-0 ${severityDot[item.severity] || "bg-muted-foreground"}`} />
+          <div className="mt-0.5 shrink-0">
+            {item.source === "broadcast" ? (
+              <BroadcastBeaconSvg size={16} className={item.severity === "critical" || item.severity === "emergency" ? "text-destructive" : "text-primary"} animated />
+            ) : item.source === "intel" ? (
+              <IntelEyeSvg size={16} className="text-primary" />
+            ) : (
+              <AlertSirenSvg size={16} className={item.severity === "critical" || item.severity === "emergency" ? "text-destructive" : "text-accent"} animated={item.severity !== "info"} />
+            )}
+          </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs text-foreground truncate">{item.title}</p>
             <div className="flex items-center gap-2 mt-0.5 flex-wrap">
@@ -72,6 +80,7 @@ export default function TodayAlerts({ events, intel, broadcasts }) {
               {item.faction && (
                 <span className="text-[10px]" style={{ color: item.factionColor }}>{item.faction}</span>
               )}
+              <span className={`inline-flex h-1.5 w-1.5 rounded-full ${severityDot[item.severity] || "bg-muted-foreground"}`} />
               <span className="text-[10px] text-muted-foreground">{moment(item.time).fromNow()}</span>
             </div>
           </div>

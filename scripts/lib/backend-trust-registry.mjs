@@ -45,6 +45,7 @@ export const backendTrustRegistry = {
   weatherSimulation: { lane: 'canonical', trigger: 'frontend', allowsLLM: false, allowsRandom: false, classification: 'deterministic_rewrite' },
   weeklyDossier: { lane: 'advisory', trigger: 'frontend', allowsLLM: false, allowsRandom: false, classification: 'advisory_only' },
   whitelistPlayer: { lane: 'canonical', trigger: 'admin', allowsLLM: false, allowsRandom: false, classification: 'keep' },
+  worldStateSync: { lane: 'canonical', trigger: 'automation', allowsLLM: false, allowsRandom: false, classification: 'keep' },
   worldPulse: { lane: 'deterministic_projection', trigger: 'automation', allowsLLM: false, allowsRandom: false, classification: 'deterministic_rewrite' },
 };
 

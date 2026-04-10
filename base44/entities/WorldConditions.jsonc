@@ -2,6 +2,63 @@
   "name": "WorldConditions",
   "type": "object",
   "properties": {
+    "authority_status": {
+      "type": "string",
+      "enum": [
+        "verified",
+        "stale",
+        "unavailable",
+        "error"
+      ],
+      "default": "unavailable",
+      "description": "Current telemetry authority state for this world snapshot"
+    },
+    "authoritative_source_kind": {
+      "type": "string",
+      "enum": [
+        "pterodactyl_file",
+        "rcon_command"
+      ],
+      "description": "Backend source used for the most recent sync attempt"
+    },
+    "authoritative_source_ref": {
+      "type": "string",
+      "description": "Path or command identifier for the authoritative world state source"
+    },
+    "last_verified_at": {
+      "type": "string",
+      "description": "ISO timestamp of the last successful authoritative sync"
+    },
+    "last_sync_attempt_at": {
+      "type": "string",
+      "description": "ISO timestamp of the most recent sync attempt"
+    },
+    "last_sync_error": {
+      "type": "string",
+      "description": "Last sync/read/parse error message, if any"
+    },
+    "stale_after_seconds": {
+      "type": "number",
+      "default": 180,
+      "description": "How long a verified sample remains fresh before clients should freeze it as stale"
+    },
+    "world_day_number": {
+      "type": "number",
+      "description": "Authoritative in-game day number from the server snapshot"
+    },
+    "world_minute_of_day": {
+      "type": "number",
+      "description": "Authoritative minute-of-day anchor from the server snapshot"
+    },
+    "clock_observed_at": {
+      "type": "string",
+      "description": "ISO timestamp when the current clock anchor was observed on the server"
+    },
+    "clock_rate_multiplier": {
+      "type": "number",
+      "default": 1,
+      "description": "In-game seconds advanced per real second for the anchored world clock"
+    },
     "world_date": {
       "type": "string",
       "description": "In-game date display (e.g. 'Day 147' or 'March 12, 2089')"
@@ -108,10 +165,25 @@
     "gm_flavor_text": {
       "type": "string",
       "description": "Optional GM-authored atmospheric description"
+    },
+    "data_origin": {
+      "type": "string",
+      "description": "Provenance origin for the current authoritative snapshot"
+    },
+    "source_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Source references backing the current snapshot"
+    },
+    "rule_version": {
+      "type": "string",
+      "description": "Provenance rule version for the current authoritative snapshot"
+    },
+    "generated_at": {
+      "type": "string",
+      "description": "ISO timestamp when the authoritative snapshot payload was generated"
     }
-  },
-  "required": [
-    "season",
-    "weather"
-  ]
+  }
 }

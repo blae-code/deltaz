@@ -132,13 +132,35 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'User not found' }, { status: 404 });
       }
 
+      const linkedSteamId = typeof userData.steam_id === 'string' ? userData.steam_id.trim() : '';
+      let removedFromWhitelist = false;
+      let whitelistError = '';
+
+      if (linkedSteamId) {
+        try {
+          await base44.functions.invoke('whitelistPlayer', {
+            action: 'remove',
+            steam_id: linkedSteamId,
+          });
+          removedFromWhitelist = true;
+        } catch (error) {
+          whitelistError = error instanceof Error ? error.message : 'Failed to remove whitelist entry.';
+          console.warn('Whitelist removal during unlink failed (non-blocking):', whitelistError);
+        }
+      }
+
       await base44.asServiceRole.entities.User.update(userData.id, {
         steam_id: '',
         steam_name: '',
         steam_linked_at: '',
       });
 
-      return Response.json({ status: 'ok', message: 'Steam account unlinked.' });
+      return Response.json({
+        status: 'ok',
+        message: 'Steam account unlinked.',
+        removed_from_whitelist: removedFromWhitelist,
+        whitelist_error: whitelistError || null,
+      });
     }
 
     const userData = await getUserRecord(base44, user.email);

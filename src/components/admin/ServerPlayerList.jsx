@@ -1,22 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Users, UserCheck } from "lucide-react";
 
-function parsePlayers(raw) {
-  if (!raw || typeof raw !== "string") return [];
-  // Typical RCON Players response is lines with player info
-  const lines = raw.split("\n").filter((l) => l.trim().length > 0);
-  // Try to parse structured player data
-  const players = [];
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.toLowerCase().includes("players on server") || trimmed.toLowerCase().startsWith("id")) continue;
-    players.push(trimmed);
-  }
-  return players;
-}
-
-export default function ServerPlayerList({ raw, loading, onRefresh }) {
-  const players = parsePlayers(raw);
+export default function ServerPlayerList({ players = [], raw, loading, onRefresh }) {
   const hasPlayers = players.length > 0;
 
   return (
@@ -64,12 +49,12 @@ export default function ServerPlayerList({ raw, loading, onRefresh }) {
         <div className="space-y-1.5 max-h-48 overflow-auto">
           {players.map((player, i) => (
             <div
-              key={i}
+              key={player.steam_id || player.name || i}
               className="flex items-center gap-2 bg-secondary/50 rounded-sm px-3 py-1.5"
             >
               <UserCheck className="h-3 w-3 text-primary shrink-0" />
               <span className="text-xs font-mono text-foreground truncate">
-                {player}
+                {player.display || player.name}
               </span>
             </div>
           ))}

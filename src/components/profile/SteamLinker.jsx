@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { getSteamLinkStatus, getSteamLoginUrl, unlinkSteamAccount, verifySteamLink } from "@/api/serverApi";
 import DataCard from "../terminal/DataCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,8 +14,8 @@ export default function SteamLinker() {
   const { toast } = useToast();
 
   const loadStatus = async () => {
-    const res = await base44.functions.invoke("steamAuth", { action: "status" });
-    setSteamStatus(res.data);
+    const nextStatus = await getSteamLinkStatus();
+    setSteamStatus(nextStatus);
     setLoading(false);
   };
 
@@ -40,12 +40,9 @@ export default function SteamLinker() {
   const verifySteamCallback = async (openidParams) => {
     setLinking(true);
     try {
-      const res = await base44.functions.invoke("steamAuth", {
-        action: "verify",
-        openid_params: openidParams,
-      });
-      const wlMsg = res.data.whitelisted ? 'You have been whitelisted on the game server.' : 'Steam linked. Whitelist will sync when server is online.';
-      toast({ title: "Steam Linked!", description: `${res.data.steam_id} — ${wlMsg}` });
+      const res = await verifySteamLink(openidParams);
+      const wlMsg = res.whitelisted ? 'You have been whitelisted on the game server.' : 'Steam linked. Whitelist will sync when server is online.';
+      toast({ title: "Steam Linked!", description: `${res.steam_id} — ${wlMsg}` });
       // Clean URL
       window.history.replaceState({}, document.title, window.location.pathname);
       loadStatus();
@@ -65,12 +62,9 @@ export default function SteamLinker() {
     try {
       // Return URL is current profile page
       const returnUrl = window.location.origin + window.location.pathname;
-      const res = await base44.functions.invoke("steamAuth", {
-        action: "get_login_url",
-        return_url: returnUrl,
-      });
+      const url = await getSteamLoginUrl(returnUrl);
       // Redirect to Steam login
-      window.location.href = res.data.url;
+      window.location.href = url;
     } catch (err) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
       setLinking(false);
@@ -80,8 +74,13 @@ export default function SteamLinker() {
   const unlinkSteam = async () => {
     setUnlinking(true);
     try {
-      await base44.functions.invoke("steamAuth", { action: "unlink" });
-      toast({ title: "Steam Unlinked", description: "Your Steam account has been disconnected." });
+      const res = await unlinkSteamAccount();
+      toast({
+        title: "Steam Unlinked",
+        description: res.removed_from_whitelist
+          ? "Your Steam account has been disconnected and removed from the whitelist."
+          : "Your Steam account has been disconnected.",
+      });
       loadStatus();
     } catch (err) {
       toast({ title: "Error", description: err.message, variant: "destructive" });

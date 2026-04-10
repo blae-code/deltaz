@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { base44 } from "@/api/base44Client";
+import { getPlayerTelemetry } from "@/api/serverApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RefreshCw, Search, Loader2, Wifi, WifiOff, Users } from "lucide-react";
@@ -19,8 +19,8 @@ export default function PlayerTelemetryPanel() {
 
   const fetchData = useCallback(async () => {
     try {
-      const res = await base44.functions.invoke("playerTelemetry", {});
-      setData(res.data);
+      const nextData = await getPlayerTelemetry();
+      setData(nextData);
       setError(null);
     } catch (err) {
       setError(err.response?.data?.error || err.message);

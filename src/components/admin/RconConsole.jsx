@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { runRconCommand } from "@/api/serverApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -37,13 +37,10 @@ export default function RconConsole() {
     setSending(true);
 
     try {
-      const res = await base44.functions.invoke("serverManager", {
-        action: "rcon",
-        command: trimmed,
-      });
+      const res = await runRconCommand(trimmed);
       setLog((prev) =>
         prev.map((e) =>
-          e.id === entry.id ? { ...e, response: res.data.result || "(no output)" } : e
+          e.id === entry.id ? { ...e, response: res.result || "(no output)" } : e
         )
       );
     } catch (err) {

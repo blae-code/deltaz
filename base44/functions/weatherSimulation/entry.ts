@@ -62,16 +62,10 @@ async function handleSimulate(base44: any, body: any) {
   if (worldConditions?.id) {
     await base44.asServiceRole.entities.WorldConditions.update(
       worldConditions.id,
-      withProvenance(
-        {
-          last_weather_map: weatherMap,
-          last_weather_cycle: cycleKey,
-        },
-        {
-          dataOrigin: DATA_ORIGINS.DETERMINISTIC_PROJECTION,
-          sourceRefs: [buildSourceRef('Weather', cycleKey)],
-        },
-      ),
+      {
+        last_weather_map: weatherMap,
+        last_weather_cycle: cycleKey,
+      },
     );
   }
 

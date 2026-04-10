@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
+import PageShell from "../components/layout/PageShell";
 import AuthLoadingState from "../components/terminal/AuthLoadingState";
 import DataCard from "../components/terminal/DataCard";
 import StatusIndicator from "../components/terminal/StatusIndicator";
@@ -56,23 +57,22 @@ export default function Profile() {
   const getFactionName = (id) => factions.find((f) => f.id === id)?.name || "Unknown";
 
   if (loading) {
-    return <AuthLoadingState message="ACCESSING DOSSIER..." />;
+    return (
+      <div className="max-w-2xl">
+        <AuthLoadingState message="ACCESSING DOSSIER..." />
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <div>
-        <h2 className="text-lg font-bold font-display tracking-wider text-primary uppercase">
-          Operative Dossier
-        </h2>
-        <p className="text-xs text-muted-foreground mt-1">Personal file and reputation standing</p>
-      </div>
+    <div className="max-w-2xl">
+    <PageShell title="Operative Dossier" subtitle="Personal file and reputation standing">
 
       {/* Identity */}
       <DataCard title="Identity">
         <div className="space-y-4">
           <div className="flex items-center gap-4">
-            <div className="h-16 w-16 rounded-sm border border-primary/30 bg-primary/10 flex items-center justify-center">
+            <div className="h-16 w-16 border border-primary/30 bg-primary/10 flex items-center justify-center">
               <User className="h-8 w-8 text-primary" />
             </div>
             <div>
@@ -164,6 +164,7 @@ export default function Profile() {
         <LogOut className="h-3.5 w-3.5 mr-2" />
         DISCONNECT TERMINAL
       </Button>
+    </PageShell>
     </div>
   );
 }

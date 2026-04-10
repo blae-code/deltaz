@@ -6,6 +6,7 @@ import TopBar from "./TopBar";
 import { isAdminOrGM } from "../../lib/displayName";
 import ScanlineOverlay from "../terminal/ScanlineOverlay";
 import SyncStatusFooter from "../terminal/SyncStatusFooter";
+import TerminalLoader from "../terminal/TerminalLoader";
 import Onboarding from "../../pages/Onboarding";
 import { isGameMaster } from "../../lib/displayName";
 
@@ -29,13 +30,7 @@ export default function AppShell() {
   if (checking) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-px w-24 bg-gradient-to-r from-transparent via-primary to-transparent animate-pulse" />
-          <div className="text-primary text-[11px] tracking-[0.4em] animate-pulse font-mono uppercase">
-            Authenticating
-          </div>
-          <div className="h-px w-24 bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
-        </div>
+        <TerminalLoader size="lg" messages={["AUTHENTICATING...", "VERIFYING CREDENTIALS...", "ESTABLISHING SESSION..."]} />
       </div>
     );
   }

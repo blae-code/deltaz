@@ -28,6 +28,22 @@ If you are working backend-only while Base44 continues frontend work, use:
 
 The detailed workflow is in [docs/backend-workflow.md](./docs/backend-workflow.md).
 
+## Authoritative World State
+
+Server-authoritative world time, season, weather, and daylight are synchronized through `worldStateSync`.
+
+- Configure one backend source in the deployed function environment:
+  - `WORLD_STATE_FILE_PATH`
+  - or `WORLD_STATE_RCON_COMMAND`
+- The source must return JSON with:
+  - `world_day_number`
+  - `world_minute_of_day`
+  - `clock_rate_multiplier`
+  - `season`
+  - `weather`
+  - `daylight_phase`
+- Schedule `worldStateSync` on a 60-second automation cadence in the connected Base44 app environment.
+
 ## Sync
 
 Changes pushed to this repository sync back into the connected Base44 app. Publish from Base44 when you want the updated app live.

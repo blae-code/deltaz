@@ -43,6 +43,49 @@ const getRconConfig = () => {
 
 const sanitizeBroadcastMessage = (message) => message.replace(/\s+/g, ' ').trim().slice(0, 200);
 
+function inferCurrentState(attributes) {
+  const explicit = typeof attributes?.current_state === 'string' ? attributes.current_state.trim() : '';
+  if (explicit) {
+    return explicit;
+  }
+
+  if (attributes?.is_suspended) {
+    return 'offline';
+  }
+
+  const uptime = Number(attributes?.resources?.uptime || 0);
+  return uptime > 0 ? 'running' : 'offline';
+}
+
+function parsePlayerList(raw) {
+  if (!raw || typeof raw !== 'string') return [];
+
+  return raw
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .filter((line) => !line.toLowerCase().includes('players on server'))
+    .filter((line) => !line.toLowerCase().startsWith('id'))
+    .map((line, index) => {
+      const match = line.match(/^(\d+)\.\s*(.+?)(?:,\s*(\d+))?$/);
+      if (!match) {
+        return {
+          index,
+          display: line,
+          name: line,
+          steam_id: null,
+        };
+      }
+
+      return {
+        index: Number.parseInt(match[1], 10),
+        display: line,
+        name: match[2].trim(),
+        steam_id: match[3] || null,
+      };
+    });
+}
+
 async function sendRconCommand(command) {
   const { host, port, password } = getRconConfig();
 
@@ -148,7 +191,10 @@ Deno.serve(async (req) => {
       }
       const data = await res.json();
       const attrs = data.attributes;
+      const currentState = inferCurrentState(attrs);
       return Response.json({
+        current_state: currentState,
+        is_running: currentState === 'running',
         is_suspended: attrs.is_suspended,
         resources: {
           memory_bytes: attrs.resources?.memory_bytes || 0,
@@ -245,7 +291,12 @@ Deno.serve(async (req) => {
       } catch (rconErr) {
         console.warn('RCON players list failed:', rconErr.message);
       }
-      return Response.json({ status: "ok", result });
+      return Response.json({
+        status: "ok",
+        result,
+        raw: result,
+        players: parsePlayerList(result),
+      });
     }
 
     return Response.json({ error: "Unknown action" }, { status: 400 });

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { sendServerBroadcast } from "@/api/serverApi";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
@@ -14,7 +14,7 @@ export default function ServerBroadcast() {
     if (!message.trim()) return;
     setSending(true);
     try {
-      await base44.functions.invoke("serverManager", { action: "broadcast", message: message.trim() });
+      await sendServerBroadcast(message);
       toast({ title: "Broadcast sent" });
       setMessage("");
     } catch (err) {
@@ -35,11 +35,11 @@ export default function ServerBroadcast() {
         placeholder="Type a message to broadcast to all players..."
         className="font-mono text-xs bg-muted mb-3 resize-none"
         rows={3}
-        maxLength={256}
+        maxLength={200}
       />
       <div className="flex items-center justify-between">
         <span className="text-[10px] text-muted-foreground font-mono">
-          {message.length}/256
+          {message.length}/200
         </span>
         <Button
           size="sm"

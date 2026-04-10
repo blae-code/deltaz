@@ -2,13 +2,20 @@ import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import StatusIndicator from "../terminal/StatusIndicator";
-import { Clock, Lock, Search, Activity } from "lucide-react";
+import { Lock, Search, Activity } from "lucide-react";
 import SidebarLogoSvg from "../svg/SidebarLogoSvg";
+import SeasonGlyphSvg from "../svg/SeasonGlyphSvg";
+import TelemetrySignalSvg from "../svg/TelemetrySignalSvg";
+import WeatherStatusSvg from "../svg/WeatherStatusSvg";
+import WorldClockSvg from "../svg/WorldClockSvg";
 import { cn } from "@/lib/utils";
 import GlobalSearchDialog from "../search/GlobalSearchDialog";
 import NotificationDropdown from "./NotificationDropdown";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { getDisplayName, isAdminOrGM } from "../../lib/displayName";
+import useWorldClock from "../../hooks/useWorldClock";
+import useWorldState from "../../hooks/useWorldState";
+import { getAuthorityTone } from "../../lib/world-state";
 
 // Short stable session token derived from user email — purely decorative
 function sessionTag(email) {
@@ -20,10 +27,12 @@ function sessionTag(email) {
 
 export default function TopBar({ user: propUser }) {
   const [user, setUser] = useState(propUser || null);
-  const [time, setTime] = useState(new Date());
   const [searchOpen, setSearchOpen] = useState(false);
   const [uptime, setUptime] = useState(0);
   const startRef = useRef(Date.now());
+  const { data: worldConditions } = useWorldState();
+  const worldClock = useWorldClock(worldConditions);
+  const worldTone = getAuthorityTone(worldClock.authorityStatus);
 
   useEffect(() => {
     if (propUser) {
@@ -32,7 +41,6 @@ export default function TopBar({ user: propUser }) {
       base44.auth.me().then(setUser).catch(() => {});
     }
     const interval = setInterval(() => {
-      setTime(new Date());
       setUptime(Math.floor((Date.now() - startRef.current) / 1000));
     }, 1000);
     return () => clearInterval(interval);
@@ -50,12 +58,6 @@ export default function TopBar({ user: propUser }) {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  const formatClock = (d) =>
-    d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
-  const formatDate = (d) =>
-    d.toLocaleDateString(undefined, { year: "numeric", month: "2-digit", day: "2-digit" });
-  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone?.split("/").pop()?.replace(/_/g, " ") || "LOCAL";
-
   const formatUptime = (s) => {
     const h = Math.floor(s / 3600);
     const m = Math.floor((s % 3600) / 60);
@@ -65,6 +67,13 @@ export default function TopBar({ user: propUser }) {
   };
 
   const sess = sessionTag(user?.email);
+  const signalVariant = worldTone === "ok"
+    ? "live"
+    : worldTone === "warn"
+      ? "stale"
+      : worldTone === "error"
+        ? "error"
+        : "offline";
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -129,12 +138,51 @@ export default function TopBar({ user: propUser }) {
             <kbd className="hidden md:inline text-[9px] bg-secondary/80 px-1 rounded text-muted-foreground/50 ml-0.5">⌘K</kbd>
           </button>
 
-          <div className="hidden sm:flex items-center gap-1.5 text-[10px] text-muted-foreground/60 font-mono border-l border-border/40 pl-3">
-            <Clock className="h-3 w-3 text-muted-foreground/40" />
-            <span>{formatDate(time)}</span>
-            <span className="text-primary/60 tabular-nums">{formatClock(time)}</span>
-            <span className="text-muted-foreground/30">{tz}</span>
-          </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div
+                className={cn(
+                  "hidden lg:flex items-center gap-2 font-mono border-l border-border/40 pl-3 cursor-help",
+                  worldTone === "ok" && "text-status-ok",
+                  worldTone === "warn" && "text-status-warn",
+                  worldTone === "error" && "text-destructive",
+                  worldTone === "offline" && "text-muted-foreground/50",
+                )}
+              >
+                <div className="relative flex h-7 w-7 items-center justify-center rounded-sm border border-current/20 bg-secondary/20">
+                  <WorldClockSvg size={15} className="opacity-90" animated={worldClock.isTicking} />
+                  <span className="absolute -right-0.5 -top-0.5">
+                    <TelemetrySignalSvg size={12} variant={signalVariant} animated={worldClock.authorityStatus === "verified"} />
+                  </span>
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 text-[10px] leading-tight tracking-wider">
+                    <span className="text-muted-foreground/70">{worldClock.displayDate}</span>
+                    <span className="tabular-nums text-primary/80">{worldClock.displayTimeWithSeconds}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[9px] uppercase tracking-[0.18em] text-muted-foreground/70">
+                    <SeasonGlyphSvg size={12} variant={worldClock.seasonKey || "autumn"} className="text-primary/80" />
+                    <span>{worldClock.seasonLabel}</span>
+                    <span className="text-muted-foreground/30">/</span>
+                    <WeatherStatusSvg size={12} variant={worldClock.weatherKey || "overcast"} className="text-primary/80" />
+                    <span>{worldClock.weatherLabel}</span>
+                  </div>
+                </div>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="font-mono text-[11px] bg-card border-primary/30 max-w-[280px]">
+              <p className="text-primary font-semibold text-[10px] mb-1">AUTHORITATIVE WORLD CLOCK</p>
+              <p className="text-muted-foreground">
+                {worldClock.authorityLabel} via {worldClock.sourceLabel}. {worldClock.freshnessTooltip}
+              </p>
+              {worldClock.sourceRef && (
+                <p className="text-muted-foreground/60 mt-1 break-all">Source: {worldClock.sourceRef}</p>
+              )}
+              {worldClock.lastSyncError && (
+                <p className="text-destructive/80 mt-1 break-words">{worldClock.lastSyncError}</p>
+              )}
+            </TooltipContent>
+          </Tooltip>
 
           {user && (
             <Link

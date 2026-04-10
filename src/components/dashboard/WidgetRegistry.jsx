@@ -8,6 +8,7 @@ import ActivityFeed from "./ActivityFeed";
 import IntelHighlights from "./IntelHighlights";
 import TacticalAdvisor from "./TacticalAdvisor";
 import ScavengeLog from "./ScavengeLog";
+import CommsTelemetryWidget from "./CommsTelemetryWidget";
 import ColonyMonitor from "./ColonyMonitor";
 import FactionEconomyWidget from "./FactionEconomyWidget";
 import MissionForgeFeed from "./MissionForgeFeed";
@@ -33,6 +34,14 @@ const WIDGET_REGISTRY = [
     defaultSize: "full",
     sizes: ["full"],
     builtin: true,
+  },
+  {
+    id: "comms_telemetry",
+    label: "Comms & Telemetry",
+    icon: ScrollText,
+    defaultSize: "full",
+    sizes: ["lg", "full"],
+    component: CommsTelemetryWidget,
   },
   {
     id: "colony_monitor",

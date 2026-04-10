@@ -1,28 +1,41 @@
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import useCurrentUser from "../hooks/useCurrentUser";
-import AuthLoadingState from "../components/terminal/AuthLoadingState";
-import ActionRail from "../components/layout/ActionRail";
+import PageShell from "../components/layout/PageShell";
 import DataCard from "../components/terminal/DataCard";
-import JournalEventCard from "../components/journal/JournalEventCard";
+import TerminalLoader from "../components/terminal/TerminalLoader";
+import ActionRail from "../components/layout/ActionRail";
 import JournalTimeline from "../components/journal/JournalTimeline";
-import ConsequenceChain from "../components/journal/ConsequenceChain";
-import ConsequenceTagCloud from "../components/journal/ConsequenceTagCloud";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Loader2, GitBranch, Tag } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { BookOpen, Plus, Archive, Clock } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+
+const TABS = [
+  { key: "notes", label: "Notes", icon: BookOpen },
+  { key: "timeline", label: "Timeline", icon: Clock },
+];
 
 export default function Journal() {
   const { user } = useCurrentUser();
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [generating, setGenerating] = useState(false);
-  const [tab, setTab] = useState("active"); // active | resolved | timeline
+  const [tab, setTab] = useState("notes");
+  const [showForm, setShowForm] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [formTitle, setFormTitle] = useState("");
+  const [formBody, setFormBody] = useState("");
   const { toast } = useToast();
 
   const loadData = async () => {
     if (!user?.email) return;
-    const ents = await base44.entities.JournalEntry.filter({ player_email: user.email }, "-created_date", 100);
+    const ents = await base44.entities.JournalEntry.filter(
+      { player_email: user.email },
+      "-created_date",
+      100
+    );
     setEntries(ents);
     setLoading(false);
   };
@@ -31,119 +44,183 @@ export default function Journal() {
     if (!user?.email) return;
     loadData();
     const unsub = base44.entities.JournalEntry.subscribe((ev) => {
-      if (ev.type === "create") setEntries(prev => [ev.data, ...prev]);
-      else if (ev.type === "update") setEntries(prev => prev.map(e => e.id === ev.id ? ev.data : e));
+      if (ev.type === "create") setEntries((prev) => [ev.data, ...prev]);
+      else if (ev.type === "update")
+        setEntries((prev) => prev.map((e) => (e.id === ev.id ? ev.data : e)));
     });
     return unsub;
   }, [user?.email]);
 
-  const generateEvent = async () => {
-    setGenerating(true);
+  const handleCreate = async () => {
+    if (!formTitle.trim() || !formBody.trim()) return;
+    setSaving(true);
     try {
-      await base44.functions.invoke("generateJournalEvent", {});
-      toast({ title: "New event generated", description: "A narrative event has been created for your journal." });
-      loadData();
+      await base44.entities.JournalEntry.create({
+        player_email: user.email,
+        title: formTitle.trim(),
+        narrative: formBody.trim(),
+        category: "field_note",
+        status: "active",
+      });
+      setFormTitle("");
+      setFormBody("");
+      setShowForm(false);
+      toast({ title: "Entry logged", description: "Field note saved to journal." });
     } catch (err) {
-      toast({ title: "Generation failed", description: err.message, variant: "destructive" });
+      toast({ title: "Save failed", description: err.message, variant: "destructive" });
     }
-    setGenerating(false);
+    setSaving(false);
   };
 
-  const handleChoice = async (entryId, choiceId) => {
+  const handleArchive = async (id) => {
     try {
-      const res = await base44.functions.invoke("resolveJournalChoice", { entry_id: entryId, choice_id: choiceId });
-      const data = res.data;
-      const parts = [];
-      if (data.reputation_effect) parts.push(`Rep ${data.reputation_effect.delta > 0 ? '+' : ''}${data.reputation_effect.delta}`);
-      if (data.world_effects?.length) parts.push(`${data.world_effects.length} world effect(s)`);
-      if (data.followup_entry_id) parts.push('Follow-up event spawned!');
-      toast({ title: 'Choice resolved', description: parts.join(' · ') || 'The consequences unfold...' });
-      loadData();
+      await base44.entities.JournalEntry.update(id, { status: "resolved" });
     } catch (err) {
-      toast({ title: "Choice failed", description: err.message, variant: "destructive" });
+      toast({ title: "Archive failed", description: err.message, variant: "destructive" });
     }
   };
 
-  const pending = entries.filter(e => e.status === "pending");
-  const resolved = entries.filter(e => e.status === "resolved");
+  const active = entries.filter((e) => e.status !== "resolved");
+  const archived = entries.filter((e) => e.status === "resolved");
 
   if (loading) {
     return (
-      <div className="space-y-5 max-w-3xl">
-        <AuthLoadingState message="LOADING JOURNAL..." />
-      </div>
+      <PageShell title="Field Journal" subtitle="Personal notes from the field">
+        <TerminalLoader size="lg" messages={["LOADING JOURNAL...", "DECRYPTING FIELD NOTES...", "QUERYING ARCHIVES..."]} />
+      </PageShell>
     );
   }
 
   return (
-    <div className="space-y-5 max-w-3xl">
-      <div className="flex items-start justify-between flex-wrap gap-2">
-        <div>
-          <h2 className="text-lg font-bold font-display tracking-wider text-primary uppercase">Active Journal</h2>
-          <p className="text-xs text-muted-foreground mt-1">
-            Narrative events that shape your story — your choices ripple through the world
-          </p>
-        </div>
+    <PageShell
+      title="Field Journal"
+      subtitle="Personal notes from the field"
+      actions={
         <Button
           size="sm"
           className="h-7 text-[10px] uppercase tracking-wider"
-          onClick={generateEvent}
-          disabled={generating || pending.length >= 3}
+          onClick={() => setShowForm((v) => !v)}
         >
-          {generating ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <BookOpen className="h-3 w-3 mr-1" />}
-          {pending.length >= 3 ? "RESOLVE EXISTING" : "SEEK EVENT"}
+          <Plus className="h-3 w-3 mr-1" />
+          New Entry
         </Button>
-      </div>
+      }
+    >
+      {/* Entry form */}
+      {showForm && (
+        <div className="panel-frame p-4 space-y-3">
+          <p className="text-[9px] font-mono text-primary/50 tracking-[0.3em] uppercase">// NEW FIELD NOTE</p>
+          <div className="space-y-1.5">
+            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Title</Label>
+            <Input
+              value={formTitle}
+              onChange={(e) => setFormTitle(e.target.value)}
+              placeholder="Entry title..."
+              className="h-8 text-xs bg-secondary/50 border-border"
+              maxLength={80}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Note</Label>
+            <Textarea
+              value={formBody}
+              onChange={(e) => setFormBody(e.target.value)}
+              placeholder="What happened out there..."
+              className="text-xs bg-secondary/50 border-border min-h-[100px] resize-none"
+              maxLength={2000}
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              className="h-7 text-[10px] uppercase tracking-wider"
+              onClick={handleCreate}
+              disabled={saving || !formTitle.trim() || !formBody.trim()}
+            >
+              {saving ? "SAVING..." : "LOG ENTRY"}
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 text-[10px] uppercase tracking-wider text-muted-foreground"
+              onClick={() => { setShowForm(false); setFormTitle(""); setFormBody(""); }}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
 
-      {/* Tabs */}
-      <ActionRail
-        tabs={[
-          { key: "active", label: `Pending`, icon: BookOpen, count: pending.length },
-          { key: "resolved", label: `Resolved`, count: resolved.length },
-          { key: "chains", label: "Branches", icon: GitBranch },
-          { key: "timeline", label: "Timeline" },
-        ]}
-        active={tab}
-        onChange={setTab}
-      />
+      <ActionRail tabs={TABS} active={tab} onChange={setTab} />
 
-      {tab === "active" && (
-        <div className="space-y-4">
-          {pending.length === 0 ? (
-            <DataCard title="No Active Events">
+      {tab === "notes" && (
+        <div className="space-y-3">
+          {active.length === 0 ? (
+            <DataCard title="No Entries">
               <div className="text-center py-6">
                 <BookOpen className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
                 <p className="text-xs text-muted-foreground">
-                  No pending events. Click "Seek Event" to discover what the wasteland has in store.
+                  Nothing logged yet. Hit "New Entry" to record a field note.
                 </p>
               </div>
             </DataCard>
           ) : (
-            pending.map(entry => (
-              <JournalEventCard key={entry.id} entry={entry} onChoice={handleChoice} />
+            active.map((entry) => (
+              <EntryCard key={entry.id} entry={entry} onArchive={handleArchive} />
             ))
+          )}
+
+          {archived.length > 0 && (
+            <div className="pt-2">
+              <p className="text-[9px] font-mono text-muted-foreground/40 tracking-[0.3em] uppercase mb-2">
+                // ARCHIVED ({archived.length})
+              </p>
+              <div className="space-y-2">
+                {archived.map((entry) => (
+                  <EntryCard key={entry.id} entry={entry} archived />
+                ))}
+              </div>
+            </div>
           )}
         </div>
       )}
 
-      {tab === "resolved" && (
-        <div className="space-y-3">
-          {resolved.length === 0 ? (
-            <p className="text-xs text-muted-foreground text-center py-6">No resolved events yet.</p>
-          ) : (
-            resolved.map(entry => (
-              <JournalEventCard key={entry.id} entry={entry} resolved />
-            ))
-          )}
-        </div>
+      {tab === "timeline" && (
+        <JournalTimeline entries={[...active, ...archived]} />
       )}
+    </PageShell>
+  );
+}
 
-      {tab === "chains" && <ConsequenceChain entries={entries} />}
+function EntryCard({ entry, onArchive, archived }) {
+  return (
+    <div className={`panel-frame overflow-hidden ${archived ? "opacity-60" : ""}`}>
+      {/* Header */}
+      <div className="flex items-center gap-2 border-b border-border/50 px-4 py-2.5 bg-secondary/20">
+        <BookOpen className="h-3 w-3 text-primary/60 shrink-0" />
+        <span className="flex-1 min-w-0 text-[11px] font-semibold font-display tracking-wider text-foreground uppercase truncate">
+          {entry.title}
+        </span>
+        <span className="text-[8px] text-muted-foreground font-mono shrink-0">
+          {new Date(entry.created_date).toLocaleDateString()}
+        </span>
+        {!archived && onArchive && (
+          <button
+            onClick={() => onArchive(entry.id)}
+            className="text-muted-foreground/40 hover:text-muted-foreground transition-colors ml-1 shrink-0"
+            title="Archive"
+          >
+            <Archive className="h-3 w-3" />
+          </button>
+        )}
+      </div>
 
-      {tab === "timeline" && <JournalTimeline entries={resolved} />}
-
-      {/* Story Threads — visible on all tabs */}
-      <ConsequenceTagCloud entries={entries} />
+      {/* Body */}
+      <div className="px-4 py-3">
+        <p className="text-[11px] text-foreground/80 leading-relaxed whitespace-pre-wrap">
+          {entry.narrative}
+        </p>
+      </div>
     </div>
   );
 }

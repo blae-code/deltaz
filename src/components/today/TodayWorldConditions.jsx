@@ -1,13 +1,19 @@
-import { useState, useEffect } from "react";
 import {
   Cloud, Sun, CloudRain, CloudLightning, Snowflake, Wind, CloudFog,
-  Thermometer, Eye, Radiation, Clock, Calendar, AlertTriangle
+  Thermometer, Eye, Radiation, Calendar, AlertTriangle
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 import CompassSvg from "../svg/CompassSvg";
+import SeasonGlyphSvg from "../svg/SeasonGlyphSvg";
+import TelemetrySignalSvg from "../svg/TelemetrySignalSvg";
+import WeatherStatusSvg from "../svg/WeatherStatusSvg";
+import WorldClockSvg from "../svg/WorldClockSvg";
 import WeatherParticles from "./weather/WeatherParticles";
 import LightningFlash from "./weather/LightningFlash";
 import ConditionTooltipCell from "./weather/ConditionTooltipCell";
+import useWorldClock from "../../hooks/useWorldClock";
+import { getAuthorityTone } from "../../lib/world-state";
 
 /* ── CONFIG TABLES ── */
 
@@ -89,12 +95,17 @@ function getTempInfo(c) {
 /* ── MAIN COMPONENT ── */
 
 export default function TodayWorldConditions({ conditions }) {
-  if (!conditions) return <WorldConditionsEmpty />;
+  const worldClock = useWorldClock(conditions);
+  const authorityTone = getAuthorityTone(worldClock.authorityStatus);
+  const shouldShowUnavailable = !conditions
+    || (worldClock.authorityStatus === "unavailable" && !worldClock.weatherKey && !worldClock.seasonKey);
+  if (shouldShowUnavailable) {
+    return <WorldConditionsEmpty errorMessage={worldClock.lastSyncError} />;
+  }
 
-  const weather = WEATHER_CONFIG[conditions.weather] || WEATHER_CONFIG.overcast;
-  const WeatherIcon = weather.icon;
-  const daylight = DAYLIGHT_CONFIG[conditions.daylight_phase] || DAYLIGHT_CONFIG.midday;
-  const season = SEASON_CONFIG[conditions.season] || { label: conditions.season, tip: "" };
+  const weather = WEATHER_CONFIG[worldClock.weatherKey] || WEATHER_CONFIG.overcast;
+  const daylight = DAYLIGHT_CONFIG[worldClock.daylightKey] || DAYLIGHT_CONFIG.midday;
+  const season = SEASON_CONFIG[worldClock.seasonKey] || { label: worldClock.seasonLabel, tip: "" };
   const tempC = conditions.temperature_c ?? "--";
   const tempF = tempC !== "--" ? Math.round(tempC * 9 / 5 + 32) : "--";
   const tempInfo = tempC !== "--" ? getTempInfo(tempC) : { color: "text-foreground", tip: "", pulse: null };
@@ -102,8 +113,15 @@ export default function TodayWorldConditions({ conditions }) {
   const visInfo = VIS_CONFIG[conditions.visibility] || VIS_CONFIG.good;
   const windInfo = WIND_CONFIG[conditions.wind] || WIND_CONFIG.calm;
 
-  const isDangerous = ["radiation_storm", "blizzard", "acid_rain", "thunderstorm"].includes(conditions.weather);
-  const isNight = ["night", "midnight"].includes(conditions.daylight_phase);
+  const isDangerous = ["radiation_storm", "blizzard", "acid_rain", "thunderstorm"].includes(worldClock.weatherKey);
+  const isNight = ["night", "midnight"].includes(worldClock.daylightKey);
+  const signalVariant = authorityTone === "ok"
+    ? "live"
+    : authorityTone === "warn"
+      ? "stale"
+      : authorityTone === "error"
+        ? "error"
+        : "offline";
 
   return (
     <div className={`relative border overflow-hidden transition-all duration-700 ${
@@ -117,13 +135,13 @@ export default function TodayWorldConditions({ conditions }) {
       />
 
       {/* Weather particle system */}
-      <WeatherParticles weather={conditions.weather} />
+      <WeatherParticles weather={worldClock.weatherKey} />
 
       {/* Lightning flash for thunderstorms */}
-      <LightningFlash active={conditions.weather === "thunderstorm"} />
+      <LightningFlash active={worldClock.weatherKey === "thunderstorm"} />
 
       {/* Fog overlay */}
-      {conditions.weather === "fog" && (
+      {worldClock.weatherKey === "fog" && (
         <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-white/5 via-white/8 to-white/3 animate-pulse" style={{ animationDuration: "4s" }} />
       )}
 
@@ -137,23 +155,31 @@ export default function TodayWorldConditions({ conditions }) {
       {/* ── Top band: time + weather hero ── */}
       <div className="relative px-4 pt-4 pb-3 flex items-start justify-between gap-3 z-[2]">
         <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-1.5 mb-2">
+            <TelemetryPill
+              label={worldClock.authorityLabel}
+              value={worldClock.sourceLabel}
+              variant={signalVariant}
+            />
+            <TelemetryMeta label="Freshness" value={worldClock.freshnessLabel} />
+            {worldClock.daylightLabel && <TelemetryMeta label="Light" value={worldClock.daylightLabel} />}
+          </div>
           <div className="flex items-center gap-2 mb-1">
-            {conditions.world_date && (
+            {worldClock.displayDate && (
               <span className="flex items-center gap-1 text-[11px] font-mono text-foreground">
                 <Calendar className="h-3 w-3 text-primary" />
-                {conditions.world_date}
+                {worldClock.displayDate}
               </span>
             )}
-            {conditions.world_time && (
-              <LiveClock time={conditions.world_time} />
-            )}
+            <WorldClockReadout clock={worldClock} />
           </div>
           <TooltipProvider delayDuration={200}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <p className="text-[10px] text-muted-foreground tracking-widest uppercase font-mono cursor-help hover:text-foreground transition-colors">
-                  {season.label} · {daylight.label}
-                </p>
+                <div className="inline-flex items-center gap-1.5 text-[10px] text-muted-foreground tracking-widest uppercase font-mono cursor-help hover:text-foreground transition-colors">
+                  <SeasonGlyphSvg size={14} variant={worldClock.seasonKey || "autumn"} className="text-primary/85" />
+                  <p>{season.label} · {daylight.label}</p>
+                </div>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="max-w-[220px] text-[11px] bg-card border-border">
                 <p className="font-semibold text-primary mb-0.5">{season.label}</p>
@@ -169,12 +195,12 @@ export default function TodayWorldConditions({ conditions }) {
             <TooltipTrigger asChild>
               <div className="flex flex-col items-center shrink-0 cursor-help group">
                 <div className={`relative ${isDangerous ? "animate-pulse" : ""}`}>
-                  <WeatherIcon className={`h-10 w-10 ${weather.color} transition-transform group-hover:scale-110 drop-shadow-lg`} />
+                  <WeatherStatusSvg size={42} variant={worldClock.weatherKey || "overcast"} className={`${weather.color} transition-transform group-hover:scale-110 drop-shadow-lg`} />
                   {isDangerous && (
                     <div className="absolute inset-0 rounded-full blur-lg opacity-40" style={{
-                      background: conditions.weather === "radiation_storm" ? "rgba(239,68,68,0.5)" :
-                                  conditions.weather === "acid_rain" ? "rgba(74,222,128,0.4)" :
-                                  conditions.weather === "thunderstorm" ? "rgba(250,204,21,0.4)" :
+                      background: worldClock.weatherKey === "radiation_storm" ? "rgba(239,68,68,0.5)" :
+                                  worldClock.weatherKey === "acid_rain" ? "rgba(74,222,128,0.4)" :
+                                  worldClock.weatherKey === "thunderstorm" ? "rgba(250,204,21,0.4)" :
                                   "rgba(147,197,253,0.4)"
                     }} />
                   )}
@@ -191,6 +217,20 @@ export default function TodayWorldConditions({ conditions }) {
           </Tooltip>
         </TooltipProvider>
       </div>
+
+      {worldClock.authorityStatus !== "verified" && (
+        <div className={cn(
+          "relative z-[2] mx-4 mb-3 rounded-sm border px-3 py-2 text-[10px] font-mono uppercase tracking-[0.18em]",
+          authorityTone === "warn" && "border-status-warn/30 bg-status-warn/10 text-status-warn",
+          authorityTone === "error" && "border-destructive/30 bg-destructive/10 text-destructive",
+          authorityTone === "offline" && "border-border/60 bg-secondary/30 text-muted-foreground",
+        )}>
+          Verified server telemetry is {worldClock.authorityLabel.toLowerCase()}.
+          <span className="ml-2 normal-case tracking-normal text-muted-foreground">
+            {worldClock.lastSyncError || "Clock is frozen until the next authoritative sample arrives."}
+          </span>
+        </div>
+      )}
 
       {/* ── Conditions grid with tooltips ── */}
       <div className="relative z-[2] grid grid-cols-2 sm:grid-cols-4 gap-px bg-border/50">
@@ -254,32 +294,46 @@ export default function TodayWorldConditions({ conditions }) {
   );
 }
 
-/* ── Live Clock with pulse ── */
-function LiveClock({ time }) {
-  const [pulse, setPulse] = useState(true);
-
-  useEffect(() => {
-    const interval = setInterval(() => setPulse(p => !p), 1000);
-    return () => clearInterval(interval);
-  }, []);
-
+function WorldClockReadout({ clock }) {
+  const pulseActive = clock.isTicking && clock.secondsOfDay !== null && clock.secondsOfDay % 2 === 0;
   return (
     <span className="flex items-center gap-1 text-[11px] font-mono text-foreground">
-      <Clock className="h-3 w-3 text-primary" />
-      <span>{time}</span>
-      <span className={`inline-block h-1.5 w-1.5 rounded-full bg-primary transition-opacity duration-500 ${pulse ? "opacity-100" : "opacity-20"}`} />
+      <WorldClockSvg size={14} className="text-primary" animated={clock.isTicking} />
+      <span>{clock.displayTimeWithSeconds}</span>
+      <span className={`inline-block h-1.5 w-1.5 rounded-full bg-primary transition-opacity duration-500 ${pulseActive ? "opacity-100" : "opacity-20"}`} />
     </span>
   );
 }
 
-/* ── Empty state ── */
-function WorldConditionsEmpty() {
+function TelemetryPill({ label, value, variant }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-sm border border-border/60 bg-card/60 px-2 py-1 text-[9px] font-mono uppercase tracking-[0.18em] text-muted-foreground">
+      <TelemetrySignalSvg size={12} variant={variant} animated={variant === "live"} className="text-primary/85" />
+      <span className="text-foreground">{label}</span>
+      <span className="text-muted-foreground/60">{value}</span>
+    </span>
+  );
+}
+
+function TelemetryMeta({ label, value }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-sm border border-border/40 bg-card/40 px-2 py-1 text-[9px] font-mono uppercase tracking-[0.18em] text-muted-foreground">
+      <span>{label}</span>
+      <span className="text-foreground">{value}</span>
+    </span>
+  );
+}
+
+function WorldConditionsEmpty({ errorMessage }) {
   return (
     <div className="border border-dashed border-border rounded-sm px-4 py-6 text-center">
       <CompassSvg size={40} className="text-muted-foreground/30 mx-auto mb-2" />
       <p className="text-[10px] text-muted-foreground/60 font-mono tracking-wider">
-        WORLD CONDITIONS UNAVAILABLE — AWAITING GM DATA
+        VERIFIED SERVER TELEMETRY UNAVAILABLE
       </p>
+      {errorMessage && (
+        <p className="text-[10px] text-destructive/80 mt-2 font-mono">{errorMessage}</p>
+      )}
     </div>
   );
 }

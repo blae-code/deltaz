@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { sendServerBroadcast } from "@/api/serverApi";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -27,10 +28,7 @@ export default function ColonyBroadcast() {
 
     // Also try RCON broadcast if server is available
     try {
-      await base44.functions.invoke("serverManager", {
-        action: "broadcast",
-        message: `[COLONY ${severity.toUpperCase()}] ${message}`,
-      });
+      await sendServerBroadcast(`[COLONY ${severity.toUpperCase()}] ${message}`);
     } catch (_) {
       // Server might be offline — event broadcast still works
     }
