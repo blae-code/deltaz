@@ -131,11 +131,11 @@ export default function TopBar({ user: propUser }) {
 
           <button
             onClick={() => setSearchOpen(true)}
-            className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-primary transition-colors font-mono border border-border/60 rounded-sm px-2 py-1 hover:border-primary/30"
+            className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-primary transition-colors font-mono border border-border/60 px-2 py-1 hover:border-primary/30 hover:shadow-[inset_0_-1px_0_0_hsl(var(--primary)/0.4)]"
           >
             <Search className="h-3 w-3" />
             <span className="hidden sm:inline tracking-wider">SEARCH</span>
-            <kbd className="hidden md:inline text-[9px] bg-secondary/80 px-1 rounded text-muted-foreground/50 ml-0.5">⌘K</kbd>
+            <kbd className="hidden md:inline text-[9px] bg-secondary/80 px-1 text-muted-foreground/50 ml-0.5 font-mono">⌘K</kbd>
           </button>
 
           <Tooltip>
@@ -192,7 +192,7 @@ export default function TopBar({ user: propUser }) {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="flex items-center gap-2 cursor-pointer">
-                    <div className="h-6 w-6 rounded-sm bg-primary/10 border border-primary/25 flex items-center justify-center shrink-0">
+                    <div className="h-6 w-6 bg-primary/10 border border-primary/25 flex items-center justify-center shrink-0">
                       <SidebarLogoSvg size={13} className="text-primary" />
                     </div>
                     <div className="hidden sm:block">

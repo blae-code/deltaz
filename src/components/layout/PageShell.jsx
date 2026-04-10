@@ -15,8 +15,8 @@ export default function PageShell({ title, subtitle, actions, statusStrip, actio
       {/* 1. Header */}
       <div className="flex items-start justify-between flex-wrap gap-2">
         <div className="flex items-center gap-3 min-w-0">
-          {/* Amber left accent — EVE-style page identity bar */}
-          <div className="shrink-0 w-[3px] h-8 bg-gradient-to-b from-primary via-primary/60 to-transparent rounded-full" />
+          {/* Amber left accent — hard-edge identity bar */}
+          <div className="shrink-0 w-[3px] h-8 bg-gradient-to-b from-primary via-primary/50 to-transparent" />
           <div className="min-w-0">
             <h2 className="text-base sm:text-lg font-bold font-display tracking-wider text-primary uppercase truncate leading-tight">
               {title}

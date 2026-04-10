@@ -15,8 +15,8 @@ export default function FactionCard({ faction, members = [], selected, onSelect 
       onClick={() => onSelect(faction.id)}
       className={`w-full text-left panel-frame overflow-hidden transition-all ${
         selected
-          ? "shadow-[inset_2px_0_0_0_hsl(var(--primary))] bg-primary/5"
-          : "hover:border-primary/30"
+          ? "shadow-[inset_2px_0_0_0_hsl(var(--primary))] bg-primary/5 border-primary/30"
+          : "hover:border-primary/25 hover:shadow-[inset_2px_0_0_0_hsl(var(--primary)/0.25)]"
       }`}
     >
       {/* Header */}

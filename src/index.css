@@ -129,6 +129,12 @@
 .clip-corner-tr-bl {
   clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
 }
+.clip-corner-br {
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
+}
+.clip-corner-tr-br {
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
+}
 
 /* Panel frame: border + bg + amber gradient top rule */
 .panel-frame {
@@ -208,6 +214,44 @@
 @keyframes lightning-fade {
   0% { opacity: 1; }
   100% { opacity: 0; }
+}
+
+/* DataCard header — slow luminous sweep from left to right */
+@keyframes card-sweep {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(500%); }
+}
+.card-header-sweep {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 20%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    hsl(var(--primary) / 0.07) 50%,
+    transparent 100%
+  );
+  animation: card-sweep 9s ease-in-out 1s infinite;
+  pointer-events: none;
+}
+
+/* Signal bars active pulse */
+@keyframes bar-fade {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
+}
+
+/* OperativeBadge — slow rotating dashed ring */
+@keyframes badge-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* OperativeBadge — outer ring pulse */
+@keyframes badge-ring-pulse {
+  0%, 100% { opacity: 0.08; }
+  50%       { opacity: 0.28; }
 }
 
 .terminal-flicker {

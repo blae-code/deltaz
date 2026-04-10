@@ -40,7 +40,7 @@ export default function TodayInventory({ inventory, craftingProjects }) {
       <div className="grid grid-cols-3 gap-2">
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="panel-frame p-2.5 text-center cursor-help">
+            <div className="panel-frame clip-corner-tr p-2.5 text-center cursor-help">
               <div className="text-lg font-bold font-display text-primary">{totalItems}</div>
               <div className="text-[10px] text-muted-foreground tracking-widest uppercase">Items</div>
             </div>
@@ -52,7 +52,7 @@ export default function TodayInventory({ inventory, craftingProjects }) {
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="panel-frame p-2.5 text-center cursor-help">
+            <div className="panel-frame clip-corner-tr p-2.5 text-center cursor-help">
               <div className="text-lg font-bold font-display text-foreground">{equipped.length}</div>
               <div className="text-[10px] text-muted-foreground tracking-widest uppercase">Equipped</div>
             </div>
@@ -64,7 +64,7 @@ export default function TodayInventory({ inventory, craftingProjects }) {
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className={`panel-frame p-2.5 text-center cursor-help ${lowCondition.length > 0 ? "shadow-[inset_2px_0_0_0_hsl(var(--accent))]" : ""}`}>
+            <div className={`panel-frame clip-corner-tr p-2.5 text-center cursor-help ${lowCondition.length > 0 ? "shadow-[inset_2px_0_0_0_hsl(var(--accent))]" : ""}`}>
               <div className={`text-lg font-bold font-display ${lowCondition.length > 0 ? "text-accent" : "text-foreground"}`}>
                 {lowCondition.length}
               </div>

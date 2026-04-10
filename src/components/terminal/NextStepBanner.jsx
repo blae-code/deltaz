@@ -21,7 +21,7 @@ export default function NextStepBanner({ to, icon: Icon, label, hint, color = "p
   return (
     <Link
       to={to}
-      className={`flex items-center gap-3 rounded-sm px-3 py-2.5 border transition-colors group ${colors[color] || colors.primary}`}
+      className={`flex items-center gap-3 px-3 py-2.5 border transition-all shadow-[inset_2px_0_0_0_transparent] hover:shadow-[inset_2px_0_0_0_currentColor] group ${colors[color] || colors.primary}`}
     >
       {Icon && <Icon className="h-4 w-4 shrink-0" />}
       <div className="flex-1 min-w-0">

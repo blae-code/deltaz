@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { BookOpen, Plus, Archive, Clock } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import CornerAccentSvg from "../components/svg/CornerAccentSvg";
 
 const TABS = [
   { key: "notes", label: "Notes", icon: BookOpen },
@@ -194,29 +195,35 @@ export default function Journal() {
 
 function EntryCard({ entry, onArchive, archived }) {
   return (
-    <div className={`panel-frame overflow-hidden ${archived ? "opacity-60" : ""}`}>
+    <div className={`panel-frame clip-corner-br overflow-hidden ${archived ? "opacity-55" : ""}`}>
       {/* Header */}
-      <div className="flex items-center gap-2 border-b border-border/50 px-4 py-2.5 bg-secondary/20">
-        <BookOpen className="h-3 w-3 text-primary/60 shrink-0" />
-        <span className="flex-1 min-w-0 text-[11px] font-semibold font-display tracking-wider text-foreground uppercase truncate">
+      <div className="relative flex items-center gap-2 border-b border-border/50 px-4 py-2.5 bg-secondary/20 overflow-hidden">
+        {/* Sweep shimmer */}
+        <div className="card-header-sweep" aria-hidden="true" />
+        <BookOpen className="h-3 w-3 text-primary/60 shrink-0 relative" />
+        <span className="flex-1 min-w-0 text-[11px] font-semibold font-display tracking-wider text-foreground uppercase truncate relative">
           {entry.title}
         </span>
-        <span className="text-[8px] text-muted-foreground font-mono shrink-0">
+        <span className="text-[8px] text-muted-foreground font-mono shrink-0 relative">
           {new Date(entry.created_date).toLocaleDateString()}
         </span>
         {!archived && onArchive && (
           <button
             onClick={() => onArchive(entry.id)}
-            className="text-muted-foreground/40 hover:text-muted-foreground transition-colors ml-1 shrink-0"
-            title="Archive"
+            className="text-muted-foreground/40 hover:text-muted-foreground transition-colors ml-1 shrink-0 relative"
+            title="Archive this entry"
           >
             <Archive className="h-3 w-3" />
           </button>
         )}
+        {/* Corner accent bracket */}
+        <div className="absolute right-0 top-0 pointer-events-none">
+          <CornerAccentSvg corner="tr" size={12} />
+        </div>
       </div>
 
-      {/* Body */}
-      <div className="px-4 py-3">
+      {/* Body — left amber rule on active entries */}
+      <div className={`px-4 py-3 ${!archived ? "border-l-2 border-primary/15" : ""}`}>
         <p className="text-[11px] text-foreground/80 leading-relaxed whitespace-pre-wrap">
           {entry.narrative}
         </p>

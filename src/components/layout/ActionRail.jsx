@@ -8,14 +8,15 @@ export default function ActionRail({ tabs, active, onChange }) {
     <div className="flex gap-1.5 border-b border-border pb-2.5 flex-wrap">
       {tabs.map((t) => {
         const Icon = t.icon;
+        const isActive = active === t.key;
         return (
           <button
             key={t.key}
             onClick={() => onChange(t.key)}
-            className={`flex items-center gap-1.5 text-[11px] uppercase tracking-wider font-mono px-3 py-2 rounded-sm transition-colors focus-visible:ring-2 focus-visible:ring-primary/60 ${
-              active === t.key
-                ? "bg-primary/10 text-primary border border-primary/30"
-                : "text-muted-foreground hover:text-foreground border border-transparent"
+            className={`flex items-center gap-1.5 text-[11px] uppercase tracking-wider font-mono px-3 py-2 transition-all focus-visible:ring-2 focus-visible:ring-primary/60 ${
+              isActive
+                ? "bg-primary/10 text-primary border border-primary/30 shadow-[inset_0_-2px_0_0_hsl(var(--primary))]"
+                : "text-muted-foreground hover:text-foreground border border-transparent hover:border-border/60 hover:shadow-[inset_0_-1px_0_0_hsl(var(--border))]"
             }`}
           >
             {Icon && <Icon className="h-3.5 w-3.5" />}

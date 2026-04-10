@@ -26,11 +26,11 @@ export default function TodayColony({ bases = [], survivors = [] }) {
     <div className="space-y-2.5">
       {/* Summary stats */}
       <div className="grid grid-cols-2 gap-2">
-        <div className="panel-frame p-2.5 text-center">
+        <div className="panel-frame clip-corner-tr p-2.5 text-center">
           <div className="text-lg font-bold font-display text-primary">{activeBases.length}</div>
           <div className="text-[10px] text-muted-foreground tracking-widest uppercase">Active Base{activeBases.length !== 1 ? "s" : ""}</div>
         </div>
-        <div className="panel-frame p-2.5 text-center">
+        <div className="panel-frame clip-corner-tr p-2.5 text-center">
           <div className="text-lg font-bold font-display text-foreground">{assignedSurvivors.length}</div>
           <div className="text-[10px] text-muted-foreground tracking-widest uppercase">Survivors</div>
         </div>

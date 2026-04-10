@@ -220,7 +220,7 @@ export default function TodayWorldConditions({ conditions }) {
 
       {worldClock.authorityStatus !== "verified" && (
         <div className={cn(
-          "relative z-[2] mx-4 mb-3 rounded-sm border px-3 py-2 text-[10px] font-mono uppercase tracking-[0.18em]",
+          "relative z-[2] mx-4 mb-3 border px-3 py-2 text-[10px] font-mono uppercase tracking-[0.18em]",
           authorityTone === "warn" && "border-status-warn/30 bg-status-warn/10 text-status-warn",
           authorityTone === "error" && "border-destructive/30 bg-destructive/10 text-destructive",
           authorityTone === "offline" && "border-border/60 bg-secondary/30 text-muted-foreground",
@@ -272,7 +272,7 @@ export default function TodayWorldConditions({ conditions }) {
           {conditions.special_conditions.map((cond, i) => (
             <span
               key={i}
-              className="inline-flex items-center gap-1 text-[9px] font-mono font-semibold tracking-wider uppercase bg-accent/10 text-accent border border-accent/20 rounded-sm px-2 py-0.5 animate-pulse"
+              className="inline-flex items-center gap-1 text-[9px] font-mono font-semibold tracking-wider uppercase bg-accent/10 text-accent border border-accent/20 px-2 py-0.5 animate-pulse"
               style={{ animationDelay: `${i * 300}ms` }}
             >
               <AlertTriangle className="h-2.5 w-2.5" />
@@ -307,7 +307,7 @@ function WorldClockReadout({ clock }) {
 
 function TelemetryPill({ label, value, variant }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-sm border border-border/60 bg-card/60 px-2 py-1 text-[9px] font-mono uppercase tracking-[0.18em] text-muted-foreground">
+    <span className="inline-flex items-center gap-1.5 border border-border/60 bg-card/60 px-2 py-1 text-[9px] font-mono uppercase tracking-[0.18em] text-muted-foreground">
       <TelemetrySignalSvg size={12} variant={variant} animated={variant === "live"} className="text-primary/85" />
       <span className="text-foreground">{label}</span>
       <span className="text-muted-foreground/60">{value}</span>
@@ -317,7 +317,7 @@ function TelemetryPill({ label, value, variant }) {
 
 function TelemetryMeta({ label, value }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-sm border border-border/40 bg-card/40 px-2 py-1 text-[9px] font-mono uppercase tracking-[0.18em] text-muted-foreground">
+    <span className="inline-flex items-center gap-1 border border-border/40 bg-card/40 px-2 py-1 text-[9px] font-mono uppercase tracking-[0.18em] text-muted-foreground">
       <span>{label}</span>
       <span className="text-foreground">{value}</span>
     </span>
@@ -326,7 +326,7 @@ function TelemetryMeta({ label, value }) {
 
 function WorldConditionsEmpty({ errorMessage }) {
   return (
-    <div className="border border-dashed border-border rounded-sm px-4 py-6 text-center">
+    <div className="border border-dashed border-border px-4 py-6 text-center">
       <CompassSvg size={40} className="text-muted-foreground/30 mx-auto mb-2" />
       <p className="text-[10px] text-muted-foreground/60 font-mono tracking-wider">
         VERIFIED SERVER TELEMETRY UNAVAILABLE

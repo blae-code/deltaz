@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { subscribeRegistry } from "../../hooks/useSyncRegistry";
 import { cn } from "@/lib/utils";
 import { Wifi, WifiOff, RefreshCw, AlertTriangle } from "lucide-react";
+import SignalBarsSvg from "../svg/SignalBarsSvg";
 
 /**
  * SyncStatusFooter — replaces the static footer status with
@@ -22,7 +23,7 @@ export default function SyncStatusFooter() {
   if (list.length === 0) {
     return (
       <div className="flex items-center gap-1.5">
-        <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" />
+        <SignalBarsSvg strength={0} size={14} />
         <span className="text-[10px] text-muted-foreground/50 font-mono tracking-widest">STANDBY</span>
       </div>
     );
@@ -34,20 +35,24 @@ export default function SyncStatusFooter() {
   const age = latestUpdate > 0 ? Math.round((now - latestUpdate) / 1000) : null;
   const isVeryStale = age !== null && age > 120;
 
-  let dotColor = "bg-status-ok/70";
+  let signalStrength = 4;
+  let signalColor = "hsl(var(--status-ok))";
   let label = "LIVE";
   let Icon = Wifi;
 
   if (anyFetching) {
-    dotColor = "bg-primary";
+    signalStrength = 2;
+    signalColor = "hsl(var(--primary))";
     label = "SYNCING";
     Icon = RefreshCw;
   } else if (anyError) {
-    dotColor = "bg-destructive/70";
+    signalStrength = 1;
+    signalColor = "hsl(var(--destructive) / 0.85)";
     label = "SYNC ERROR";
     Icon = WifiOff;
   } else if (isVeryStale) {
-    dotColor = "bg-status-warn/70";
+    signalStrength = 2;
+    signalColor = "hsl(var(--status-warn))";
     label = "STALE DATA";
     Icon = AlertTriangle;
   }
@@ -57,7 +62,7 @@ export default function SyncStatusFooter() {
 
   return (
     <div className="flex items-center gap-2">
-      <div className={cn("h-1.5 w-1.5 rounded-full", dotColor, anyFetching && "animate-pulse")} />
+      <SignalBarsSvg strength={signalStrength} size={14} animated={!anyError} activeColor={signalColor} />
       <Icon className={cn("h-2.5 w-2.5 text-muted-foreground/50", anyFetching && "animate-spin")} />
       <span className="text-[10px] text-muted-foreground/60 font-mono tracking-widest">
         {label}

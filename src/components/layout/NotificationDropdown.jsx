@@ -74,8 +74,10 @@ export default function NotificationDropdown({ userEmail }) {
       <button
         onClick={() => setOpen(!open)}
         className={cn(
-          "relative flex items-center justify-center h-8 w-8 rounded-sm border transition-colors",
-          open ? "border-primary/50 bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground hover:border-primary/30"
+          "relative flex items-center justify-center h-8 w-8 border transition-colors",
+          open
+            ? "border-primary/50 bg-primary/10 text-primary shadow-[inset_0_-2px_0_0_hsl(var(--primary))]"
+            : "border-border text-muted-foreground hover:text-foreground hover:border-primary/30"
         )}
       >
         <Bell className="h-3.5 w-3.5" />
@@ -88,7 +90,7 @@ export default function NotificationDropdown({ userEmail }) {
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute right-0 top-full mt-1.5 w-80 max-h-[420px] overflow-y-auto border border-border bg-card rounded-sm shadow-lg z-50">
+        <div className="absolute right-0 top-full mt-1.5 w-80 max-h-[420px] overflow-y-auto panel-frame shadow-lg z-50">
           {/* Header */}
           <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-secondary/30 sticky top-0 z-10">
             <span className="text-[10px] font-semibold font-display tracking-widest text-primary uppercase">
@@ -98,7 +100,7 @@ export default function NotificationDropdown({ userEmail }) {
               {count > 0 && (
                 <button
                   onClick={markAllRead}
-                  className="text-[9px] text-muted-foreground hover:text-primary tracking-wider uppercase flex items-center gap-1 px-1.5 py-0.5 rounded-sm hover:bg-primary/10 transition-colors"
+                  className="text-[9px] text-muted-foreground hover:text-primary tracking-wider uppercase flex items-center gap-1 px-1.5 py-0.5 hover:bg-primary/10 transition-colors"
                 >
                   <Check className="h-3 w-3" /> CLEAR ALL
                 </button>
@@ -124,7 +126,7 @@ export default function NotificationDropdown({ userEmail }) {
                 const Icon = TYPE_ICON[n.type] || AlertTriangle;
                 const priority = n.priority || "normal";
                 return (
-                  <div key={n.id} className="flex items-start gap-2.5 px-3 py-2.5 hover:bg-secondary/20 transition-colors">
+                  <div key={n.id} className="flex items-start gap-2.5 px-3 py-2.5 hover:bg-secondary/20 hover:shadow-[inset_2px_0_0_0_hsl(var(--primary)/0.35)] transition-all">
                     <div className="mt-0.5 shrink-0 relative">
                       <Icon className="h-3.5 w-3.5 text-muted-foreground" />
                       {priority !== "normal" && (
@@ -140,7 +142,7 @@ export default function NotificationDropdown({ userEmail }) {
                     </div>
                     <button
                       onClick={(e) => { e.stopPropagation(); markRead(n.id); }}
-                      className="text-muted-foreground/60 hover:text-foreground shrink-0 p-1.5 rounded-sm hover:bg-secondary/50 transition-colors"
+                      className="text-muted-foreground/60 hover:text-foreground shrink-0 p-1.5 hover:bg-secondary/50 transition-colors"
                       title="Dismiss"
                     >
                       <X className="h-3.5 w-3.5" />

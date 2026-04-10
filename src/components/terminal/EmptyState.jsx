@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { CircleOff } from "lucide-react";
+import CornerAccentSvg from "../svg/CornerAccentSvg";
 
 /**
  * EmptyState — directive empty state that answers:
@@ -13,14 +14,14 @@ export default function EmptyState({ icon: Icon = CircleOff, title, why, action,
       "relative border border-dashed border-border/40 py-8 sm:py-10 px-4 sm:px-6 flex flex-col items-center text-center space-y-3",
       className
     )}>
-      {/* Corner bracket decorations */}
-      <span className="absolute top-2 left-2 text-[10px] font-mono text-primary/20 select-none leading-none">[</span>
-      <span className="absolute top-2 right-2 text-[10px] font-mono text-primary/20 select-none leading-none">]</span>
-      <span className="absolute bottom-2 left-2 text-[10px] font-mono text-primary/20 select-none leading-none">[</span>
-      <span className="absolute bottom-2 right-2 text-[10px] font-mono text-primary/20 select-none leading-none">]</span>
+      {/* SVG corner bracket decorations */}
+      <div className="absolute top-0 left-0 pointer-events-none"><CornerAccentSvg corner="tl" size={14} /></div>
+      <div className="absolute top-0 right-0 pointer-events-none"><CornerAccentSvg corner="tr" size={14} /></div>
+      <div className="absolute bottom-0 left-0 pointer-events-none"><CornerAccentSvg corner="bl" size={14} /></div>
+      <div className="absolute bottom-0 right-0 pointer-events-none"><CornerAccentSvg corner="br" size={14} /></div>
 
       {/* Icon */}
-      <div className="h-10 w-10 rounded-sm bg-secondary/40 border border-border/50 flex items-center justify-center">
+      <div className="h-10 w-10 bg-secondary/40 border border-border/50 flex items-center justify-center">
         <Icon className="h-5 w-5 text-muted-foreground/50" />
       </div>
 
