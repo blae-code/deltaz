@@ -26,7 +26,7 @@ export default function TodayMissions({ jobs, userEmail }) {
           YOUR ACTIVE MISSIONS ({myActive.length})
         </h4>
         {myActive.length === 0 ? (
-          <p className="text-xs text-muted-foreground/60 italic py-2">
+          <p className="text-xs text-muted-foreground/70 italic py-2">
             No active ops. Accept a contract from the board below to earn credits and rep for your clan.
           </p>
         ) : (

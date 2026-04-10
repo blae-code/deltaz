@@ -34,7 +34,7 @@ export default function OperativeIdCard({ user, factions, reputations, jobs }) {
   return (
     <div className="panel-frame overflow-hidden">
       {/* Header band */}
-      <div className="flex items-center justify-between gap-3 px-3 sm:px-4 py-2.5 bg-primary/5 border-b border-primary/20">
+      <div className="flex items-center justify-between gap-3 px-3 sm:px-4 py-3 bg-gradient-to-r from-primary/8 via-primary/4 to-transparent border-b border-primary/20">
         <div className="flex items-center gap-3">
           {/* Avatar / Monogram — SVG Badge */}
           <OperativeBadgeSvg
@@ -175,7 +175,7 @@ export default function OperativeIdCard({ user, factions, reputations, jobs }) {
       {/* Footer link */}
       <Link
         to="/profile"
-        className="flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary transition-colors border-t border-border py-2 tracking-wider uppercase font-mono"
+        className="flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary transition-colors border-t border-border/60 py-2 tracking-wider uppercase font-mono hover:bg-primary/3"
       >
         FULL DOSSIER <ChevronRight className="h-3 w-3" />
       </Link>

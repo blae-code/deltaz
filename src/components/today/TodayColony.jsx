@@ -7,9 +7,9 @@ export default function TodayColony({ bases = [], survivors = [] }) {
   if (bases.length === 0) {
     return (
       <div className="text-center py-4">
-        <SettlementSvg size={32} className="text-muted-foreground/30 mx-auto mb-2" />
-        <p className="text-xs text-muted-foreground/60 italic">No bases registered yet.</p>
-        <p className="text-[10px] text-muted-foreground/40 mt-1">Register your first base in the Colony section.</p>
+        <SettlementSvg size={32} className="text-muted-foreground/40 mx-auto mb-2" />
+        <p className="text-xs text-muted-foreground/70 italic">No bases registered yet.</p>
+        <p className="text-[10px] text-muted-foreground/50 mt-1">Register your first base in the Colony section.</p>
         <Link to="/colony">
           <Button variant="outline" size="sm" className="text-[10px] uppercase tracking-wider h-8 mt-2">
             <SettlementSvg size={14} className="mr-1" /> Go to Colony
@@ -27,12 +27,12 @@ export default function TodayColony({ bases = [], survivors = [] }) {
       {/* Summary stats */}
       <div className="grid grid-cols-2 gap-2">
         <div className="panel-frame clip-corner-tr p-2.5 text-center">
-          <div className="text-lg font-bold font-display text-primary">{activeBases.length}</div>
-          <div className="text-[10px] text-muted-foreground tracking-widest uppercase">Active Base{activeBases.length !== 1 ? "s" : ""}</div>
+          <div className="text-xl font-bold font-display text-primary">{activeBases.length}</div>
+          <div className="text-[10px] text-muted-foreground/80 tracking-widest uppercase">Active Base{activeBases.length !== 1 ? "s" : ""}</div>
         </div>
         <div className="panel-frame clip-corner-tr p-2.5 text-center">
-          <div className="text-lg font-bold font-display text-foreground">{assignedSurvivors.length}</div>
-          <div className="text-[10px] text-muted-foreground tracking-widest uppercase">Survivors</div>
+          <div className="text-xl font-bold font-display text-foreground">{assignedSurvivors.length}</div>
+          <div className="text-[10px] text-muted-foreground/80 tracking-widest uppercase">Survivors</div>
         </div>
       </div>
 
@@ -55,7 +55,7 @@ export default function TodayColony({ bases = [], survivors = [] }) {
           );
         })}
         {activeBases.length > 3 && (
-          <p className="text-[10px] text-muted-foreground/50 text-center font-mono">+{activeBases.length - 3} more</p>
+          <p className="text-[10px] text-muted-foreground/60 text-center font-mono">+{activeBases.length - 3} more</p>
         )}
       </div>
 

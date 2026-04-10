@@ -63,13 +63,13 @@ export default function TodayActions() {
             <TooltipTrigger asChild>
               <Link
                 to={a.to}
-                className="panel-frame flex flex-col items-center gap-1 p-3 hover:bg-secondary/40 hover:border-primary/30 hover:shadow-[inset_0_-2px_0_0_hsl(var(--primary)/0.5)] transition-all group text-center"
+                className="panel-frame flex flex-col items-center gap-1 p-3 hover:bg-primary/5 hover:border-primary/30 hover:shadow-[inset_0_-2px_0_0_hsl(var(--primary)/0.5)] transition-all group text-center"
               >
                 <a.icon className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                 <span className="text-[11px] font-semibold text-foreground group-hover:text-primary transition-colors tracking-wider uppercase">
                   {a.label}
                 </span>
-                <span className="text-[10px] text-muted-foreground leading-tight hidden sm:block">{a.desc}</span>
+                <span className="text-[10px] text-muted-foreground/70 leading-tight hidden sm:block">{a.desc}</span>
               </Link>
             </TooltipTrigger>
             <TooltipContent side="bottom" className="font-mono text-[11px] bg-card border-primary/30 max-w-[220px]">

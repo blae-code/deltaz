@@ -107,7 +107,7 @@ export default function TodayPriorityBriefing({ jobs, userEmail, inventory, craf
 
   return (
     <div className="space-y-1.5">
-      <h3 className="text-[11px] text-muted-foreground tracking-widest uppercase font-mono font-semibold mb-2">
+      <h3 className="text-[11px] text-primary/70 tracking-widest uppercase font-mono font-semibold mb-2">
         PRIORITY BRIEFING
       </h3>
       {items.slice(0, 5).map((item, idx) => {

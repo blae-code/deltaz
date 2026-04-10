@@ -195,7 +195,7 @@ export default function Journal() {
 
 function EntryCard({ entry, onArchive, archived }) {
   return (
-    <div className={`panel-frame clip-corner-br overflow-hidden ${archived ? "opacity-55" : ""}`}>
+    <div className={`panel-frame clip-corner-br overflow-hidden transition-opacity ${archived ? "opacity-50" : "hover:border-primary/25"}`}>
       {/* Header */}
       <div className="relative flex items-center gap-2 border-b border-border/50 px-4 py-2.5 bg-secondary/20 overflow-hidden">
         {/* Sweep shimmer */}
@@ -223,8 +223,8 @@ function EntryCard({ entry, onArchive, archived }) {
       </div>
 
       {/* Body — left amber rule on active entries */}
-      <div className={`px-4 py-3 ${!archived ? "border-l-2 border-primary/15" : ""}`}>
-        <p className="text-[11px] text-foreground/80 leading-relaxed whitespace-pre-wrap">
+      <div className={`px-4 py-3 ${!archived ? "border-l-2 border-primary/20" : ""}`}>
+        <p className="text-[12px] text-foreground/85 leading-relaxed whitespace-pre-wrap">
           {entry.narrative}
         </p>
       </div>

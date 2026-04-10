@@ -94,21 +94,22 @@ export default function Colony() {
         <>
           {/* Overview Stats */}
           <div className="grid grid-cols-3 gap-3">
-            <div className="panel-frame clip-corner-tr p-3 text-center">
-              <Home className="h-4 w-4 mx-auto text-primary mb-1" />
-              <div className="text-[9px] text-muted-foreground tracking-wider">YOUR BASES</div>
-              <div className="text-lg font-bold text-foreground font-display">{myBases.length}</div>
+            <div className="panel-frame clip-corner-tr p-3 text-center group hover:border-primary/30 transition-colors">
+              <Home className="h-4 w-4 mx-auto text-primary mb-1 group-hover:scale-110 transition-transform" />
+              <div className="text-[9px] text-muted-foreground/80 tracking-wider">YOUR BASES</div>
+              <div className="text-xl font-bold text-foreground font-display">{myBases.length}</div>
             </div>
-            <div className="panel-frame clip-corner-tr p-3 text-center">
-              <Users className="h-4 w-4 mx-auto text-accent mb-1" />
-              <div className="text-[9px] text-muted-foreground tracking-wider">SURVIVORS</div>
-              <div className="text-lg font-bold text-foreground font-display">{totalSurvivors}</div>
+            <div className="panel-frame clip-corner-tr p-3 text-center group hover:border-accent/30 transition-colors">
+              <Users className="h-4 w-4 mx-auto text-accent mb-1 group-hover:scale-110 transition-transform" />
+              <div className="text-[9px] text-muted-foreground/80 tracking-wider">SURVIVORS</div>
+              <div className="text-xl font-bold text-foreground font-display">{totalSurvivors}</div>
             </div>
-            <div className="panel-frame clip-corner-tr p-3 text-center">
-              <Shield className="h-4 w-4 mx-auto text-muted-foreground mb-1" />
-              <div className="text-[9px] text-muted-foreground tracking-wider">CAPACITY</div>
-              <div className="text-lg font-bold text-foreground font-display">
-                {totalSurvivors}/{totalCapacity}
+            <div className="panel-frame clip-corner-tr p-3 text-center group hover:border-border transition-colors">
+              <Shield className="h-4 w-4 mx-auto text-muted-foreground mb-1 group-hover:scale-110 transition-transform" />
+              <div className="text-[9px] text-muted-foreground/80 tracking-wider">CAPACITY</div>
+              <div className="text-xl font-bold text-foreground font-display">
+                <span className={totalSurvivors >= totalCapacity ? "text-accent" : ""}>{totalSurvivors}</span>
+                <span className="text-muted-foreground/50">/</span>{totalCapacity}
               </div>
             </div>
           </div>
@@ -174,9 +175,9 @@ export default function Colony() {
                         {selectedBase.status}
                       </Badge>
                     </div>
-                    <div className="h-2 bg-secondary overflow-hidden">
+                    <div className="h-2 bg-secondary/60 overflow-hidden rounded-sm">
                       <div
-                        className="h-full bg-primary transition-all"
+                        className={`h-full transition-all ${activeSurvivors.length >= (selectedBase.capacity || 5) ? "bg-accent" : "bg-primary"}`}
                         style={{ width: `${Math.min(100, (activeSurvivors.length / (selectedBase.capacity || 5)) * 100)}%` }}
                       />
                     </div>

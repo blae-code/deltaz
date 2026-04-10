@@ -154,12 +154,18 @@ export default function WorldMap() {
 
           {/* Hint when nothing selected */}
           {!selectedMarker && !pendingPosition && !selectedSector && !influencePanel && (
-            <div className="panel-frame py-6 px-4 text-center">
-              <p className="text-[9px] text-primary/30 font-mono tracking-[0.3em] uppercase mb-1">
+            <div className="panel-frame py-8 px-4 text-center">
+              <div className="h-10 w-10 mx-auto mb-3 bg-secondary/50 border border-border/60 flex items-center justify-center">
+                <svg className="h-5 w-5 text-primary/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
+                </svg>
+              </div>
+              <p className="text-[9px] text-primary/40 font-mono tracking-[0.3em] uppercase mb-1">
                 // AWAITING INPUT
               </p>
-              <p className="text-[11px] text-muted-foreground/60 font-mono">
-                Click any sector to drop a marker or view sector info.
+              <p className="text-[11px] text-muted-foreground/70 font-mono leading-relaxed">
+                Click any sector on the grid to drop a marker or view sector intel.
               </p>
             </div>
           )}

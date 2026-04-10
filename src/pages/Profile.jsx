@@ -72,7 +72,7 @@ export default function Profile() {
       <DataCard title="Identity">
         <div className="space-y-4">
           <div className="flex items-center gap-4">
-            <div className="h-16 w-16 border border-primary/30 bg-primary/10 flex items-center justify-center">
+            <div className="h-16 w-16 border border-primary/35 bg-primary/15 flex items-center justify-center shadow-[0_0_12px_hsl(var(--primary)/0.12)]">
               <User className="h-8 w-8 text-primary" />
             </div>
             <div>
@@ -158,7 +158,7 @@ export default function Profile() {
       {/* Actions */}
       <Button
         variant="outline"
-        className="text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
+        className="text-xs text-destructive/80 border-destructive/25 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/40 transition-colors"
         onClick={() => base44.auth.logout()}
       >
         <LogOut className="h-3.5 w-3.5 mr-2" />

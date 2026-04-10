@@ -19,9 +19,9 @@ export default function TodayInventory({ inventory, craftingProjects }) {
   if (totalItems === 0 && (!craftingProjects || craftingProjects.length === 0)) {
     return (
       <div className="text-center py-4">
-        <GearCrateSvg size={32} className="text-muted-foreground/30 mx-auto mb-2" />
-        <p className="text-xs text-muted-foreground/60 italic">No gear logged yet.</p>
-        <p className="text-[10px] text-muted-foreground/40 mt-1">
+        <GearCrateSvg size={32} className="text-muted-foreground/40 mx-auto mb-2" />
+        <p className="text-xs text-muted-foreground/70 italic">No gear logged yet.</p>
+        <p className="text-[10px] text-muted-foreground/50 mt-1">
           Head to the Gear Locker to add items manually.
         </p>
       </div>
@@ -40,9 +40,9 @@ export default function TodayInventory({ inventory, craftingProjects }) {
       <div className="grid grid-cols-3 gap-2">
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="panel-frame clip-corner-tr p-2.5 text-center cursor-help">
-              <div className="text-lg font-bold font-display text-primary">{totalItems}</div>
-              <div className="text-[10px] text-muted-foreground tracking-widest uppercase">Items</div>
+            <div className="panel-frame clip-corner-tr p-2.5 text-center cursor-help hover:border-primary/30 transition-colors">
+              <div className="text-xl font-bold font-display text-primary">{totalItems}</div>
+              <div className="text-[10px] text-muted-foreground/80 tracking-widest uppercase">Items</div>
             </div>
           </TooltipTrigger>
           <TooltipContent side="top" className="font-mono text-[11px] bg-card border-primary/30 max-w-[200px]">
@@ -52,9 +52,9 @@ export default function TodayInventory({ inventory, craftingProjects }) {
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="panel-frame clip-corner-tr p-2.5 text-center cursor-help">
-              <div className="text-lg font-bold font-display text-foreground">{equipped.length}</div>
-              <div className="text-[10px] text-muted-foreground tracking-widest uppercase">Equipped</div>
+            <div className="panel-frame clip-corner-tr p-2.5 text-center cursor-help hover:border-border transition-colors">
+              <div className="text-xl font-bold font-display text-foreground">{equipped.length}</div>
+              <div className="text-[10px] text-muted-foreground/80 tracking-widest uppercase">Equipped</div>
             </div>
           </TooltipTrigger>
           <TooltipContent side="top" className="font-mono text-[11px] bg-card border-primary/30 max-w-[200px]">
@@ -64,11 +64,11 @@ export default function TodayInventory({ inventory, craftingProjects }) {
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className={`panel-frame clip-corner-tr p-2.5 text-center cursor-help ${lowCondition.length > 0 ? "shadow-[inset_2px_0_0_0_hsl(var(--accent))]" : ""}`}>
-              <div className={`text-lg font-bold font-display ${lowCondition.length > 0 ? "text-accent" : "text-foreground"}`}>
+            <div className={`panel-frame clip-corner-tr p-2.5 text-center cursor-help transition-colors ${lowCondition.length > 0 ? "shadow-[inset_2px_0_0_0_hsl(var(--accent))] hover:border-accent/30" : "hover:border-border"}`}>
+              <div className={`text-xl font-bold font-display ${lowCondition.length > 0 ? "text-accent" : "text-foreground"}`}>
                 {lowCondition.length}
               </div>
-              <div className="text-[10px] text-muted-foreground tracking-widest uppercase">Degraded</div>
+              <div className="text-[10px] text-muted-foreground/80 tracking-widest uppercase">Degraded</div>
             </div>
           </TooltipTrigger>
           <TooltipContent side="top" className="font-mono text-[11px] bg-card border-primary/30 max-w-[220px]">
@@ -93,9 +93,9 @@ export default function TodayInventory({ inventory, craftingProjects }) {
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-foreground truncate">{p.title}</p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <div className="flex-1 h-1 bg-secondary overflow-hidden">
+                      <div className="flex-1 h-1.5 bg-secondary/60 overflow-hidden rounded-sm">
                         <div
-                          className={`h-full ${p.status === "ready" ? "bg-status-ok" : "bg-primary"}`}
+                          className={`h-full transition-all rounded-sm ${p.status === "ready" ? "bg-status-ok" : "bg-primary"}`}
                           style={{ width: `${total > 0 ? (done / total) * 100 : 0}%` }}
                         />
                       </div>
