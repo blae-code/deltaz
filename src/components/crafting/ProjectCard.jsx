@@ -16,6 +16,7 @@ import { useToast } from "@/components/ui/use-toast";
 import MaterialRow from "./MaterialRow";
 import TradeFromProject from "./TradeFromProject";
 import InlineConfirm from "../terminal/InlineConfirm";
+import { getInventoryCountForLineItem } from "@/lib/gameCatalog";
 
 const priorityStyle = {
   low: "bg-muted text-muted-foreground",
@@ -114,18 +115,22 @@ export default function ProjectCard({ project, inventory: rawInventory, userEmai
   };
 
   // Check inventory for auto-detection
-  const getInventoryCount = (resourceName) => {
-    if (!resourceName) return 0;
-    const lower = resourceName.toLowerCase();
-    return inventory
-      .filter(i => i.name && i.name.toLowerCase().includes(lower))
-      .reduce((sum, i) => sum + (i.quantity || 1), 0);
+  const getInventoryCount = (material) => {
+    if (!material) return 0;
+    return getInventoryCountForLineItem(inventory, {
+      game_item_slug: material.game_item_slug,
+      name: material.resource,
+    });
   };
 
   // Shortfall items for trade
   const shortfalls = materials
     .filter(m => (m.have || 0) < (m.needed || 1))
-    .map(m => ({ resource: m.resource, deficit: (m.needed || 1) - (m.have || 0) }));
+    .map(m => ({
+      resource: m.resource,
+      game_item_slug: m.game_item_slug || "",
+      deficit: (m.needed || 1) - (m.have || 0),
+    }));
 
   return (
     <div className={`border rounded-sm overflow-hidden transition-colors ${
@@ -187,7 +192,7 @@ export default function ProjectCard({ project, inventory: rawInventory, userEmai
                 mat={mat}
                 idx={idx}
                 editing={editing}
-                inventoryCount={getInventoryCount(mat.resource)}
+                inventoryCount={getInventoryCount(mat)}
                 onUpdate={updateMaterial}
               />
             ))}
@@ -263,6 +268,7 @@ export default function ProjectCard({ project, inventory: rawInventory, userEmai
             <TradeFromProject
               shortfalls={shortfalls}
               projectTitle={project.title}
+              inventory={inventory}
               userEmail={userEmail}
               userCallsign={userCallsign}
               onDone={() => setShowTrade(false)}

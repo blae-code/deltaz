@@ -6,20 +6,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Hammer, BookOpen } from "lucide-react";
+import { Hammer, BookOpen } from "lucide-react";
 import GuidanceBox from "../terminal/GuidanceBox";
 import { useToast } from "@/components/ui/use-toast";
+import useGameCatalog from "@/hooks/useGameCatalog";
+import CraftingMaterialsEditor from "./CraftingMaterialsEditor";
 
-const CATEGORIES = ["weapon", "armor", "tool", "consumable", "upgrade", "trade_good", "building", "custom"];
+const CATEGORIES = ["weapon", "ammo", "armor", "clothing", "backpack", "tool", "medical", "consumable", "material", "upgrade", "trade_good", "building", "custom"];
 const PRIORITIES = ["low", "normal", "high", "urgent"];
 
 // SAFETY: Creates CraftingProject records.
 // Schema requires: owner_email, title, materials (array of {resource, needed, have}).
-// Category enum: weapon|armor|tool|consumable|upgrade|trade_good|building|custom.
+// Category enum includes weapon/ammo/armor/clothing/backpack/tool/medical/consumable/material/upgrade/trade_good/building/custom.
 // Priority enum: low|normal|high|urgent. Status enum: gathering|ready|completed|abandoned.
-// TODO(schema-audit): Recipe.category includes "building" and "custom" only in CraftingProject, not in Recipe.
-//   Recipe uses: weapon|armor|tool|consumable|upgrade|trade_good. The form CATEGORIES below include extras
-//   that only CraftingProject supports. This is intentional — custom/building are project-only types.
+// TODO(schema-audit): custom/building remain project-only convenience categories.
 export default function CreateProjectForm({ userEmail: _userEmail, recipes: rawRecipes, onCreated }) {
   const recipes = Array.isArray(rawRecipes) ? rawRecipes : [];
   const queryClient = useQueryClient();
@@ -28,9 +28,10 @@ export default function CreateProjectForm({ userEmail: _userEmail, recipes: rawR
   const [category, setCategory] = useState("custom");
   const [priority, setPriority] = useState("normal");
   const [recipeId, setRecipeId] = useState("");
-  const [materials, setMaterials] = useState([{ resource: "", needed: 1, have: 0 }]);
+  const [materials, setMaterials] = useState([]);
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
+  const { data: gameItems = [] } = useGameCatalog();
 
   const loadFromRecipe = (id) => {
     setRecipeId(id);
@@ -44,18 +45,12 @@ export default function CreateProjectForm({ userEmail: _userEmail, recipes: rawR
     setMaterials(
       ingredients.map(ing => ({
         resource: ing?.resource || "",
+        game_item_slug: ing?.item_slug || "",
         needed: ing?.amount || 1,
         have: 0,
       }))
     );
   };
-
-  const updateMaterial = (idx, field, value) => {
-    setMaterials(prev => prev.map((m, i) => i === idx ? { ...m, [field]: value } : m));
-  };
-
-  const addMaterial = () => setMaterials(prev => [...prev, { resource: "", needed: 1, have: 0 }]);
-  const removeMaterial = (idx) => setMaterials(prev => prev.filter((_, i) => i !== idx));
 
   const submit = async (e) => {
     e.preventDefault();
@@ -63,6 +58,7 @@ export default function CreateProjectForm({ userEmail: _userEmail, recipes: rawR
 
     const cleanMats = materials.filter(m => m.resource.trim()).map(m => ({
       resource: m.resource.trim(),
+      game_item_slug: m.game_item_slug || "",
       needed: Math.max(1, m.needed),
       have: Math.max(0, m.have),
     }));
@@ -165,58 +161,7 @@ export default function CreateProjectForm({ userEmail: _userEmail, recipes: rawR
         />
       </div>
 
-      {/* Materials list */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label className="text-[9px] uppercase tracking-wider text-muted-foreground font-mono">
-            Materials Needed
-          </Label>
-          <Button type="button" variant="ghost" size="sm" onClick={addMaterial} className="h-5 text-[9px] text-primary">
-            <Plus className="h-3 w-3 mr-0.5" /> ADD
-          </Button>
-        </div>
-        <div className="space-y-1.5">
-          {materials.map((mat, idx) => (
-            <div key={idx} className="grid grid-cols-[1fr_70px_70px_28px] gap-1.5 items-center">
-              <Input
-                value={mat.resource}
-                onChange={e => updateMaterial(idx, "resource", e.target.value)}
-                placeholder="Resource name"
-                className="h-6 text-[10px] bg-secondary/50 border-border font-mono"
-              />
-              <Input
-                type="number"
-                min={1}
-                value={mat.needed}
-                onChange={e => updateMaterial(idx, "needed", parseInt(e.target.value) || 1)}
-                className="h-6 text-[10px] bg-secondary/50 border-border font-mono"
-                title="Needed"
-              />
-              <Input
-                type="number"
-                min={0}
-                value={mat.have}
-                onChange={e => updateMaterial(idx, "have", parseInt(e.target.value) || 0)}
-                className="h-6 text-[10px] bg-secondary/50 border-border font-mono"
-                title="Have"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                onClick={() => removeMaterial(idx)}
-                disabled={materials.length <= 1}
-              >
-                <Trash2 className="h-3 w-3" />
-              </Button>
-            </div>
-          ))}
-          <div className="grid grid-cols-[1fr_70px_70px_28px] gap-1.5 text-[8px] text-muted-foreground/60 uppercase tracking-wider font-mono px-0.5">
-            <span>Resource</span><span>Need</span><span>Have</span><span></span>
-          </div>
-        </div>
-      </div>
+      <CraftingMaterialsEditor catalog={gameItems} value={materials} onChange={setMaterials} />
 
       <Button type="submit" size="sm" disabled={saving || !title.trim()} className="w-full font-mono text-[10px] uppercase tracking-wider h-7">
         <Hammer className="h-3 w-3 mr-1" /> {saving ? "CREATING..." : "CREATE PROJECT"}

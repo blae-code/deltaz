@@ -1,0 +1,118 @@
+{
+  "name": "GameCatalogState",
+  "type": "object",
+  "properties": {
+    "key": {
+      "type": "string",
+      "description": "Singleton key for the active catalog state"
+    },
+    "active_catalog_version": {
+      "type": "string",
+      "description": "Currently active catalog version used by the app"
+    },
+    "snapshot_catalog_version": {
+      "type": "string",
+      "description": "Latest checked-in snapshot version applied to Base44"
+    },
+    "live_catalog_version": {
+      "type": "string",
+      "description": "Latest admin-triggered live sync version applied to Base44"
+    },
+    "active_sync_mode": {
+      "type": "string",
+      "enum": [
+        "snapshot",
+        "live"
+      ],
+      "default": "snapshot"
+    },
+    "last_sync_mode": {
+      "type": "string",
+      "enum": [
+        "bootstrap",
+        "snapshot",
+        "live",
+        "backfill"
+      ],
+      "default": "bootstrap"
+    },
+    "last_sync_status": {
+      "type": "string",
+      "enum": [
+        "idle",
+        "running",
+        "ok",
+        "error"
+      ],
+      "default": "idle"
+    },
+    "last_sync_at": {
+      "type": "string",
+      "description": "ISO timestamp of the last catalog operation"
+    },
+    "last_snapshot_sync_at": {
+      "type": "string",
+      "description": "ISO timestamp of the last snapshot reseed"
+    },
+    "last_live_sync_at": {
+      "type": "string",
+      "description": "ISO timestamp of the last live sync"
+    },
+    "item_count": {
+      "type": "number",
+      "default": 0
+    },
+    "recipe_count": {
+      "type": "number",
+      "default": 0
+    },
+    "backfill_target_version": {
+      "type": "string",
+      "description": "Catalog version current records should be migrated toward"
+    },
+    "backfill_completed_version": {
+      "type": "string",
+      "description": "Latest catalog version fully backfilled across existing records"
+    },
+    "backfill_status": {
+      "type": "string",
+      "enum": [
+        "idle",
+        "running",
+        "completed",
+        "error"
+      ],
+      "default": "idle"
+    },
+    "backfill_lock_id": {
+      "type": "string",
+      "description": "Temporary lock token for the active chunked backfill runner"
+    },
+    "backfill_lock_expires_at": {
+      "type": "string",
+      "description": "ISO timestamp when the current backfill lock expires"
+    },
+    "backfill_cursors": {
+      "type": "object",
+      "description": "Per-entity cursor state for chunked backfill"
+    },
+    "backfill_counts": {
+      "type": "object",
+      "description": "Scanned, updated, and unmatched counters for the current target version"
+    },
+    "source_manifest": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Allowlisted upstream sources used for the active catalog"
+    },
+    "last_error": {
+      "type": "string",
+      "description": "Most recent catalog operation error"
+    }
+  },
+  "required": [
+    "key"
+  ]
+}

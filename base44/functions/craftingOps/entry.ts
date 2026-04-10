@@ -1,15 +1,20 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.24';
 import { DATA_ORIGINS, buildSourceRef, withProvenance } from '../_shared/provenance.ts';
-import { STARTER_RECIPE_CATALOG } from '../_shared/recipeCatalog.ts';
+import { REFERENCE_RECIPE_CATALOG } from '../_shared/recipeCatalog.ts';
 
-const PROJECT_CATEGORIES = new Set(['weapon', 'armor', 'tool', 'consumable', 'upgrade', 'trade_good', 'building', 'custom']);
-const RECIPE_CATEGORIES = new Set(['weapon', 'armor', 'tool', 'consumable', 'upgrade', 'trade_good']);
+const PROJECT_CATEGORIES = new Set(['weapon', 'ammo', 'armor', 'clothing', 'backpack', 'tool', 'medical', 'consumable', 'material', 'upgrade', 'trade_good', 'building', 'custom']);
+const RECIPE_CATEGORIES = new Set(['weapon', 'ammo', 'armor', 'clothing', 'backpack', 'tool', 'medical', 'consumable', 'material', 'upgrade', 'trade_good']);
 const PRIORITIES = new Set(['low', 'normal', 'high', 'urgent']);
 const INVENTORY_CATEGORY_MAP: Record<string, string> = {
   weapon: 'weapon',
+  ammo: 'ammo',
   armor: 'armor',
+  clothing: 'armor',
+  backpack: 'armor',
   tool: 'tool',
+  medical: 'consumable',
   consumable: 'consumable',
+  material: 'material',
   upgrade: 'misc',
   trade_good: 'misc',
   building: 'misc',
@@ -47,7 +52,7 @@ Deno.serve(async (req) => {
       );
 
       const created = [];
-      for (const recipe of STARTER_RECIPE_CATALOG) {
+      for (const recipe of REFERENCE_RECIPE_CATALOG) {
         if (existingSlugs.has(recipe.slug)) {
           continue;
         }
@@ -57,6 +62,21 @@ Deno.serve(async (req) => {
           category: normalizeRecipeCategory(recipe.category),
           difficulty: normalizeRecipeDifficulty(recipe.difficulty),
           ingredients: normalizeIngredients(recipe.ingredients),
+          item_slug: sanitizeText((recipe as any).item_slug, 160),
+          crafting_station: sanitizeText((recipe as any).crafting_station, 120),
+          crafting_time_seconds: clampNumber((recipe as any).crafting_time_seconds, 0, 999999, 0),
+          crafted_durability: clampNumber((recipe as any).crafted_durability, 0, 100, 0),
+          requires_recipe: Boolean((recipe as any).requires_recipe),
+          return_item: sanitizeText((recipe as any).return_item, 120),
+          return_amount: clampNumber((recipe as any).return_amount, 0, 999, 0),
+          return_durability: clampNumber((recipe as any).return_durability, 0, 100, 0),
+          source_scope: sanitizeText((recipe as any).source_scope, 40),
+          source_dataset: sanitizeText((recipe as any).source_dataset, 80),
+          source_url: sanitizeText((recipe as any).source_url, 240),
+          source_urls: Array.isArray((recipe as any).source_urls)
+            ? (recipe as any).source_urls.map((entry: unknown) => sanitizeText(entry, 240)).filter(Boolean).slice(0, 24)
+            : [],
+          catalog_version: sanitizeText((recipe as any).catalog_version, 80),
           bonus_type: sanitizeText(recipe.bonus_type, 40),
           bonus_value: clampNumber(recipe.bonus_value, 0, 999, 0),
           output_value: clampNumber(recipe.output_value, 0, 999999, 0),
@@ -65,7 +85,12 @@ Deno.serve(async (req) => {
         }, {
           dataOrigin: DATA_ORIGINS.SYSTEM_RULE,
           sourceRefs: [
-            buildSourceRef('RecipeCatalog', 'starter-v1', recipe.slug),
+            buildSourceRef('RecipeCatalog', 'humanitz-community', recipe.slug),
+            ...(
+              Array.isArray((recipe as any).source_urls)
+                ? (recipe as any).source_urls
+                : []
+            ),
           ],
         })));
         existingSlugs.add(recipe.slug);
@@ -106,6 +131,7 @@ Deno.serve(async (req) => {
       }
 
       const outputName = sanitizeText(recipe?.name || body.output_name || title, 120);
+      const outputItemSlug = sanitizeText(recipe?.item_slug || body.output_item_slug, 160);
       const outputCategory = normalizeProjectCategory(recipe?.category || body.output_category || category);
       const outputValue = clampNumber(recipe?.output_value ?? body.output_value, 0, 999999, 0);
       const outputQuantity = clampNumber(recipe?.output_quantity ?? body.output_quantity, 1, 999, 1);
@@ -121,6 +147,7 @@ Deno.serve(async (req) => {
         status: projectStatus,
         materials,
         output_name: outputName,
+        output_item_slug: outputItemSlug,
         output_category: outputCategory,
         output_value: outputValue,
         output_quantity: outputQuantity,
@@ -172,6 +199,7 @@ Deno.serve(async (req) => {
 
       const completedAt = new Date().toISOString();
       const outputName = sanitizeText(project.output_name || project.title, 120);
+      const outputItemSlug = sanitizeText(project.output_item_slug, 160);
       const outputCategory = normalizeProjectCategory(project.output_category || project.category);
       const outputValue = clampNumber(project.output_value, 0, 999999, 0);
       const outputQuantity = clampNumber(project.output_quantity, 1, 999, 1);
@@ -185,6 +213,7 @@ Deno.serve(async (req) => {
         status: 'completed',
         completed_at: completedAt,
         output_name: outputName,
+        output_item_slug: outputItemSlug,
         output_category: outputCategory,
         output_value: outputValue,
         output_quantity: outputQuantity,
@@ -211,6 +240,7 @@ Deno.serve(async (req) => {
       const craftedItem = alreadyCreated || await base44.asServiceRole.entities.InventoryItem.create(withProvenance({
         owner_email: project.owner_email,
         name: outputName,
+        game_item_slug: outputItemSlug,
         category: INVENTORY_CATEGORY_MAP[outputCategory] || 'misc',
         quantity: outputQuantity,
         condition: 100,
@@ -347,6 +377,7 @@ function normalizeIngredients(value: unknown) {
   return value
     .map((item) => ({
       resource: sanitizeText(item?.resource, 80),
+      item_slug: sanitizeText(item?.item_slug, 160),
       amount: clampNumber(item?.amount, 1, 999, 1),
     }))
     .filter((item) => item.resource);
@@ -361,6 +392,7 @@ function normalizeMaterials(value: unknown, fallbackIngredients: unknown[] = [])
   return source
     .map((item) => ({
       resource: sanitizeText(item?.resource, 80),
+      game_item_slug: sanitizeText(item?.game_item_slug || item?.item_slug, 160),
       needed: clampNumber(item?.needed ?? item?.amount, 1, 999, 1),
       have: clampNumber(item?.have, 0, 999, 0),
     }))

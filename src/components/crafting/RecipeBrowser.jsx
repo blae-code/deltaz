@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Search, Plus, Check, X } from "lucide-react";
 import GuidanceBox from "../terminal/GuidanceBox";
 import { useToast } from "@/components/ui/use-toast";
+import { getInventoryCountForLineItem } from "@/lib/gameCatalog";
 
 const diffColor = {
   basic: "text-primary",
@@ -29,12 +30,12 @@ export default function RecipeBrowser({ recipes, inventory, userEmail: _userEmai
     return true;
   });
 
-  const getInventoryCount = (resourceName) => {
-    if (!resourceName) return 0;
-    const lower = resourceName.toLowerCase();
-    return inventory
-      .filter(i => i.name && i.name.toLowerCase().includes(lower))
-      .reduce((sum, i) => sum + (i.quantity || 1), 0);
+  const getInventoryCount = (ingredient) => {
+    if (!ingredient) return 0;
+    return getInventoryCountForLineItem(inventory, {
+      game_item_slug: ingredient.item_slug,
+      name: ingredient.resource,
+    });
   };
 
   const startProject = async (recipe) => {
@@ -48,6 +49,7 @@ export default function RecipeBrowser({ recipes, inventory, userEmail: _userEmai
       status: "gathering",
       materials: (recipe.ingredients || []).map(ing => ({
         resource: ing.resource,
+        game_item_slug: ing.item_slug || "",
         needed: ing.amount,
         have: 0,
       })),
@@ -99,7 +101,7 @@ export default function RecipeBrowser({ recipes, inventory, userEmail: _userEmai
         <div className="space-y-2 max-h-[400px] overflow-y-auto">
           {filtered.map(recipe => {
             const ingredients = recipe.ingredients || [];
-            const canCraft = ingredients.every(ing => getInventoryCount(ing.resource) >= ing.amount);
+            const canCraft = ingredients.every(ing => getInventoryCount(ing) >= ing.amount);
 
             return (
               <div key={recipe.id} className="border border-border bg-secondary/20 rounded-sm p-2.5">
@@ -133,7 +135,7 @@ export default function RecipeBrowser({ recipes, inventory, userEmail: _userEmai
                 {/* Ingredients */}
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {ingredients.map((ing, idx) => {
-                    const invCount = getInventoryCount(ing.resource);
+                    const invCount = getInventoryCount(ing);
                     const hasEnough = invCount >= ing.amount;
                     return (
                       <div
@@ -153,6 +155,13 @@ export default function RecipeBrowser({ recipes, inventory, userEmail: _userEmai
                 {recipe.bonus_type && recipe.bonus_type !== "none" && (
                   <div className="mt-1.5 text-[10px] text-chart-4 font-mono">
                     +{recipe.bonus_value || 0}% {recipe.bonus_type} • Value: {recipe.output_value || 0}c
+                  </div>
+                )}
+                {(recipe.crafting_station || recipe.crafting_time_seconds || recipe.requires_recipe) && (
+                  <div className="mt-1.5 text-[9px] text-muted-foreground font-mono uppercase tracking-wider">
+                    {recipe.crafting_station || "Field Craft"}
+                    {recipe.crafting_time_seconds ? ` • ${recipe.crafting_time_seconds}s` : ""}
+                    {recipe.requires_recipe ? " • RECIPE REQUIRED" : ""}
                   </div>
                 )}
               </div>

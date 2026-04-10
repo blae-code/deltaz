@@ -10,6 +10,8 @@
     "backend:guard": "node ./scripts/guard-backend-boundary.mjs",
     "backend:status": "node ./scripts/backend-status.mjs",
     "backend:ship:check": "node ./scripts/backend-ship-check.mjs",
+    "data:sync:humanitz": "node ./scripts/generate-humanitz-catalog.mjs",
+    "test:data": "node --test tests/*.test.mjs",
     "lint": "eslint . --quiet",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc -p ./jsconfig.json",

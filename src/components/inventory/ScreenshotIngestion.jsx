@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Camera, Upload, Loader2, Check, X, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import useGameCatalog from "@/hooks/useGameCatalog";
+import { buildInventoryRecordFromCatalog, matchGameItemByName } from "@/lib/gameCatalog";
 
 const CATEGORIES = ["weapon", "armor", "tool", "consumable", "material", "ammo", "misc"];
 
@@ -17,6 +19,7 @@ export default function ScreenshotIngestion({ userEmail, onComplete }) {
   const fileRef = useRef(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { data: gameItems = [] } = useGameCatalog();
 
   const handleFile = (e) => {
     const f = e.target.files?.[0];
@@ -80,16 +83,21 @@ Be thorough — extract ALL visible items even if partially obscured.`,
   const saveAll = async () => {
     if (!parsedItems?.items?.length) return;
     setSaving(true);
-    const records = parsedItems.items.map((item) => ({
-      owner_email: userEmail,
-      name: item.name,
-      category: item.category || "misc",
-      rarity: item.rarity || "common",
-      quantity: Math.max(1, item.quantity || 1),
-      value: item.value || 0,
-      condition: item.condition || 100,
-      source: "screenshot scan",
-    }));
+    const records = parsedItems.items.map((item) => {
+      const matched = matchGameItemByName(gameItems, item.name);
+      const defaults = matched ? buildInventoryRecordFromCatalog(matched) : null;
+      return {
+        owner_email: userEmail,
+        name: defaults?.name || item.name,
+        game_item_slug: defaults?.game_item_slug || "",
+        category: defaults?.category || item.category || "misc",
+        rarity: defaults?.rarity || item.rarity || "common",
+        quantity: Math.max(1, item.quantity || 1),
+        value: defaults?.value ?? item.value ?? 0,
+        condition: item.condition || 100,
+        source: matched ? "screenshot scan • catalog matched" : "screenshot scan",
+      };
+    });
     await base44.entities.InventoryItem.bulkCreate(records);
     toast({ title: "Inventory Imported", description: `${records.length} items added from screenshot` });
     queryClient.invalidateQueries({ queryKey: ["inventory"] });
@@ -185,7 +193,9 @@ Be thorough — extract ALL visible items even if partially obscured.`,
           )}
 
           <div className="max-h-60 overflow-y-auto space-y-1 border border-border rounded-sm">
-            {parsedItems.items.map((item, idx) => (
+            {parsedItems.items.map((item, idx) => {
+              const matched = matchGameItemByName(gameItems, item.name);
+              return (
               <div
                 key={idx}
                 className="flex items-center gap-2 px-3 py-1.5 border-b border-border/50 text-[10px] hover:bg-secondary/20"
@@ -194,13 +204,19 @@ Be thorough — extract ALL visible items even if partially obscured.`,
                   {item.name}
                 </span>
                 <Badge variant="outline" className="text-[8px] shrink-0">{item.category?.toUpperCase()}</Badge>
+                {matched && (
+                  <Badge variant="outline" className="text-[8px] shrink-0 border-primary/30 text-primary">
+                    CATALOG
+                  </Badge>
+                )}
                 <span className="text-muted-foreground w-8 text-right shrink-0">×{item.quantity || 1}</span>
                 <span className="text-accent w-10 text-right shrink-0">{item.value || 0}c</span>
                 <button onClick={() => removeItem(idx)} className="text-muted-foreground hover:text-destructive shrink-0 p-0.5">
                   <Trash2 className="h-3 w-3" />
                 </button>
               </div>
-            ))}
+              );
+            })}
           </div>
 
           <Button

@@ -3,24 +3,25 @@ import { base44 } from "@/api/base44Client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, ArrowLeftRight, Loader2, MapPin, Coins, Package, TrendingUp, Filter } from "lucide-react";
+import { Search, ArrowLeftRight, Loader2, MapPin, Coins, Package, Filter } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-
-const rarityColors = {
-  common: "text-muted-foreground border-border",
-  uncommon: "text-status-ok border-status-ok/30",
-  rare: "text-chart-4 border-chart-4/30",
-  epic: "text-purple-400 border-purple-400/30",
-  legendary: "text-accent border-accent/30",
-};
+import useGameCatalog from "@/hooks/useGameCatalog";
+import { describeTradeFulfillmentGap, formatTradeLineItems, getStructuredTradeOffer } from "@/lib/gameCatalog";
 
 const categoryIcons = {
   weapon: "⚔️", armor: "🛡️", tool: "🔧", consumable: "💊",
   material: "📦", ammo: "🔫", misc: "📎",
 };
 
-export default function PlayerTradeBoard({ userEmail, commodities, factions, economies }) {
+export default function PlayerTradeBoard({
+  userEmail,
+  userInventory = [],
+  userCredits = 0,
+  commodities,
+  factions: _factions = [],
+  economies: _economies = [],
+}) {
   const [trades, setTrades] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -29,6 +30,7 @@ export default function PlayerTradeBoard({ userEmail, commodities, factions, eco
   const [sortBy, setSortBy] = useState("newest");
   const [accepting, setAccepting] = useState(null);
   const { toast } = useToast();
+  const { data: gameItems = [] } = useGameCatalog();
 
   useEffect(() => {
     base44.entities.TradeOffer.filter({ status: "open" }, "-created_date", 200)
@@ -43,56 +45,78 @@ export default function PlayerTradeBoard({ userEmail, commodities, factions, eco
     return unsub;
   }, []);
 
+  const structuredTrades = trades.map((trade) => ({
+    raw: trade,
+    structured: getStructuredTradeOffer(trade, gameItems),
+  }));
   const sectors = ["all", ...new Set(trades.map(t => t.sector).filter(Boolean))].sort();
-  const categories = ["all", ...new Set(trades.map(t => t.item_category).filter(Boolean))];
+  const categories = ["all", ...new Set(structuredTrades.map(({ structured }) => {
+    const primary = structured.listing_type === "want" ? structured.requested_items?.[0] : structured.offered_items?.[0];
+    return primary?.inventory_category || "";
+  }).filter(Boolean))];
 
   // Get market value context for items
-  const getMarketHint = (trade) => {
+  const getMarketHint = (trade, structuredTrade) => {
     if (!commodities || commodities.length === 0) return null;
+    const primary = structuredTrade.listing_type === "want" ? structuredTrade.requested_items?.[0] : structuredTrade.offered_items?.[0];
+    const category = primary?.inventory_category || trade.item_category;
     const catMap = { material: "metals", ammo: "munitions", consumable: "food", tool: "tech" };
-    const commodity = commodities.find(c => c.resource_type === catMap[trade.item_category]);
+    const commodity = commodities.find(c => c.resource_type === catMap[category]);
     if (!commodity) return null;
-    const marketValue = commodity.current_price * (trade.quantity || 1);
-    if (trade.asking_price <= 0) return null;
-    const ratio = trade.asking_price / marketValue;
+    const quantity = primary?.quantity || trade.quantity || 1;
+    const marketValue = commodity.current_price * quantity;
+    const askingPrice = structuredTrade.listing_type === "want" ? structuredTrade.offered_credits : structuredTrade.requested_credits;
+    if (askingPrice <= 0) return null;
+    const ratio = askingPrice / marketValue;
     if (ratio < 0.7) return { label: "BELOW MARKET", color: "text-status-ok" };
     if (ratio > 1.3) return { label: "ABOVE MARKET", color: "text-status-danger" };
     return { label: "FAIR PRICE", color: "text-muted-foreground" };
   };
 
-  const filtered = trades
-    .filter(t => {
+  const filtered = structuredTrades
+    .filter(({ raw: t, structured }) => {
+      const requestedItems = Array.isArray(structured.requested_items) ? structured.requested_items : [];
+      const offeredItems = Array.isArray(structured.offered_items) ? structured.offered_items : [];
+      const primaryDisplay = structured.listing_type === "want"
+        ? formatTradeLineItems(requestedItems)
+        : formatTradeLineItems(offeredItems);
+      const primary = structured.listing_type === "want" ? requestedItems[0] : offeredItems[0];
       if (t.status !== "open") return false;
       if (t.seller_email === userEmail) return false;
       if (sectorFilter !== "all" && t.sector !== sectorFilter) return false;
-      if (categoryFilter !== "all" && t.item_category !== categoryFilter) return false;
-      if (search && !t.item_name?.toLowerCase().includes(search.toLowerCase())) return false;
+      if (categoryFilter !== "all" && (primary?.inventory_category || t.item_category) !== categoryFilter) return false;
+      if (search && !primaryDisplay?.toLowerCase().includes(search.toLowerCase())) return false;
       return true;
     })
-    .sort((a, b) => {
-      if (sortBy === "price_low") return (a.asking_price || 0) - (b.asking_price || 0);
-      if (sortBy === "price_high") return (b.asking_price || 0) - (a.asking_price || 0);
-      return new Date(b.created_date) - new Date(a.created_date);
+    .sort((left, right) => {
+      const leftPrice = left.structured.listing_type === "want" ? left.structured.offered_credits : left.structured.requested_credits;
+      const rightPrice = right.structured.listing_type === "want" ? right.structured.offered_credits : right.structured.requested_credits;
+      if (sortBy === "price_low") return leftPrice - rightPrice;
+      if (sortBy === "price_high") return rightPrice - leftPrice;
+      return new Date(right.raw.created_date) - new Date(left.raw.created_date);
     });
 
-  const handleAccept = async (trade) => {
+  const handleSettlement = async (trade) => {
+    const structured = getStructuredTradeOffer(trade, gameItems);
     setAccepting(trade.id);
-    await base44.entities.TradeOffer.update(trade.id, {
-      status: "accepted",
-      buyer_email: userEmail,
-    });
-    await base44.entities.InventoryItem.create({
-      owner_email: userEmail,
-      name: trade.item_name,
-      category: trade.item_category || "misc",
-      quantity: trade.quantity || 1,
-      rarity: "common",
-      value: trade.asking_price || 0,
-      source: `Trade from ${trade.seller_callsign || trade.seller_email}`,
-      sector: trade.sector,
-    });
-    toast({ title: "Trade Accepted", description: `Acquired ${trade.quantity || 1}x ${trade.item_name}` });
-    setAccepting(null);
+    try {
+      await base44.functions.invoke("tradeOps", {
+        action: structured.listing_type === "want" ? "fulfill_listing" : "accept_listing",
+        listing_id: trade.id,
+      });
+      toast({
+        title: structured.listing_type === "want" ? "Listing Fulfilled" : "Trade Accepted",
+        description: "Settlement completed.",
+      });
+    } catch (error) {
+      toast({
+        title: "Settlement Failed",
+        description: error?.message || "Trade could not be completed.",
+        variant: "destructive",
+      });
+    } finally {
+      setAccepting(null);
+    }
   };
 
   if (loading) {
@@ -171,20 +195,32 @@ export default function PlayerTradeBoard({ userEmail, commodities, factions, eco
         </div>
       ) : (
         <div className="space-y-2">
-          {filtered.map(trade => {
-            const marketHint = getMarketHint(trade);
+          {filtered.map(({ raw: trade, structured }) => {
+            const requestedItems = Array.isArray(structured.requested_items) ? structured.requested_items : [];
+            const offeredItems = Array.isArray(structured.offered_items) ? structured.offered_items : [];
+            const primary = structured.listing_type === "want" ? requestedItems[0] : offeredItems[0];
+            const marketHint = getMarketHint(trade, structured);
+            const primaryDisplay = structured.listing_type === "want"
+              ? formatTradeLineItems(requestedItems)
+              : formatTradeLineItems(offeredItems);
+            const fulfillmentGap = describeTradeFulfillmentGap(
+              userInventory,
+              requestedItems,
+              userCredits,
+              structured.requested_credits,
+            );
             return (
               <div key={trade.id} className="border border-border bg-card rounded-sm p-3 hover:border-primary/20 transition-colors">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[9px]">{categoryIcons[trade.item_category] || "📎"}</span>
-                      <span className="text-[11px] font-semibold font-mono text-foreground">{trade.item_name}</span>
-                      {trade.quantity > 1 && (
-                        <Badge variant="outline" className="text-[8px]">x{trade.quantity}</Badge>
+                      <span className="text-[9px]">{categoryIcons[primary?.inventory_category] || "📎"}</span>
+                      <span className="text-[11px] font-semibold font-mono text-foreground">{primaryDisplay || trade.item_name}</span>
+                      {primary?.inventory_category && (
+                        <Badge variant="outline" className="text-[7px] uppercase">{primary.inventory_category}</Badge>
                       )}
-                      {trade.item_category && (
-                        <Badge variant="outline" className="text-[7px] uppercase">{trade.item_category}</Badge>
+                      {structured.listing_type === "want" && (
+                        <Badge variant="outline" className="text-[7px] uppercase border-accent/30 text-accent">SEEKING</Badge>
                       )}
                       {marketHint && (
                         <span className={`text-[7px] font-mono tracking-wider ${marketHint.color}`}>
@@ -203,30 +239,41 @@ export default function PlayerTradeBoard({ userEmail, commodities, factions, eco
                       )}
                     </div>
                     {/* Barter request */}
-                    {trade.asking_items && (
+                    {structured.listing_type === "offer" && requestedItems.length > 0 && (
                       <div className="flex items-center gap-1 mt-1.5 bg-accent/5 border border-accent/10 rounded-sm px-2 py-1">
                         <Package className="h-3 w-3 text-accent shrink-0" />
-                        <span className="text-[9px] text-accent font-mono">BARTER: {trade.asking_items}</span>
+                        <span className="text-[9px] text-accent font-mono">BARTER: {formatTradeLineItems(requestedItems)}</span>
                       </div>
+                    )}
+                    {structured.listing_type === "want" && offeredItems.length > 0 && (
+                      <div className="flex items-center gap-1 mt-1.5 bg-primary/5 border border-primary/10 rounded-sm px-2 py-1">
+                        <Package className="h-3 w-3 text-primary shrink-0" />
+                        <span className="text-[9px] text-primary font-mono">OFFERING: {formatTradeLineItems(offeredItems)}</span>
+                      </div>
+                    )}
+                    {fulfillmentGap.message && !fulfillmentGap.ok && (
+                      <p className="mt-1.5 text-[9px] text-muted-foreground font-mono">{fulfillmentGap.message}</p>
                     )}
                   </div>
                   <div className="flex flex-col items-end gap-1.5 shrink-0">
-                    {trade.asking_price > 0 && (
+                    {(structured.listing_type === "offer" ? structured.requested_credits : structured.offered_credits) > 0 && (
                       <div className="flex items-center gap-1">
                         <Coins className="h-3 w-3 text-primary" />
-                        <span className="text-sm font-bold text-primary font-mono">{trade.asking_price}c</span>
+                        <span className="text-sm font-bold text-primary font-mono">{structured.listing_type === "offer" ? structured.requested_credits : structured.offered_credits}c</span>
                       </div>
                     )}
-                    {!trade.asking_price && !trade.asking_items && (
+                    {(structured.listing_type === "offer"
+                      ? (!structured.requested_credits && (!structured.requested_items || structured.requested_items.length === 0))
+                      : (!structured.offered_credits && (!structured.offered_items || structured.offered_items.length === 0))) && (
                       <span className="text-[9px] text-status-ok font-mono">FREE</span>
                     )}
                     <Button
                       size="sm"
                       className="h-7 text-[9px] uppercase tracking-wider"
-                      onClick={() => handleAccept(trade)}
-                      disabled={accepting === trade.id}
+                      onClick={() => handleSettlement(trade)}
+                      disabled={accepting === trade.id || !fulfillmentGap.ok}
                     >
-                      {accepting === trade.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "ACCEPT"}
+                      {accepting === trade.id ? <Loader2 className="h-3 w-3 animate-spin" /> : structured.listing_type === "offer" ? "ACCEPT" : "FULFILL"}
                     </Button>
                   </div>
                 </div>

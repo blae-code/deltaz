@@ -23,7 +23,7 @@ export default function TradeHub() {
   const [prefillDeal, setPrefillDeal] = useState(null);
 
   // User's inventory — drives the gear picker and the "YOU HAVE THIS" badge
-  const { data: items = [], isLoading: itemsLoading } = useEntityQuery(
+  const { data: items = [] } = useEntityQuery(
     ["inventory", user?.email],
     () => user ? base44.entities.InventoryItem.filter({ owner_email: user.email }, "-created_date", 200) : Promise.resolve([]),
     { subscribeEntities: ["InventoryItem"], queryOpts: { enabled: !!user?.email } }
@@ -38,20 +38,14 @@ export default function TradeHub() {
 
   // Called from a Trade Post card — switches to Deals tab pre-filled for that listing
   const handleProposeDeal = (trade) => {
-    const isWant = trade.type === "want";
-    setPrefillDeal(isWant ? {
-      // I'm supplying what they want → pre-fill my offer with their sought item
+    const isWant = trade.listing_type === "want";
+    setPrefillDeal({
       receiverEmail: trade.seller_email,
       receiverCallsign: trade.seller_callsign,
-      offerItems: trade.item_name,
-      requestItems: trade.asking_items || "",
-      requestCredits: trade.asking_price || 0,
-    } : {
-      // I want what they're listing → pre-fill my request with their item
-      receiverEmail: trade.seller_email,
-      receiverCallsign: trade.seller_callsign,
-      requestItems: `${trade.quantity > 1 ? `${trade.quantity}x ` : ""}${trade.item_name}`,
-      requestCredits: 0,
+      offeredItems: trade.requested_items || [],
+      requestedItems: trade.offered_items || [],
+      offeredCredits: isWant ? 0 : (trade.requested_credits || 0),
+      requestedCredits: isWant ? (trade.offered_credits || 0) : 0,
     });
     setTab("deals");
     setShowCreateDeal(true);
@@ -123,6 +117,7 @@ export default function TradeHub() {
           <SectorTradeBoard
             userEmail={user?.email}
             userInventory={items}
+            userCredits={user?.credits || 0}
             onProposeDeal={handleProposeDeal}
           />
         </>
@@ -156,7 +151,7 @@ export default function TradeHub() {
             </DataCard>
           )}
 
-          <TradeRequestList userEmail={user?.email} />
+          <TradeRequestList userEmail={user?.email} userInventory={items} userCredits={user?.credits || 0} />
         </>
       )}
 

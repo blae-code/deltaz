@@ -7,23 +7,15 @@ import EmptyState from "../terminal/EmptyState";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeftRight, Search } from "lucide-react";
+import useGameCatalog from "@/hooks/useGameCatalog";
+import { canFulfillTradeRequirements, getStructuredTradeOffer } from "@/lib/gameCatalog";
 
-// Checks if the user's inventory contains something matching a want listing's item name.
-// Simple substring match — good enough for player-entered data.
-function inventoryHasMatch(wantName, inventory) {
-  if (!wantName || !inventory?.length) return null;
-  const needle = wantName.toLowerCase().replace(/^\d+x\s+/, ""); // strip "2x " prefix
-  return inventory.find(i => {
-    const haystack = (i.name || "").toLowerCase();
-    return haystack.includes(needle) || needle.includes(haystack);
-  }) || null;
-}
-
-export default function SectorTradeBoard({ userEmail, userInventory = [], onProposeDeal }) {
+export default function SectorTradeBoard({ userEmail, userInventory = [], userCredits = 0, onProposeDeal }) {
   const [trades, setTrades] = useState([]);
   const [sectorFilter, setSectorFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [boardTab, setBoardTab] = useState("listings"); // "listings" | "wants"
+  const { data: gameItems = [] } = useGameCatalog();
 
   const loadTrades = async () => {
     const all = await base44.entities.TradeOffer.filter({ status: "open" }, "-created_date", 100);
@@ -48,9 +40,13 @@ export default function SectorTradeBoard({ userEmail, userInventory = [], onProp
   const filtered = sectorFilter
     ? trades.filter(t => t.sector?.toUpperCase().includes(sectorFilter.toUpperCase()))
     : trades;
+  const structuredTrades = filtered.map((trade) => ({
+    raw: trade,
+    structured: getStructuredTradeOffer(trade, gameItems),
+  }));
 
-  const listings = filtered.filter(t => t.type !== "want");
-  const wants = filtered.filter(t => t.type === "want");
+  const listings = structuredTrades.filter(t => t.structured.listing_type !== "want").map((entry) => entry.raw);
+  const wants = structuredTrades.filter(t => t.structured.listing_type === "want").map((entry) => entry.raw);
 
   const myListings = listings.filter(t => t.seller_email === userEmail);
   const otherListings = listings.filter(t => t.seller_email !== userEmail);
@@ -58,7 +54,15 @@ export default function SectorTradeBoard({ userEmail, userInventory = [], onProp
   const otherWants = wants.filter(t => t.seller_email !== userEmail);
 
   // How many of the other players' want listings can I supply from my own inventory?
-  const suppliableCount = otherWants.filter(t => inventoryHasMatch(t.item_name, userInventory)).length;
+  const suppliableCount = otherWants.filter((trade) => {
+    const structured = getStructuredTradeOffer(trade, gameItems);
+    return canFulfillTradeRequirements(
+      userInventory,
+      structured.requested_items,
+      userCredits,
+      structured.requested_credits,
+    );
+  }).length;
 
   return (
     <div className="space-y-4">
@@ -136,6 +140,8 @@ export default function SectorTradeBoard({ userEmail, userInventory = [], onProp
                     trade={t}
                     isOwn={false}
                     userEmail={userEmail}
+                    userInventory={userInventory}
+                    userCredits={userCredits}
                     onUpdate={loadTrades}
                     onProposeDeal={onProposeDeal}
                   />
@@ -182,6 +188,7 @@ export default function SectorTradeBoard({ userEmail, userInventory = [], onProp
                     isOwn={false}
                     userEmail={userEmail}
                     userInventory={userInventory}
+                    userCredits={userCredits}
                     onUpdate={loadTrades}
                     onProposeDeal={onProposeDeal}
                   />

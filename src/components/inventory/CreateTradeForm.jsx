@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,76 +6,80 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeftRight, Search } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import useGameCatalog from "@/hooks/useGameCatalog";
+import { buildTradeLineItemFromInventory } from "@/lib/gameCatalog";
+import TradeLineItemsEditor from "@/components/trading/TradeLineItemsEditor";
 
-// Handles both "offer" (I have this) and "want" (I need this) listings.
-// The TradeOffer entity uses `type` field to distinguish them.
-export default function CreateTradeForm({ items: rawItems, userEmail, userCallsign, onCreated }) {
+export default function CreateTradeForm({ items: rawItems, onCreated }) {
   const items = Array.isArray(rawItems) ? rawItems : [];
-  const [mode, setMode] = useState("offer"); // "offer" | "want"
-
-  // Offer mode fields
+  const [mode, setMode] = useState("offer");
   const [selectedItemId, setSelectedItemId] = useState("");
   const [quantity, setQuantity] = useState(1);
-  const [askingPrice, setAskingPrice] = useState(0);
-  const [askingItems, setAskingItems] = useState("");
-
-  // Want mode fields
-  const [wantItemName, setWantItemName] = useState("");
-  const [wantQuantity, setWantQuantity] = useState(1);
-  const [canOfferItems, setCanOfferItems] = useState("");
+  const [requestedItems, setRequestedItems] = useState([]);
+  const [requestedCredits, setRequestedCredits] = useState(0);
+  const [wantItems, setWantItems] = useState([]);
+  const [canOfferItems, setCanOfferItems] = useState([]);
   const [canOfferCredits, setCanOfferCredits] = useState(0);
-
   const [sector, setSector] = useState("");
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
+  const { data: gameItems = [] } = useGameCatalog();
 
-  const tradableItems = items.filter(i => i?.name && !i.is_equipped && (i.quantity || 1) > 0);
-  const selectedItem = items.find(i => i.id === selectedItemId);
+  const tradableItems = useMemo(
+    () => items.filter((item) => item?.name && !item.is_equipped && (item.quantity || 1) > 0),
+    [items],
+  );
+  const selectedItem = useMemo(
+    () => tradableItems.find((item) => item.id === selectedItemId) || null,
+    [tradableItems, selectedItemId],
+  );
 
-  const submit = async (e) => {
-    e.preventDefault();
-    if (!sector.trim()) return;
-    if (mode === "offer" && !selectedItemId) return;
-    if (mode === "want" && !wantItemName.trim()) return;
-    setSaving(true);
-
-    if (mode === "offer") {
-      await base44.entities.TradeOffer.create({
-        seller_email: userEmail,
-        seller_callsign: userCallsign,
-        item_id: selectedItemId,
-        item_name: selectedItem?.name || "Unknown",
-        item_category: selectedItem?.category || "misc",
-        quantity: Math.min(quantity, selectedItem?.quantity || 1),
-        asking_price: askingPrice,
-        asking_items: askingItems,
-        sector: sector.trim().toUpperCase(),
-        status: "open",
-        type: "offer",
-      });
-      toast({ title: "Trade Posted", description: `${selectedItem?.name} listed for trade` });
-    } else {
-      await base44.entities.TradeOffer.create({
-        seller_email: userEmail,
-        seller_callsign: userCallsign,
-        item_name: `${wantQuantity > 1 ? `${wantQuantity}x ` : ""}${wantItemName.trim()}`,
-        quantity: wantQuantity,
-        asking_price: canOfferCredits,
-        asking_items: canOfferItems,
-        sector: sector.trim().toUpperCase(),
-        status: "open",
-        type: "want",
-      });
-      toast({ title: "Want Listed", description: `Seeking ${wantItemName} in sector ${sector.trim().toUpperCase()}` });
+  const submit = async (event) => {
+    event.preventDefault();
+    if (!sector.trim()) {
+      return;
     }
 
-    onCreated?.();
-    setSaving(false);
+    setSaving(true);
+    try {
+      if (mode === "offer") {
+        if (!selectedItem) {
+          return;
+        }
+
+        await base44.functions.invoke("tradeOps", {
+          action: "create_listing",
+          listing_type: "offer",
+          sector: sector.trim().toUpperCase(),
+          offered_items: [buildTradeLineItemFromInventory(selectedItem, quantity, gameItems)],
+          requested_items: requestedItems,
+          requested_credits: requestedCredits,
+        });
+        toast({ title: "Trade Posted", description: `${selectedItem.name} listed for trade` });
+      } else {
+        await base44.functions.invoke("tradeOps", {
+          action: "create_listing",
+          listing_type: "want",
+          sector: sector.trim().toUpperCase(),
+          requested_items: wantItems,
+          offered_items: canOfferItems,
+          offered_credits: canOfferCredits,
+        });
+        toast({ title: "Want Listed", description: `Want listing posted for ${sector.trim().toUpperCase()}` });
+      }
+
+      onCreated?.();
+    } finally {
+      setSaving(false);
+    }
   };
+
+  const isValid = mode === "offer"
+    ? Boolean(selectedItem && sector.trim())
+    : wantItems.length > 0 && sector.trim();
 
   return (
     <form onSubmit={submit} className="space-y-3">
-      {/* Mode toggle */}
       <div className="flex gap-0">
         <button
           type="button"
@@ -86,7 +90,7 @@ export default function CreateTradeForm({ items: rawItems, userEmail, userCallsi
               : "border-border/40 text-muted-foreground hover:text-foreground"
           }`}
         >
-          I'm Offering
+          I&apos;m Offering
         </button>
         <button
           type="button"
@@ -97,7 +101,7 @@ export default function CreateTradeForm({ items: rawItems, userEmail, userCallsi
               : "border-border/40 text-muted-foreground hover:text-foreground"
           }`}
         >
-          I'm Seeking
+          I&apos;m Seeking
         </button>
       </div>
 
@@ -109,7 +113,7 @@ export default function CreateTradeForm({ items: rawItems, userEmail, userCallsi
             </Label>
             {tradableItems.length === 0 ? (
               <p className="text-[9px] text-muted-foreground font-mono mt-1 italic">
-                No tradable items — add gear to your Loadout first.
+                No tradable items available in your locker.
               </p>
             ) : (
               <Select value={selectedItemId} onValueChange={setSelectedItemId}>
@@ -117,9 +121,9 @@ export default function CreateTradeForm({ items: rawItems, userEmail, userCallsi
                   <SelectValue placeholder="Choose item to trade..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {tradableItems.map(i => (
-                    <SelectItem key={i.id} value={i.id}>
-                      {i.name} ({i.rarity}) x{i.quantity || 1}
+                  {tradableItems.map((item) => (
+                    <SelectItem key={item.id} value={item.id}>
+                      {item.name} x{item.quantity || 1}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -131,78 +135,88 @@ export default function CreateTradeForm({ items: rawItems, userEmail, userCallsi
             <div>
               <Label className="text-[9px] uppercase tracking-wider text-muted-foreground font-mono">Quantity</Label>
               <Input
-                type="number" min={1} max={selectedItem?.quantity || 1}
-                value={quantity} onChange={e => setQuantity(parseInt(e.target.value) || 1)}
+                type="number"
+                min={1}
+                max={selectedItem?.quantity || 1}
+                value={quantity}
+                onChange={(event) => setQuantity(Math.max(1, parseInt(event.target.value, 10) || 1))}
                 className="h-7 text-xs bg-secondary/50 border-border font-mono mt-0.5"
               />
             </div>
             <div>
               <Label className="text-[9px] uppercase tracking-wider text-muted-foreground font-mono">Sector</Label>
               <Input
-                value={sector} onChange={e => setSector(e.target.value)}
-                placeholder="e.g. B-3" required
+                value={sector}
+                onChange={(event) => setSector(event.target.value)}
+                placeholder="e.g. B-3"
+                required
                 className="h-7 text-xs bg-secondary/50 border-border font-mono mt-0.5"
               />
             </div>
           </div>
 
-          <div className="panel-frame p-2.5 space-y-2">
-            <p className="text-[9px] text-muted-foreground font-mono uppercase tracking-wider">Asking in return</p>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-[8px] uppercase text-muted-foreground font-mono">Credits</Label>
-                <Input type="number" min={0} value={askingPrice} onChange={e => setAskingPrice(parseInt(e.target.value) || 0)} className="h-6 text-[10px] bg-secondary/50 border-border font-mono mt-0.5" />
-              </div>
-              <div>
-                <Label className="text-[8px] uppercase text-muted-foreground font-mono">Or Items</Label>
-                <Input value={askingItems} onChange={e => setAskingItems(e.target.value)} placeholder="e.g. 5x Ammo" className="h-6 text-[10px] bg-secondary/50 border-border font-mono mt-0.5" />
-              </div>
+          <div className="panel-frame p-2.5 space-y-3">
+            <div className="text-[9px] text-muted-foreground font-mono uppercase tracking-wider">Asking in return</div>
+            <TradeLineItemsEditor
+              label="Requested Items"
+              catalog={gameItems}
+              value={requestedItems}
+              onChange={setRequestedItems}
+              emptyLabel="Credits only or open barter."
+            />
+            <div>
+              <Label className="text-[8px] uppercase tracking-wider text-muted-foreground font-mono">Requested Credits</Label>
+              <Input
+                type="number"
+                min={0}
+                value={requestedCredits}
+                onChange={(event) => setRequestedCredits(Math.max(0, parseInt(event.target.value, 10) || 0))}
+                className="h-7 text-[10px] bg-secondary/50 border-border font-mono mt-0.5"
+              />
             </div>
           </div>
         </>
       ) : (
         <>
+          <TradeLineItemsEditor
+            label="Requested Items"
+            catalog={gameItems}
+            value={wantItems}
+            onChange={setWantItems}
+            emptyLabel="Add at least one catalog item you are seeking."
+          />
+
           <div>
-            <Label className="text-[9px] uppercase tracking-wider text-muted-foreground font-mono">
-              Item I'm Looking For
-            </Label>
+            <Label className="text-[9px] uppercase tracking-wider text-muted-foreground font-mono">Sector</Label>
             <Input
-              value={wantItemName} onChange={e => setWantItemName(e.target.value)}
-              placeholder="e.g. Antibiotics, Fuel Can..."
+              value={sector}
+              onChange={(event) => setSector(event.target.value)}
+              placeholder="e.g. B-3"
+              required
               className="h-7 text-xs bg-secondary/50 border-border font-mono mt-0.5"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="panel-frame p-2.5 space-y-3">
+            <div className="text-[9px] text-muted-foreground font-mono uppercase tracking-wider">What I can offer in return</div>
+            <TradeLineItemsEditor
+              label="Offered Items"
+              catalog={gameItems}
+              inventory={tradableItems}
+              allowInventory
+              value={canOfferItems}
+              onChange={setCanOfferItems}
+              emptyLabel="Optional barter items."
+            />
             <div>
-              <Label className="text-[9px] uppercase tracking-wider text-muted-foreground font-mono">Quantity Needed</Label>
+              <Label className="text-[8px] uppercase tracking-wider text-muted-foreground font-mono">Offered Credits</Label>
               <Input
-                type="number" min={1}
-                value={wantQuantity} onChange={e => setWantQuantity(parseInt(e.target.value) || 1)}
-                className="h-7 text-xs bg-secondary/50 border-border font-mono mt-0.5"
+                type="number"
+                min={0}
+                value={canOfferCredits}
+                onChange={(event) => setCanOfferCredits(Math.max(0, parseInt(event.target.value, 10) || 0))}
+                className="h-7 text-[10px] bg-secondary/50 border-border font-mono mt-0.5"
               />
-            </div>
-            <div>
-              <Label className="text-[9px] uppercase tracking-wider text-muted-foreground font-mono">Sector</Label>
-              <Input
-                value={sector} onChange={e => setSector(e.target.value)}
-                placeholder="e.g. B-3" required
-                className="h-7 text-xs bg-secondary/50 border-border font-mono mt-0.5"
-              />
-            </div>
-          </div>
-
-          <div className="panel-frame p-2.5 space-y-2">
-            <p className="text-[9px] text-muted-foreground font-mono uppercase tracking-wider">What I can offer in return</p>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-[8px] uppercase text-muted-foreground font-mono">Credits</Label>
-                <Input type="number" min={0} value={canOfferCredits} onChange={e => setCanOfferCredits(parseInt(e.target.value) || 0)} className="h-6 text-[10px] bg-secondary/50 border-border font-mono mt-0.5" />
-              </div>
-              <div>
-                <Label className="text-[8px] uppercase text-muted-foreground font-mono">Or Items</Label>
-                <Input value={canOfferItems} onChange={e => setCanOfferItems(e.target.value)} placeholder="e.g. 10x Scrap" className="h-6 text-[10px] bg-secondary/50 border-border font-mono mt-0.5" />
-              </div>
             </div>
           </div>
         </>
@@ -211,7 +225,7 @@ export default function CreateTradeForm({ items: rawItems, userEmail, userCallsi
       <Button
         type="submit"
         size="sm"
-        disabled={saving || (mode === "offer" ? !selectedItemId : !wantItemName.trim()) || !sector.trim()}
+        disabled={saving || !isValid}
         className="w-full font-mono text-[10px] uppercase tracking-wider h-7"
       >
         {mode === "offer"

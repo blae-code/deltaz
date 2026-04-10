@@ -7,12 +7,14 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Loader2, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import useGameCatalog from "@/hooks/useGameCatalog";
+import { buildInventoryRecordFromCatalog, matchGameItemByName } from "@/lib/gameCatalog";
 
 const CATEGORIES = ["weapon", "armor", "tool", "consumable", "material", "ammo", "misc"];
 const RARITIES = ["common", "uncommon", "rare", "epic", "legendary"];
 
 function emptyRow() {
-  return { name: "", category: "misc", rarity: "common", quantity: 1, value: 0 };
+  return { name: "", game_item_slug: "", category: "misc", rarity: "common", quantity: 1, value: 0 };
 }
 
 export default function BulkAddForm({ userEmail, onComplete }) {
@@ -22,9 +24,37 @@ export default function BulkAddForm({ userEmail, onComplete }) {
   const [pasteText, setPasteText] = useState("");
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
+  const { data: gameItems = [] } = useGameCatalog();
+
+  const hydrateRow = (row) => {
+    const matched = matchGameItemByName(gameItems, row.name);
+    if (!matched) {
+      return {
+        ...row,
+        game_item_slug: "",
+      };
+    }
+
+    const defaults = buildInventoryRecordFromCatalog(matched);
+    return {
+      ...row,
+      name: matched.name,
+      game_item_slug: matched.slug,
+      category: defaults.category,
+      rarity: defaults.rarity,
+      value: defaults.value,
+    };
+  };
 
   const updateRow = (idx, field, val) => {
-    setRows((prev) => prev.map((r, i) => (i === idx ? { ...r, [field]: val } : r)));
+    setRows((prev) => prev.map((r, i) => {
+      if (i !== idx) {
+        return r;
+      }
+
+      const nextRow = { ...r, [field]: val };
+      return field === "name" ? hydrateRow(nextRow) : nextRow;
+    }));
   };
 
   const removeRow = (idx) => setRows((prev) => prev.filter((_, i) => i !== idx));
@@ -36,11 +66,11 @@ export default function BulkAddForm({ userEmail, onComplete }) {
       // Accept: "ItemName, quantity" or "ItemName x5" or just "ItemName"
       const matchQty = line.match(/^(.+?)\s*[,x×]\s*(\d+)$/i);
       if (matchQty) {
-        return { name: matchQty[1].trim(), category: "misc", rarity: "common", quantity: parseInt(matchQty[2]) || 1, value: 0 };
+        return { name: matchQty[1].trim(), game_item_slug: "", category: "misc", rarity: "common", quantity: parseInt(matchQty[2]) || 1, value: 0 };
       }
-      return { name: line, category: "misc", rarity: "common", quantity: 1, value: 0 };
+      return { name: line, game_item_slug: "", category: "misc", rarity: "common", quantity: 1, value: 0 };
     });
-    setRows(parsed);
+    setRows(parsed.map(hydrateRow));
     setMode("rows");
   };
 
@@ -51,6 +81,7 @@ export default function BulkAddForm({ userEmail, onComplete }) {
     const records = valid.map((r) => ({
       owner_email: userEmail,
       name: r.name.trim(),
+      game_item_slug: r.game_item_slug || "",
       category: r.category,
       rarity: r.rarity,
       quantity: Math.max(1, r.quantity || 1),
@@ -115,6 +146,9 @@ export default function BulkAddForm({ userEmail, onComplete }) {
 
       {mode === "rows" && (
         <div className="space-y-1">
+          <div className="text-[9px] font-mono text-muted-foreground">
+            Matching rows auto-fill category and value from the HumanitZ catalog.
+          </div>
           {/* Header */}
           <div className="grid grid-cols-12 gap-1 text-[8px] text-muted-foreground tracking-wider uppercase px-1">
             <div className="col-span-4">NAME</div>

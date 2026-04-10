@@ -22,9 +22,14 @@
       "type": "string",
       "enum": [
         "weapon",
+        "ammo",
         "armor",
+        "clothing",
+        "backpack",
         "tool",
+        "medical",
         "consumable",
+        "material",
         "upgrade",
         "trade_good",
         "building",
@@ -60,6 +65,10 @@
           "resource": {
             "type": "string"
           },
+          "game_item_slug": {
+            "type": "string",
+            "description": "Canonical GameItem slug for this material when known"
+          },
           "needed": {
             "type": "number"
           },
@@ -74,6 +83,10 @@
     "output_name": {
       "type": "string",
       "description": "Snapshot of the crafted output name"
+    },
+    "output_item_slug": {
+      "type": "string",
+      "description": "Canonical GameItem slug for the crafted output"
     },
     "output_category": {
       "type": "string",

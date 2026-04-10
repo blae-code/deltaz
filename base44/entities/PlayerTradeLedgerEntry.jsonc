@@ -1,0 +1,147 @@
+{
+  "name": "PlayerTradeLedgerEntry",
+  "type": "object",
+  "properties": {
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "trade_offer",
+        "trade_request"
+      ],
+      "description": "The mutable trade record that produced this immutable ledger row"
+    },
+    "source_id": {
+      "type": "string",
+      "description": "ID of the source TradeOffer or TradeRequest"
+    },
+    "outcome_status": {
+      "type": "string",
+      "enum": [
+        "completed",
+        "rejected",
+        "cancelled",
+        "expired"
+      ],
+      "description": "Final outcome of the trade"
+    },
+    "settlement_mode": {
+      "type": "string",
+      "enum": [
+        "live",
+        "synthetic_backfill"
+      ],
+      "default": "live",
+      "description": "Whether this ledger row came from live settlement or historical backfill"
+    },
+    "listing_type": {
+      "type": "string",
+      "enum": [
+        "offer",
+        "want"
+      ],
+      "description": "Listing mode when the source is a public TradeOffer"
+    },
+    "initiator_email": {
+      "type": "string",
+      "description": "Email of the player who originated the listing or request"
+    },
+    "initiator_callsign": {
+      "type": "string",
+      "description": "Snapshot of the initiator callsign"
+    },
+    "counterparty_email": {
+      "type": "string",
+      "description": "Email of the other player involved in the trade"
+    },
+    "counterparty_callsign": {
+      "type": "string",
+      "description": "Snapshot of the counterparty callsign"
+    },
+    "initiator_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "game_item_slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "inventory_item_id": {
+            "type": "string"
+          },
+          "inventory_category": {
+            "type": "string"
+          },
+          "condition": {
+            "type": "number"
+          },
+          "value": {
+            "type": "number"
+          }
+        }
+      },
+      "description": "Immutable snapshot of items the initiator transferred or had listed"
+    },
+    "counterparty_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "game_item_slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "inventory_item_id": {
+            "type": "string"
+          },
+          "inventory_category": {
+            "type": "string"
+          },
+          "condition": {
+            "type": "number"
+          },
+          "value": {
+            "type": "number"
+          }
+        }
+      },
+      "description": "Immutable snapshot of items the counterparty transferred or had listed"
+    },
+    "initiator_credits": {
+      "type": "number",
+      "default": 0,
+      "description": "Credits transferred by the initiator"
+    },
+    "counterparty_credits": {
+      "type": "number",
+      "default": 0,
+      "description": "Credits transferred by the counterparty"
+    },
+    "recorded_at": {
+      "type": "string",
+      "description": "ISO timestamp when the ledger row was recorded"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Operator-facing settlement notes"
+    }
+  },
+  "required": [
+    "source_type",
+    "source_id",
+    "outcome_status",
+    "settlement_mode",
+    "initiator_email",
+    "recorded_at"
+  ]
+}

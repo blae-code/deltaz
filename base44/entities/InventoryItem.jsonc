@@ -10,6 +10,10 @@
       "type": "string",
       "description": "Item name"
     },
+    "game_item_slug": {
+      "type": "string",
+      "description": "Canonical GameItem slug when matched to the reference catalog"
+    },
     "category": {
       "type": "string",
       "enum": [

@@ -54,7 +54,7 @@ export default function CraftingTracker() {
 
     const ensureCatalog = async () => {
       try {
-        await base44.functions.invoke("craftingOps", { action: "ensure_catalog" });
+        await base44.functions.invoke("gameDataOps", { action: "bootstrap_catalog" });
         if (!cancelled) {
           setCatalogBootstrapped(true);
           recipesQuery.refetch();

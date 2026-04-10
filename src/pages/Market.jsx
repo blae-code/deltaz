@@ -14,7 +14,7 @@ import TradeLedger from "../components/trading/TradeLedger";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  TrendingUp, RefreshCw, Info, ArrowLeftRight, Plus, Send,
+  TrendingUp, RefreshCw, Info, Plus, Send,
   ShoppingCart, ScrollText, Package, Handshake,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -160,7 +160,14 @@ export default function Market() {
                 />
               </DataCard>
             )}
-            <PlayerTradeBoard userEmail={user?.email} commodities={commodities} factions={factions} economies={economies} />
+            <PlayerTradeBoard
+              userEmail={user?.email}
+              userInventory={inventory}
+              userCredits={user?.credits || 0}
+              commodities={commodities}
+              factions={factions}
+              economies={economies}
+            />
           </div>
         )}
 
@@ -169,14 +176,15 @@ export default function Market() {
           <div className="space-y-4">
             {showCreateDeal && (
               <DataCard title="New Trade Proposal">
-                <CreateTradeRequest
-                  userEmail={user?.email}
-                  userCallsign={user?.callsign || user?.full_name}
-                  onCreated={() => setShowCreateDeal(false)}
-                />
+              <CreateTradeRequest
+                userEmail={user?.email}
+                userCallsign={user?.callsign || user?.full_name}
+                items={inventory}
+                onCreated={() => setShowCreateDeal(false)}
+              />
               </DataCard>
             )}
-            <TradeRequestList userEmail={user?.email} />
+            <TradeRequestList userEmail={user?.email} userInventory={inventory} userCredits={user?.credits || 0} />
           </div>
         )}
 

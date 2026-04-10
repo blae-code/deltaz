@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Inbox, Send } from "lucide-react";
 
-export default function TradeRequestList({ userEmail }) {
+export default function TradeRequestList({ userEmail, userInventory = [], userCredits = 0 }) {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState("incoming");
@@ -77,7 +77,14 @@ export default function TradeRequestList({ userEmail }) {
         <DataCard title={`Pending (${active.length})`}>
           <div className="space-y-2">
             {active.map(r => (
-              <TradeRequestCard key={r.id} trade={r} userEmail={userEmail} onUpdate={loadRequests} />
+              <TradeRequestCard
+                key={r.id}
+                trade={r}
+                userEmail={userEmail}
+                userInventory={userInventory}
+                userCredits={userCredits}
+                onUpdate={loadRequests}
+              />
             ))}
           </div>
         </DataCard>
@@ -87,7 +94,14 @@ export default function TradeRequestList({ userEmail }) {
         <DataCard title={`History (${resolved.length})`}>
           <div className="space-y-2">
             {resolved.map(r => (
-              <TradeRequestCard key={r.id} trade={r} userEmail={userEmail} onUpdate={loadRequests} />
+              <TradeRequestCard
+                key={r.id}
+                trade={r}
+                userEmail={userEmail}
+                userInventory={userInventory}
+                userCredits={userCredits}
+                onUpdate={loadRequests}
+              />
             ))}
           </div>
         </DataCard>

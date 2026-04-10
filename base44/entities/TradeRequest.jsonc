@@ -18,6 +18,76 @@
       "type": "string",
       "description": "Callsign of the target player"
     },
+    "offered_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "game_item_slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "inventory_item_id": {
+            "type": "string"
+          },
+          "inventory_category": {
+            "type": "string"
+          },
+          "condition": {
+            "type": "number"
+          },
+          "value": {
+            "type": "number"
+          }
+        }
+      },
+      "description": "Structured list of items the sender is offering"
+    },
+    "offered_credits": {
+      "type": "number",
+      "default": 0,
+      "description": "Credits being offered"
+    },
+    "requested_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "game_item_slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "inventory_item_id": {
+            "type": "string"
+          },
+          "inventory_category": {
+            "type": "string"
+          },
+          "condition": {
+            "type": "number"
+          },
+          "value": {
+            "type": "number"
+          }
+        }
+      },
+      "description": "Structured list of items the sender wants back"
+    },
+    "requested_credits": {
+      "type": "number",
+      "default": 0,
+      "description": "Credits being requested"
+    },
     "offer_items": {
       "type": "string",
       "description": "Description of items/resources being offered"
@@ -58,6 +128,22 @@
     "resolved_at": {
       "type": "string",
       "description": "ISO date when the trade was resolved"
+    },
+    "ledger_entry_id": {
+      "type": "string",
+      "description": "Reference to the immutable player trade ledger entry"
+    },
+    "settlement_error": {
+      "type": "string",
+      "description": "Last settlement validation or execution error"
+    },
+    "settlement_lock_id": {
+      "type": "string",
+      "description": "Temporary lock token for in-flight settlement"
+    },
+    "settlement_lock_expires_at": {
+      "type": "string",
+      "description": "ISO timestamp when the settlement lock expires"
     },
     "expires_at": {
       "type": "string",

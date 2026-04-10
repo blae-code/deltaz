@@ -1,0 +1,53 @@
+name: HumanitZ Catalog Sync
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 14 * * 1"
+
+jobs:
+  sync-catalog:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Refresh Catalog Snapshot
+        run: npm run data:sync:humanitz
+
+      - name: Run Catalog Tests
+        run: npm run test:data
+
+      - name: Build App
+        run: npm run build
+
+      - name: Check Backend
+        run: npm run backend:check
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "chore: refresh HumanitZ catalog snapshot"
+          branch: chore/humanitz-catalog-sync
+          title: "chore: refresh HumanitZ catalog snapshot"
+          body: |
+            Weekly HumanitZ catalog refresh.
+
+            - regenerated the checked-in snapshot from the allowlisted community sources
+            - ran catalog tests, build, backend checks, and typecheck
+          delete-branch: true

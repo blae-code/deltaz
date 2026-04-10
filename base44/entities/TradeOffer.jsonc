@@ -10,6 +10,85 @@
       "type": "string",
       "description": "Email of the player who accepts (filled on accept)"
     },
+    "listing_type": {
+      "type": "string",
+      "enum": [
+        "offer",
+        "want"
+      ],
+      "default": "offer",
+      "description": "Whether the listing offers an item or requests one publicly"
+    },
+    "offered_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "game_item_slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "inventory_item_id": {
+            "type": "string"
+          },
+          "inventory_category": {
+            "type": "string"
+          },
+          "condition": {
+            "type": "number"
+          },
+          "value": {
+            "type": "number"
+          }
+        }
+      },
+      "description": "Structured list of items the seller is offering"
+    },
+    "requested_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "game_item_slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "inventory_item_id": {
+            "type": "string"
+          },
+          "inventory_category": {
+            "type": "string"
+          },
+          "condition": {
+            "type": "number"
+          },
+          "value": {
+            "type": "number"
+          }
+        }
+      },
+      "description": "Structured list of items requested in return"
+    },
+    "offered_credits": {
+      "type": "number",
+      "default": 0,
+      "description": "Credits the seller is offering as part of the listing"
+    },
+    "requested_credits": {
+      "type": "number",
+      "default": 0,
+      "description": "Credits the seller wants in return"
+    },
     "item_id": {
       "type": "string",
       "description": "InventoryItem being offered"
@@ -49,13 +128,33 @@
       ],
       "default": "open"
     },
+    "resolved_at": {
+      "type": "string",
+      "description": "ISO date when the listing reached a terminal state"
+    },
+    "ledger_entry_id": {
+      "type": "string",
+      "description": "Reference to the immutable player trade ledger entry"
+    },
+    "settlement_error": {
+      "type": "string",
+      "description": "Last settlement validation or execution error"
+    },
+    "settlement_lock_id": {
+      "type": "string",
+      "description": "Temporary lock token for in-flight settlement"
+    },
+    "settlement_lock_expires_at": {
+      "type": "string",
+      "description": "ISO timestamp when the settlement lock expires"
+    },
     "seller_callsign": {
       "type": "string"
     }
   },
   "required": [
     "seller_email",
-    "item_name",
+    "listing_type",
     "sector"
   ]
 }

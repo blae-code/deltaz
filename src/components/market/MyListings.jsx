@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { X, MapPin, Coins, Package } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import moment from "moment";
+import useGameCatalog from "@/hooks/useGameCatalog";
+import { formatTradeLineItems, getStructuredTradeOffer } from "@/lib/gameCatalog";
 
 const statusColors = {
   open: "text-status-ok border-status-ok/30",
@@ -18,6 +20,7 @@ export default function MyListings({ userEmail }) {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { data: gameItems = [] } = useGameCatalog();
 
   useEffect(() => {
     base44.entities.TradeOffer.filter({ seller_email: userEmail }, "-created_date", 50)
@@ -37,7 +40,10 @@ export default function MyListings({ userEmail }) {
   }, [userEmail]);
 
   const cancelListing = async (id) => {
-    await base44.entities.TradeOffer.update(id, { status: "cancelled" });
+    await base44.functions.invoke("tradeOps", {
+      action: "cancel_listing",
+      listing_id: id,
+    });
     toast({ title: "Listing cancelled" });
   };
 
@@ -47,6 +53,14 @@ export default function MyListings({ userEmail }) {
 
   const open = listings.filter(l => l.status === "open");
   const closed = listings.filter(l => l.status !== "open");
+  const structuredOpenListings = open.map((listing) => ({
+    raw: listing,
+    structured: getStructuredTradeOffer(listing, gameItems),
+  }));
+  const structuredClosedListings = closed.map((listing) => ({
+    raw: listing,
+    structured: getStructuredTradeOffer(listing, gameItems),
+  }));
 
   return (
     <div className="space-y-3">
@@ -55,25 +69,31 @@ export default function MyListings({ userEmail }) {
           <p className="text-[10px] text-muted-foreground text-center py-4">No active listings. Post a trade offer to get started.</p>
         ) : (
           <div className="space-y-2">
-            {open.map(l => (
-              <div key={l.id} className="flex items-center justify-between gap-3 border border-border rounded-sm p-2 bg-secondary/20">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <Package className="h-3 w-3 text-muted-foreground shrink-0" />
-                    <span className="text-[10px] font-mono font-semibold text-foreground truncate">{l.item_name}</span>
-                    {l.quantity > 1 && <span className="text-[9px] text-muted-foreground">x{l.quantity}</span>}
+            {structuredOpenListings.map(({ raw: listing, structured }) => {
+              const primaryDisplay = structured.listing_type === "want"
+                ? formatTradeLineItems(structured.requested_items)
+                : formatTradeLineItems(structured.offered_items);
+              return (
+                <div key={listing.id} className="flex items-center justify-between gap-3 border border-border rounded-sm p-2 bg-secondary/20">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <Package className="h-3 w-3 text-muted-foreground shrink-0" />
+                      <span className="text-[10px] font-mono font-semibold text-foreground truncate">{primaryDisplay || listing.item_name}</span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-0.5 text-[9px] text-muted-foreground">
+                      {listing.sector && <span className="flex items-center gap-0.5"><MapPin className="h-2.5 w-2.5" /> {listing.sector}</span>}
+                      {structured.listing_type === "offer" && structured.requested_credits > 0 && <span className="flex items-center gap-0.5"><Coins className="h-2.5 w-2.5" /> {structured.requested_credits}c</span>}
+                      {structured.listing_type === "want" && structured.offered_credits > 0 && <span className="flex items-center gap-0.5"><Coins className="h-2.5 w-2.5" /> {structured.offered_credits}c</span>}
+                      {structured.listing_type === "offer" && structured.requested_items?.length > 0 && <span>Wants: {formatTradeLineItems(structured.requested_items)}</span>}
+                      {structured.listing_type === "want" && structured.offered_items?.length > 0 && <span>Offering: {formatTradeLineItems(structured.offered_items)}</span>}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 mt-0.5 text-[9px] text-muted-foreground">
-                    {l.sector && <span className="flex items-center gap-0.5"><MapPin className="h-2.5 w-2.5" /> {l.sector}</span>}
-                    {l.asking_price > 0 && <span className="flex items-center gap-0.5"><Coins className="h-2.5 w-2.5" /> {l.asking_price}c</span>}
-                    {l.asking_items && <span>Wants: {l.asking_items}</span>}
-                  </div>
+                  <Button variant="outline" size="sm" className="h-6 text-[8px] text-destructive border-destructive/20" onClick={() => cancelListing(listing.id)}>
+                    <X className="h-3 w-3 mr-0.5" /> CANCEL
+                  </Button>
                 </div>
-                <Button variant="outline" size="sm" className="h-6 text-[8px] text-destructive border-destructive/20" onClick={() => cancelListing(l.id)}>
-                  <X className="h-3 w-3 mr-0.5" /> CANCEL
-                </Button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </DataCard>
@@ -81,17 +101,22 @@ export default function MyListings({ userEmail }) {
       {closed.length > 0 && (
         <DataCard title={`Closed Listings (${closed.length})`}>
           <div className="space-y-1.5 max-h-48 overflow-y-auto">
-            {closed.map(l => (
-              <div key={l.id} className="flex items-center justify-between border border-border/50 rounded-sm p-2 text-[10px]">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="font-mono text-foreground/70 truncate">{l.item_name}</span>
-                  <Badge variant="outline" className={`text-[7px] uppercase ${statusColors[l.status] || ""}`}>
-                    {l.status}
-                  </Badge>
+            {structuredClosedListings.map(({ raw: listing, structured }) => {
+              const primaryDisplay = structured.listing_type === "want"
+                ? formatTradeLineItems(structured.requested_items)
+                : formatTradeLineItems(structured.offered_items);
+              return (
+                <div key={listing.id} className="flex items-center justify-between border border-border/50 rounded-sm p-2 text-[10px]">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="font-mono text-foreground/70 truncate">{primaryDisplay || listing.item_name}</span>
+                    <Badge variant="outline" className={`text-[7px] uppercase ${statusColors[listing.status] || ""}`}>
+                      {listing.status}
+                    </Badge>
+                  </div>
+                  <span className="text-[8px] text-muted-foreground shrink-0">{moment(listing.updated_date).fromNow()}</span>
                 </div>
-                <span className="text-[8px] text-muted-foreground shrink-0">{moment(l.updated_date).fromNow()}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </DataCard>
       )}

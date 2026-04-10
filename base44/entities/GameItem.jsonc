@@ -1,0 +1,284 @@
+{
+  "name": "GameItem",
+  "type": "object",
+  "properties": {
+    "slug": {
+      "type": "string",
+      "description": "Stable canonical HumanitZ item identifier"
+    },
+    "name": {
+      "type": "string",
+      "description": "Canonical item name"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "weapon",
+        "ammo",
+        "tool",
+        "medical",
+        "consumable",
+        "material",
+        "resource",
+        "backpack",
+        "clothing",
+        "vehicle",
+        "storage",
+        "building",
+        "misc"
+      ],
+      "default": "misc"
+    },
+    "subcategory": {
+      "type": "string",
+      "description": "Granular grouping such as pistol, treatment, vest, fruit, or ore"
+    },
+    "inventory_category": {
+      "type": "string",
+      "enum": [
+        "weapon",
+        "armor",
+        "tool",
+        "consumable",
+        "material",
+        "ammo",
+        "misc"
+      ],
+      "default": "misc"
+    },
+    "item_type": {
+      "type": "string",
+      "description": "Source-specific item type label"
+    },
+    "description": {
+      "type": "string",
+      "description": "Reference description for the item"
+    },
+    "weight": {
+      "type": "number",
+      "description": "Item weight in kilograms when known"
+    },
+    "stack_size": {
+      "type": "number",
+      "description": "Maximum stack size when known"
+    },
+    "storage_slots": {
+      "type": "number",
+      "description": "Backpack or storage slot capacity when known"
+    },
+    "build_materials": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "resource": {
+            "type": "string"
+          },
+          "item_slug": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          }
+        }
+      },
+      "description": "Build ingredients for structures, storage, or placeables"
+    },
+    "fit_in_pocket": {
+      "type": "boolean",
+      "description": "Whether the item can fit in a pocket"
+    },
+    "craftable": {
+      "type": "boolean",
+      "default": false
+    },
+    "crafting_station": {
+      "type": "string",
+      "description": "Primary crafting station for this item"
+    },
+    "crafting_time_seconds": {
+      "type": "number",
+      "description": "Primary crafting duration in seconds"
+    },
+    "crafted_amount": {
+      "type": "number",
+      "description": "Primary crafted output quantity"
+    },
+    "crafted_durability": {
+      "type": "number",
+      "description": "Crafted durability snapshot when known"
+    },
+    "requires_recipe": {
+      "type": "boolean",
+      "description": "Whether crafting requires a recipe unlock"
+    },
+    "return_item": {
+      "type": "string",
+      "description": "Item returned by crafting or consumption"
+    },
+    "return_amount": {
+      "type": "number",
+      "description": "Returned item quantity"
+    },
+    "health": {
+      "type": "number",
+      "description": "Health restoration or impact value"
+    },
+    "hunger": {
+      "type": "number",
+      "description": "Hunger restoration value"
+    },
+    "thirst": {
+      "type": "number",
+      "description": "Thirst restoration or impact value"
+    },
+    "stamina": {
+      "type": "number",
+      "description": "Stamina restoration or impact value"
+    },
+    "armor_protection": {
+      "type": "string",
+      "description": "Armor protection tier when known"
+    },
+    "insulation": {
+      "type": "string",
+      "description": "Insulation tier when known"
+    },
+    "ammo_type": {
+      "type": "string",
+      "description": "Ammo consumed by the item when applicable"
+    },
+    "vehicle_id": {
+      "type": "string",
+      "description": "Internal vehicle identifier when known"
+    },
+    "moddable": {
+      "type": "boolean",
+      "description": "Whether the vehicle or item exposes mod slots"
+    },
+    "compatible_items": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Compatible gear for ammunition or attachments"
+    },
+    "location": {
+      "type": "string",
+      "description": "Known spawn or location hint from the source data"
+    },
+    "rarity": {
+      "type": "string",
+      "description": "Normalized rarity label"
+    },
+    "trade_value_player": {
+      "type": "number",
+      "description": "Approximate player trade value"
+    },
+    "trade_value_trader": {
+      "type": "number",
+      "description": "Approximate trader value"
+    },
+    "default_value": {
+      "type": "number",
+      "description": "Preferred default value used to prefill player inventory records"
+    },
+    "packaging": {
+      "type": "boolean",
+      "description": "Whether the item is a package that can be opened"
+    },
+    "packaging_items": {
+      "type": "string",
+      "description": "Packaged item contents label"
+    },
+    "packaging_amount": {
+      "type": "number",
+      "description": "Packaged contents quantity"
+    },
+    "repairable_with": {
+      "type": "string",
+      "description": "Repair material or tool when known"
+    },
+    "clothing_slot": {
+      "type": "string",
+      "description": "Clothing slot for wearable items"
+    },
+    "item_return_on_consume": {
+      "type": "string",
+      "description": "Container returned on consumption when known"
+    },
+    "can_decay": {
+      "type": "boolean",
+      "description": "Whether food spoils over time"
+    },
+    "decay_rate": {
+      "type": "string",
+      "description": "Normalized decay rate label"
+    },
+    "image": {
+      "type": "string",
+      "description": "Source image filename when known"
+    },
+    "source_scope": {
+      "type": "string",
+      "enum": [
+        "fandom",
+        "wiki_gg",
+        "derived",
+        "hybrid"
+      ],
+      "default": "derived"
+    },
+    "source_dataset": {
+      "type": "string",
+      "description": "Upstream dataset or page that supplied the record"
+    },
+    "source_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Source URLs used to build this reference item"
+    },
+    "aliases": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Alternate known names and spellings"
+    },
+    "attributes": {
+      "type": "object",
+      "description": "Normalized source-specific attributes kept for reference"
+    },
+    "catalog_version": {
+      "type": "string",
+      "description": "Catalog generation version"
+    },
+    "data_origin": {
+      "type": "string",
+      "description": "Provenance origin"
+    },
+    "source_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Compact provenance references"
+    },
+    "rule_version": {
+      "type": "string",
+      "description": "Rule or catalog version label"
+    },
+    "generated_at": {
+      "type": "string",
+      "description": "ISO timestamp for this generated record"
+    }
+  },
+  "required": [
+    "slug",
+    "name",
+    "category",
+    "inventory_category"
+  ]
+}

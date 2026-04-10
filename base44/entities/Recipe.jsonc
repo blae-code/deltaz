@@ -18,9 +18,14 @@
       "type": "string",
       "enum": [
         "weapon",
+        "ammo",
         "armor",
+        "clothing",
+        "backpack",
         "tool",
+        "medical",
         "consumable",
+        "material",
         "upgrade",
         "trade_good"
       ],
@@ -43,6 +48,10 @@
         "properties": {
           "resource": {
             "type": "string"
+          },
+          "item_slug": {
+            "type": "string",
+            "description": "Canonical GameItem slug for the ingredient when known"
           },
           "amount": {
             "type": "number"
@@ -69,6 +78,80 @@
       "type": "number",
       "default": 1,
       "description": "How many items are produced"
+    },
+    "item_slug": {
+      "type": "string",
+      "description": "Canonical GameItem slug for the crafted output"
+    },
+    "crafting_station": {
+      "type": "string",
+      "description": "Primary crafting station"
+    },
+    "crafting_time_seconds": {
+      "type": "number",
+      "description": "Crafting duration in seconds"
+    },
+    "crafted_durability": {
+      "type": "number",
+      "description": "Output durability when known"
+    },
+    "requires_recipe": {
+      "type": "boolean",
+      "description": "Whether the recipe requires an unlock or recipe item"
+    },
+    "return_item": {
+      "type": "string",
+      "description": "Item returned during crafting"
+    },
+    "return_amount": {
+      "type": "number",
+      "description": "Returned item quantity"
+    },
+    "return_durability": {
+      "type": "number",
+      "description": "Returned item durability snapshot"
+    },
+    "source_scope": {
+      "type": "string",
+      "description": "Source scope for the recipe"
+    },
+    "source_dataset": {
+      "type": "string",
+      "description": "Upstream dataset or page for the recipe"
+    },
+    "source_url": {
+      "type": "string",
+      "description": "Primary source URL"
+    },
+    "source_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Source URLs used to build the recipe"
+    },
+    "catalog_version": {
+      "type": "string",
+      "description": "Catalog generation version"
+    },
+    "data_origin": {
+      "type": "string",
+      "description": "Provenance origin"
+    },
+    "source_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Compact provenance references"
+    },
+    "rule_version": {
+      "type": "string",
+      "description": "Rule or catalog version label"
+    },
+    "generated_at": {
+      "type": "string",
+      "description": "ISO timestamp for this generated record"
     },
     "is_available": {
       "type": "boolean",

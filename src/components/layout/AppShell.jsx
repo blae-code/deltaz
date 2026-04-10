@@ -37,7 +37,7 @@ export default function AppShell() {
 
     const ensureCatalog = async () => {
       try {
-        await base44.functions.invoke("gameDataOps", { action: "ensure_catalog" });
+        await base44.functions.invoke("gameDataOps", { action: "bootstrap_catalog" });
       } catch (error) {
         console.warn("gameDataOps bootstrap failed", error);
       } finally {
