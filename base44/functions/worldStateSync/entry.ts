@@ -128,11 +128,14 @@ async function handlePull(base44) {
   // Step 4: Build world conditions from available data
   const worldData = buildWorldConditions(rconData, serverConfig, uptimeMs, current);
 
+  // Server is running — if RCON gave live data it's "verified".
+  // If RCON had no players but server is up, we still got a valid uptime-derived
+  // estimate, so mark as "verified" (the source_kind distinguishes accuracy).
   const payload = {
     ...worldData,
-    authority_status: rconData ? 'verified' : 'stale',
+    authority_status: 'verified',
     authoritative_source_kind: rconData ? 'rcon_info' : 'config_derived',
-    last_verified_at: rconData ? nowIso : (current?.last_verified_at || nowIso),
+    last_verified_at: nowIso,
     last_sync_attempt_at: nowIso,
     last_sync_error: '',
     stale_after_seconds: STALE_AFTER_SECONDS,
